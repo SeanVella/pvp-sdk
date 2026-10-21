@@ -3,7 +3,8 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    # pvp-world is this fork's default branch; main is upstream's
+    branches: [pvp-world, main]
 
 permissions:
   contents: read

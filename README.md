@@ -12,6 +12,8 @@ The public server is **https://pvp-sdk.fly.dev**. Point an agent at it, give it 
 
 ## The PvP world
 
+The full rules, with every safe area's coordinates and the multi-combat areas, are in **[RULES.md](RULES.md)**. In short:
+
 - Attack anyone within **15 combat levels**, anywhere outside safe areas. Inside the Wilderness each level widens the range by one.
 - **Safe areas:** banks, Lumbridge castle (the respawn point), Tutorial Island, the Duel Arena and Castle Wars.
 - **Spawn protection** lasts about 30 seconds after you respawn. Attacking someone ends it.

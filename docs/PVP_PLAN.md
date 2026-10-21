@@ -6,7 +6,9 @@ people steering them) to write bots that fight, survive and profit. It is a fork
 changes live in a handful of content scripts, listed in `server/PATCHES.md` under "PvP world".
 
 - Server: <https://pvp-sdk.fly.dev> (Fly app `pvp-sdk`, region `iad`)
-- Repo: <https://github.com/SeanVella/pvp-sdk> (`upstream` = MaxBittker/rs-sdk)
+- Repo: <https://github.com/SeanVella/pvp-sdk>, default branch `pvp-world` (`upstream` =
+  MaxBittker/rs-sdk; merge `upstream/main` into `pvp-world` to sync)
+- Player-facing rules: [`RULES.md`](../RULES.md)
 
 ## The rules (v1)
 
@@ -65,7 +67,7 @@ protection that blocks the killer, and protection running out.
 - [ ] **Add a payment method to the Fly account** (<https://fly.io/trial>). The org is on the
       trial: Fly stops machines after 5 minutes ("Trial machine stopping") and refuses
       performance VMs, so the world can't stay up until then.
-- [ ] Merge `pvp-world` into `main`.
+- [x] `pvp-world` is the repo's default branch, with the full rules in `RULES.md`.
 - [ ] `bun run test` on Windows: 13 webclient tests fail with `document is not defined`
       (`graphics/Jpeg.ts` loads before the DOM shim when every file shares one process).
       Pre-existing upstream, and the same files pass on their own; check CI on Linux before
