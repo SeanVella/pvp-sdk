@@ -1,0 +1,18 @@
+// pvp-sdk: stands for one bank key held in the dmm_key_N invs. The items live
+// there, not on this obj, so it can't be traded, banked or kept through death.
+[dmm_bank_key]
+name=Bank key
+desc=A share of a defeated player's bank. Open it in a safe area while unskulled.
+cost=1
+model=inv_key
+2dxof=-3
+2dyof=5
+2dzoom=700
+2dyan=20
+2dxan=328
+iop1=Open
+iop2=Check
+iop5=Destroy
+tradeable=no
+param=unbankable,^true
+param=destroy_death,^true

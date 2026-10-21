@@ -394,3 +394,5 @@
 393=karam_dungeon_varbit
 1000=pvp_death_mark
 1001=pvp_protection
+1002=pvp_combat_clock
+1003=dmm_guard_hits

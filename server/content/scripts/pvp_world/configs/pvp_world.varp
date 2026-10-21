@@ -2,3 +2,11 @@
 [pvp_protection]
 protect=no
 transmit=yes
+
+// map_clock of the player's last PvP hit, dealt or taken (teleport lock).
+[pvp_combat_clock]
+protect=no
+
+// How many times the guards have shot a skulled player in the current safe area visit.
+[dmm_guard_hits]
+protect=no

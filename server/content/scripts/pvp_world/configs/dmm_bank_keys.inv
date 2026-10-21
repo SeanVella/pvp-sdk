@@ -1,0 +1,39 @@
+// pvp-sdk: Deadman-style bank keys. Each inv is one key a player carries, holding
+// up to ^dmm_key_stacks bank stacks taken from a skulled player who died. Saved with
+// the player; protect=no so a victim's death script can hand them to the killer.
+[dmm_key_1]
+scope=perm
+size=10
+stackall=yes
+protect=no
+
+[dmm_key_2]
+scope=perm
+size=10
+stackall=yes
+protect=no
+
+[dmm_key_3]
+scope=perm
+size=10
+stackall=yes
+protect=no
+
+[dmm_key_4]
+scope=perm
+size=10
+stackall=yes
+protect=no
+
+[dmm_key_5]
+scope=perm
+size=10
+stackall=yes
+protect=no
+
+// Staging for a bank raid on the victim's side, emptied in the same script.
+[dmm_raid]
+scope=temp
+size=10
+stackall=yes
+protect=no

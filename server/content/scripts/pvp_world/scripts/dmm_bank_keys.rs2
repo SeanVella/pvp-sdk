@@ -1,0 +1,280 @@
+// pvp-sdk: Deadman-style bank keys. When a skulled player dies, their
+// ^dmm_key_stacks most valuable tradeable bank stacks are raided into a key for
+// whoever killed them, or dropped where they died if no player did. A player carries
+// at most ^dmm_max_keys keys, each kept in one of the dmm_key_N invs; the "Bank key"
+// objs in the inventory only mirror those invs (~dmm_sync_key_tokens). Keys open in
+// a safe area once the holder's skull is gone, and killing a key holder takes their
+// keys.
+
+[proc,dmm_key_inv](int $slot)(inv)
+switch_int ($slot) {
+    case 1 : return(dmm_key_1);
+    case 2 : return(dmm_key_2);
+    case 3 : return(dmm_key_3);
+    case 4 : return(dmm_key_4);
+    case 5 : return(dmm_key_5);
+}
+return(null);
+
+[proc,dmm_key_count]()(int)
+def_int $count = 0;
+def_int $slot = 1;
+while ($slot <= ^dmm_max_keys) {
+    if (inv_freespace(~dmm_key_inv($slot)) < inv_size(~dmm_key_inv($slot))) {
+        $count = add($count, 1);
+    }
+    $slot = add($slot, 1);
+}
+return($count);
+
+// The first key slot holding a key, or 0.
+[proc,dmm_first_key_slot]()(int)
+def_int $slot = 1;
+while ($slot <= ^dmm_max_keys) {
+    if (inv_freespace(~dmm_key_inv($slot)) < inv_size(~dmm_key_inv($slot))) {
+        return($slot);
+    }
+    $slot = add($slot, 1);
+}
+return(0);
+
+// The first key slot the killer (.active_player) has free, or 0.
+[proc,dmm_killer_free_key_slot]()(int)
+def_int $slot = 1;
+while ($slot <= ^dmm_max_keys) {
+    if (.inv_freespace(~dmm_key_inv($slot)) = inv_size(~dmm_key_inv($slot))) {
+        return($slot);
+    }
+    $slot = add($slot, 1);
+}
+return(0);
+
+// A stack's store value, capped at the int range.
+[proc,dmm_stack_value](obj $obj, int $count)(int)
+def_int $cost = max(oc_cost($obj), 1);
+if ($count > divide(^max_32bit_int, $cost)) {
+    return(^max_32bit_int);
+}
+return(multiply($cost, $count));
+
+// The bank slot with the most valuable tradeable stack, or -1.
+[proc,dmm_priciest_bank_slot]()(int)
+def_int $best = -1;
+def_int $best_value = 0;
+def_int $value = 0;
+def_obj $obj;
+def_int $i = 0;
+def_int $size = inv_size(bank);
+while ($i < $size) {
+    $obj = inv_getobj(bank, $i);
+    if ($obj ! null) {
+        if (oc_tradeable($obj) = true) {
+            $value = ~dmm_stack_value($obj, inv_getnum(bank, $i));
+            if ($value > $best_value) {
+                $best = $i;
+                $best_value = $value;
+            }
+        }
+    }
+    $i = add($i, 1);
+}
+return($best);
+
+// Moves the active player's ^dmm_key_stacks most valuable tradeable bank stacks
+// into dmm_raid and returns how many moved.
+[proc,dmm_raid_bank]()(int)
+inv_clear(dmm_raid);
+def_int $taken = 0;
+def_int $slot = 0;
+while ($taken < ^dmm_key_stacks) {
+    $slot = ~dmm_priciest_bank_slot;
+    if ($slot = -1) {
+        return($taken);
+    }
+    inv_moveitem(bank, dmm_raid, inv_getobj(bank, $slot), inv_getnum(bank, $slot));
+    $taken = add($taken, 1);
+}
+return($taken);
+
+// Drops every stack in the active player's $inv where they stand, for the killer.
+[proc,dmm_drop_for_killer](inv $inv)
+def_int $i = 0;
+def_int $size = inv_size($inv);
+while ($i < $size) {
+    if (inv_getobj($inv, $i) ! null) {
+        both_dropslot($inv, coord, $i, ^lootdrop_duration);
+    }
+    $i = add($i, 1);
+}
+
+// The active player died to the killer (.active_player): the killer takes the
+// victim's keys, and a skulled victim's bank is raided into a new key for them.
+// Keys that don't fit the killer's ^dmm_max_keys drop for the killer instead.
+[proc,dmm_death_to_player](boolean $skulled)
+def_int $given = 0;
+def_int $slot = 1;
+def_int $to = 0;
+while ($slot <= ^dmm_max_keys) {
+    if (inv_freespace(~dmm_key_inv($slot)) < inv_size(~dmm_key_inv($slot))) {
+        $to = ~dmm_killer_free_key_slot;
+        if ($to > 0) {
+            both_moveinv(~dmm_key_inv($slot), ~dmm_key_inv($to));
+            $given = add($given, 1);
+        } else {
+            ~dmm_drop_for_killer(~dmm_key_inv($slot));
+        }
+    }
+    $slot = add($slot, 1);
+}
+if ($skulled = true) {
+    if (~dmm_raid_bank > 0) {
+        $to = ~dmm_killer_free_key_slot;
+        if ($to > 0) {
+            both_moveinv(dmm_raid, ~dmm_key_inv($to));
+            $given = add($given, 1);
+        } else {
+            ~dmm_drop_for_killer(dmm_raid);
+        }
+    }
+}
+if ($given > 0) {
+    .queue(dmm_key_received, 0, $given);
+}
+
+// The active player died with no player to credit: their keys are destroyed, and
+// a skulled victim's raided bank stacks fall where they died.
+[proc,dmm_death_to_npc](boolean $skulled)
+def_int $slot = 1;
+while ($slot <= ^dmm_max_keys) {
+    inv_clear(~dmm_key_inv($slot));
+    $slot = add($slot, 1);
+}
+if ($skulled = true) {
+    if (~dmm_raid_bank > 0) {
+        inv_dropall(dmm_raid, coord, ^lootdrop_duration);
+    }
+}
+
+[queue,dmm_key_received](int $keys)
+~dmm_sync_key_tokens;
+if ($keys = 1) {
+    mes("You take a bank key from your victim.");
+} else {
+    mes("You take <tostring($keys)> bank keys from your victim.");
+}
+if (%pk_skull > 0) {
+    mes("Keys open in a safe area once your skull wears off.");
+} else {
+    mes("Keys open in a safe area.");
+}
+
+// Makes the "Bank key" objs in the inventory match the keys held. Keys that don't
+// fit drop at the player's feet (untradeable, so only they can see them).
+[proc,dmm_sync_key_tokens]
+def_int $keys = ~dmm_key_count;
+def_int $tokens = inv_total(inv, dmm_bank_key);
+if ($tokens > $keys) {
+    inv_del(inv, dmm_bank_key, sub($tokens, $keys));
+    return;
+}
+while ($tokens < $keys) {
+    if (inv_freespace(inv) > 0) {
+        inv_add(inv, dmm_bank_key, 1);
+    } else {
+        obj_add(coord, dmm_bank_key, 1, ^lootdrop_duration);
+    }
+    $tokens = add($tokens, 1);
+}
+
+// Opens the first key held: its stacks go to the bank, or fall at the player's feet
+// when the bank has no room.
+[opheld1,dmm_bank_key]
+if (%pk_skull > 0) {
+    mes("You can't open a bank key while you're skulled.");
+    return;
+}
+if (~pvp_in_safe_zone(coord) = false) {
+    mes("Bank keys can only be opened in a safe area.");
+    return;
+}
+def_int $slot = ~dmm_first_key_slot;
+if ($slot = 0) {
+    ~dmm_sync_key_tokens;
+    return;
+}
+~dmm_open_key(~dmm_key_inv($slot));
+~dmm_sync_key_tokens;
+
+[proc,dmm_open_key](inv $key)
+def_int $banked = 0;
+def_int $dropped = 0;
+def_obj $obj;
+def_int $count = 0;
+def_int $i = 0;
+def_int $size = inv_size($key);
+while ($i < $size) {
+    $obj = inv_getobj($key, $i);
+    if ($obj ! null) {
+        $count = inv_getnum($key, $i);
+        if (inv_itemspace(bank, $obj, $count, inv_size(bank)) = true) {
+            inv_moveitem($key, bank, $obj, $count);
+            $banked = add($banked, 1);
+        } else {
+            inv_dropslot($key, coord, $i, ^lootdrop_duration);
+            $dropped = add($dropped, 1);
+        }
+    }
+    $i = add($i, 1);
+}
+if ($banked = 1) {
+    mes("You open the bank key: 1 stack goes to your bank.");
+} else {
+    mes("You open the bank key: <tostring($banked)> stacks go to your bank.");
+}
+if ($dropped = 1) {
+    mes("Your bank is full, so 1 stack falls at your feet.");
+} else if ($dropped > 1) {
+    mes("Your bank is full, so <tostring($dropped)> stacks fall at your feet.");
+}
+
+// Lists every key held, one line per stack.
+[opheld2,dmm_bank_key]
+def_int $n = 0;
+def_int $slot = 1;
+while ($slot <= ^dmm_max_keys) {
+    if (inv_freespace(~dmm_key_inv($slot)) < inv_size(~dmm_key_inv($slot))) {
+        $n = add($n, 1);
+        ~dmm_list_key($n, ~dmm_key_inv($slot));
+    }
+    $slot = add($slot, 1);
+}
+if ($n = 0) {
+    ~dmm_sync_key_tokens;
+}
+
+[proc,dmm_list_key](int $n, inv $key)
+def_obj $obj;
+def_int $i = 0;
+def_int $size = inv_size($key);
+while ($i < $size) {
+    $obj = inv_getobj($key, $i);
+    if ($obj ! null) {
+        mes("Bank key <tostring($n)>: <tostring(inv_getnum($key, $i))> x <oc_name($obj)>");
+    }
+    $i = add($i, 1);
+}
+
+// Destroys the first key held, and everything in it.
+[opheld5,dmm_bank_key]
+def_int $slot = ~dmm_first_key_slot;
+if ($slot = 0) {
+    ~dmm_sync_key_tokens;
+    return;
+}
+~mesbox("Destroying a bank key throws away everything in it.");
+if (~p_choice2("Destroy it.", 1, "Keep it.", 2) = 2) {
+    return;
+}
+inv_clear(~dmm_key_inv($slot));
+~dmm_sync_key_tokens;
+mes("You destroy the bank key.");

@@ -3,8 +3,9 @@ import { EventEmitter } from 'node:events';
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-// Runs the compiled pvp-sdk world rules (pvp_world.rs2, ~pvp_level_check) from the built
-// pack against in-memory players: who can attack whom, where, and spawn protection.
+// Runs the compiled pvp-sdk world rules (pvp_world.rs2, dmm_bank_keys.rs2, ~pvp_level_check)
+// from the built pack against in-memory players: who can attack whom, where, spawn
+// protection, the Deadman guards, bank keys and the teleport lock.
 const output = process.env.PVP_WORLD_TEST_OUTPUT!;
 const cache = resolve('data/pack');
 
@@ -13,8 +14,15 @@ copyFileSync(resolve('data/config/private.pem'), `${output}/data/config/private.
 process.chdir(output);
 class TestWorker extends EventEmitter { postMessage() {} }
 mock.module('worker_threads', () => ({ Worker: TestWorker }));
-await import('../../src/engine/World.js');
+const { default: World } = await import('../../src/engine/World.js');
 const { default: VarPlayerType } = await import('../../src/cache/config/VarPlayerType.js');
+const { default: VarBitType } = await import('../../src/cache/config/VarBitType.js');
+const { default: ParamType } = await import('../../src/cache/config/ParamType.js');
+const { default: ObjType } = await import('../../src/cache/config/ObjType.js');
+const { default: InvType } = await import('../../src/cache/config/InvType.js');
+const { default: EnumType } = await import('../../src/cache/config/EnumType.js');
+const { default: StructType } = await import('../../src/cache/config/StructType.js');
+const { default: CategoryType } = await import('../../src/cache/config/CategoryType.js');
 const { default: DbTableType } = await import('../../src/cache/config/DbTableType.js');
 const { default: DbRowType } = await import('../../src/cache/config/DbRowType.js');
 const { default: DbTableIndex } = await import('../../src/cache/config/DbTableIndex.js');
@@ -23,36 +31,53 @@ const { default: ScriptRunner } = await import('../../src/engine/script/ScriptRu
 const { default: ScriptState } = await import('../../src/engine/script/ScriptState.js');
 const { default: ScriptPointer } = await import('../../src/engine/script/ScriptPointer.js');
 const { NetworkPlayer } = await import('../../src/engine/entity/NetworkPlayer.js');
+const { default: Obj } = await import('../../src/engine/entity/Obj.js');
 const { PlayerStat } = await import('../../src/engine/entity/PlayerStat.js');
 const { default: NullClientSocket } = await import('../../src/server/NullClientSocket.js');
-VarPlayerType.load(cache);
-DbTableType.load(cache);
-DbRowType.load(cache);
+// Not SeqType: it needs the packed client cache, and none of these scripts animate.
+for (const type of [VarPlayerType, VarBitType, ParamType, ObjType, InvType, EnumType, StructType, CategoryType, DbTableType, DbRowType]) {
+    type.load(cache);
+}
 DbTableIndex.init();
 expect(ScriptProvider.load(cache)).toBeGreaterThan(0);
 
 type TestPlayer = InstanceType<typeof NetworkPlayer> & { messages: string[] };
-const protection = VarPlayerType.getId('pvp_protection');
+const varp = (name: string) => VarPlayerType.getId(name);
+const inv = (name: string) => InvType.getId(name);
+const obj = (name: string) => ObjType.getId(name);
+const BANK = inv('bank');
+const INV = inv('inv');
+const KEY = obj('dmm_bank_key');
+
+// Scripts reach players by uid (damage) and drop loot through World.addObj; serve both
+// from the test's own players instead of a running world.
+const players: TestPlayer[] = [];
+const drops: { obj: number; count: number; receiver: bigint }[] = [];
+World.getPlayerByUid = (uid: number) => players.find(p => p.uid === uid) ?? null;
+World.addObj = (o: { type: number; count: number }, receiver64: bigint) => void drops.push({ obj: o.type, count: o.count, receiver: receiver64 });
 
 // Every melee stat (and hitpoints) at `stats` gives combat level floor(1.15 * stats).
 function player(name: string, stats: number, x: number, z: number, level = 0): TestPlayer {
-    const p = new NetworkPlayer(name, 0n, 0n, new NullClientSocket()) as TestPlayer;
+    const n = players.length + 1;
+    const p = new NetworkPlayer(name, BigInt(n), BigInt(n), new NullClientSocket()) as TestPlayer;
     for (const stat of [PlayerStat.ATTACK, PlayerStat.STRENGTH, PlayerStat.DEFENCE, PlayerStat.HITPOINTS]) {
         p.baseLevels[stat] = stats;
         p.levels[stat] = stats;
     }
+    p.uid = 1000 + n;
     p.x = x;
     p.z = z;
     p.level = level;
     p.messages = [];
     p.messageGame = (msg: string) => void p.messages.push(msg);
+    players.push(p);
     return p;
 }
 
-function run(name: string, self: TestPlayer, target: TestPlayer | null = null): ScriptState {
+function run(name: string, self: TestPlayer, target: TestPlayer | null = null, args: (number | string)[] = []): ScriptState {
     const script = ScriptProvider.getByName(name);
     expect(script).toBeDefined();
-    const state = ScriptRunner.init(script!, self, target);
+    const state = ScriptRunner.init(script!, self, target, args);
     state.pointerAdd(ScriptPointer.ProtectedActivePlayer);
     if (target) state.pointerAdd(ScriptPointer.ProtectedActivePlayer2);
     expect(ScriptRunner.execute(state)).toBe(ScriptState.FINISHED);
@@ -65,10 +90,22 @@ function attack(attacker: TestPlayer, target: TestPlayer): { allowed: boolean; m
     return { allowed, messages: attacker.messages };
 }
 
-// Open ground north-east of Lumbridge castle: no bank, safe zone or wilderness.
-const FIELD = { x: 3232, z: 3242 };
+function stacks(p: TestPlayer, invId: number): Map<number, number> {
+    const out = new Map<number, number>();
+    for (let slot = 0; slot < p.invSize(invId); slot++) {
+        const item = p.invGetSlot(invId, slot);
+        if (item) out.set(item.id, (out.get(item.id) ?? 0) + item.count);
+    }
+    return out;
+}
+
+// Open ground east of Lumbridge (past the river): no town, bank or wilderness.
+const FIELD = { x: 3255, z: 3275 };
 const LUMBRIDGE_SPAWN = { x: 3221, z: 3218 };
+const VARROCK_SQUARE = { x: 3212, z: 3428 };
 const VARROCK_WEST_BANK = { x: 3185, z: 3440 };
+const EDGEVILLE_BANK = { x: 3094, z: 3492 };
+const DRAYNOR_BANK = { x: 3092, z: 3243 };
 const TUTORIAL_ISLAND = { x: 3094, z: 3106 };
 const DUEL_ARENA_LOBBY = { x: 3360, z: 3270 };
 // Wilderness level n starts at z = 3520 + (n - 1) * 8.
@@ -98,14 +135,8 @@ test('each wilderness level widens the range by one', () => {
     expect(attack(low, high).allowed).toBe(false);
 });
 
-test('nobody fights in or out of safe areas', () => {
-    const cases: [string, { x: number; z: number }][] = [
-        ['lumbridge spawn', LUMBRIDGE_SPAWN],
-        ['varrock west bank', VARROCK_WEST_BANK],
-        ['tutorial island', TUTORIAL_ISLAND],
-        ['duel arena lobby', DUEL_ARENA_LOBBY]
-    ];
-    for (const [, safe] of cases) {
+test('nobody fights in or out of the guarded towns and other safe areas', () => {
+    for (const safe of [LUMBRIDGE_SPAWN, VARROCK_SQUARE, VARROCK_WEST_BANK, TUTORIAL_ISLAND, DUEL_ARENA_LOBBY]) {
         const inside = player('inside', 10, safe.x, safe.z);
         const outside = player('outside', 10, FIELD.x, FIELD.z);
         const into = attack(outside, inside);
@@ -115,13 +146,17 @@ test('nobody fights in or out of safe areas', () => {
         expect(outOf.allowed).toBe(false);
         expect(outOf.messages).toEqual(["You can't attack other players from a safe area."]);
     }
+    // Banks outside the guarded towns are fair game, as in Deadman.
+    for (const bank of [EDGEVILLE_BANK, DRAYNOR_BANK]) {
+        expect(attack(player('a', 10, bank.x, bank.z), player('b', 10, bank.x + 1, bank.z)).allowed).toBe(true);
+    }
 });
 
 test('spawn protection blocks attacks until it ends or the protected player attacks', () => {
     const attacker = player('attacker', 10, FIELD.x, FIELD.z);
     const respawned = player('respawned', 10, FIELD.x + 1, FIELD.z);
     run('[proc,pvp_protection_start]', respawned);
-    expect(respawned.vars[protection]).toBe(1);
+    expect(respawned.vars[varp('pvp_protection')]).toBe(1);
     const blocked = attack(attacker, respawned);
     expect(blocked.allowed).toBe(false);
     expect(blocked.messages).toEqual(['That player has just respawned and is protected.']);
@@ -129,7 +164,111 @@ test('spawn protection blocks attacks until it ends or the protected player atta
     // The protected player may still attack; doing so (set_pk_vars) ends the protection.
     expect(attack(respawned, attacker).allowed).toBe(true);
     run('[proc,set_pk_vars]', respawned, attacker);
-    expect(respawned.vars[protection]).toBe(0);
+    expect(respawned.vars[varp('pvp_protection')]).toBe(0);
     expect(respawned.messages).toContain('You are no longer protected from other players.');
     expect(attack(attacker, respawned).allowed).toBe(true);
+});
+
+test('guards shoot a skulled player in a safe area harder every hit, and only there', () => {
+    const p = player('skulled', 40, VARROCK_SQUARE.x, VARROCK_SQUARE.z); // 40 hitpoints
+    p.vars[varp('pk_skull')] = 2000;
+    run('[softtimer,dmm_guard_check]', p);
+    expect(p.levels[PlayerStat.HITPOINTS]).toBe(32); // 40 / 5
+    expect(p.messages).toContain('The guards attack you for bringing a skull into a safe area!');
+    run('[softtimer,dmm_guard_check]', p);
+    expect(p.levels[PlayerStat.HITPOINTS]).toBe(22); // 8 + 2
+    p.x = FIELD.x;
+    p.z = FIELD.z;
+    run('[softtimer,dmm_guard_check]', p);
+    expect(p.levels[PlayerStat.HITPOINTS]).toBe(22);
+    expect(p.vars[varp('dmm_guard_hits')]).toBe(0);
+});
+
+test('a PvP hit teleport-locks both players for 24 ticks', () => {
+    World.currentTick = 1000;
+    const attacker = player('attacker', 10, FIELD.x, FIELD.z);
+    const target = player('target', 10, FIELD.x + 1, FIELD.z);
+    run('[proc,set_pk_vars]', attacker, target);
+    expect(attacker.vars[varp('pvp_combat_clock')]).toBe(1000);
+    expect(target.vars[varp('pvp_combat_clock')]).toBe(1000);
+    World.currentTick = 1023;
+    expect(run('[proc,pre_tele_checks]', target, null, [0]).popInt()).toBe(0);
+    expect(target.messages).toContain("You can't teleport so soon after fighting another player.");
+    World.currentTick = 1024;
+    expect(run('[proc,pre_tele_checks]', target, null, [0]).popInt()).toBe(1);
+});
+
+test('dying skulled raids your 10 most valuable tradeable bank stacks into a key for the killer', () => {
+    const victim = player('victim', 10, FIELD.x, FIELD.z);
+    const killer = player('killer', 10, FIELD.x + 1, FIELD.z);
+    const bank: [string, number][] = [
+        ['coins', 50000], ['dragon_longsword', 1], ['rune_platebody', 1], ['rune_platelegs', 1], ['rune_full_helm', 1],
+        ['rune_scimitar', 1], ['adamant_platebody', 1], ['shark', 100], ['lobster', 100], ['swordfish', 20],
+        ['coal', 50], ['iron_ore', 100], ['logs', 100], ['thgoodminekey', 10000000]
+    ];
+    for (const [name, count] of bank) victim.invAdd(BANK, obj(name), count);
+    const byValue = bank
+        .filter(([name]) => ObjType.get(obj(name)).tradeable)
+        .sort((a, b) => ObjType.get(obj(b[0])).cost * b[1] - ObjType.get(obj(a[0])).cost * a[1]);
+    const raided = byValue.slice(0, 10).map(([name]) => obj(name));
+
+    run('[proc,dmm_death_to_player]', victim, killer, [1]);
+    const key = stacks(killer, inv('dmm_key_1'));
+    expect([...key.keys()].sort()).toEqual([...raided].sort());
+    const left = stacks(victim, BANK);
+    for (const id of raided) expect(left.has(id)).toBe(false);
+    for (const name of ['coal', 'iron_ore', 'logs', 'thgoodminekey']) expect(left.has(obj(name))).toBe(true);
+
+    // The killer's queue hands them the key token.
+    run('[queue,dmm_key_received]', killer, null, [1]);
+    expect(stacks(killer, INV).get(KEY)).toBe(1);
+    expect(killer.messages).toContain('You take a bank key from your victim.');
+
+    // Keys only open unskulled, in a safe area; the stacks then go to the bank.
+    killer.vars[varp('pk_skull')] = 2000;
+    run('[opheld1,dmm_bank_key]', killer);
+    expect(killer.messages).toContain("You can't open a bank key while you're skulled.");
+    killer.vars[varp('pk_skull')] = 0;
+    run('[opheld1,dmm_bank_key]', killer);
+    expect(killer.messages).toContain('Bank keys can only be opened in a safe area.');
+    killer.x = VARROCK_SQUARE.x;
+    killer.z = VARROCK_SQUARE.z;
+    run('[opheld1,dmm_bank_key]', killer);
+    expect(killer.messages).toContain('You open the bank key: 10 stacks go to your bank.');
+    const banked = stacks(killer, BANK);
+    for (const id of raided) expect(banked.has(id)).toBe(true);
+    expect(stacks(killer, inv('dmm_key_1')).size).toBe(0);
+    expect(stacks(killer, INV).get(KEY) ?? 0).toBe(0);
+});
+
+test('an unskulled victim keeps their bank but loses carried keys to the killer', () => {
+    const holder = player('holder', 10, FIELD.x, FIELD.z);
+    const killer = player('killer', 10, FIELD.x + 1, FIELD.z);
+    holder.invAdd(inv('dmm_key_3'), obj('rune_platebody'), 1);
+    holder.invAdd(BANK, obj('dragon_longsword'), 1);
+    run('[proc,dmm_death_to_player]', holder, killer, [0]);
+    expect(stacks(killer, inv('dmm_key_1')).get(obj('rune_platebody'))).toBe(1);
+    expect(stacks(holder, inv('dmm_key_3')).size).toBe(0);
+    expect(stacks(holder, BANK).get(obj('dragon_longsword'))).toBe(1);
+});
+
+test('a killer with five keys gets the overflow dropped for them instead', () => {
+    const victim = player('victim', 10, FIELD.x, FIELD.z);
+    const killer = player('killer', 10, FIELD.x + 1, FIELD.z);
+    for (let k = 1; k <= 5; k++) killer.invAdd(inv(`dmm_key_${k}`), obj('coins'), k);
+    victim.invAdd(BANK, obj('rune_scimitar'), 1);
+    drops.length = 0;
+    run('[proc,dmm_death_to_player]', victim, killer, [1]);
+    expect(drops).toEqual([{ obj: obj('rune_scimitar'), count: 1, receiver: killer.hash64 }]);
+});
+
+test('dying to an npc destroys carried keys, and a skulled one drops the raided stacks for anyone', () => {
+    const p = player('npcdeath', 10, FIELD.x, FIELD.z);
+    p.invAdd(inv('dmm_key_2'), obj('rune_platebody'), 1);
+    p.invAdd(BANK, obj('rune_full_helm'), 1);
+    drops.length = 0;
+    run('[proc,dmm_death_to_npc]', p, null, [1]);
+    expect(stacks(p, inv('dmm_key_2')).size).toBe(0);
+    expect(stacks(p, BANK).has(obj('rune_full_helm'))).toBe(false);
+    expect(drops).toEqual([{ obj: obj('rune_full_helm'), count: 1, receiver: Obj.NO_RECEIVER }]);
 });

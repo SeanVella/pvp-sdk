@@ -1,15 +1,13 @@
 // pvp-sdk: the whole world is a combat zone. ~pvp_level_check decides every
 // attack outside the Duel Arena and Castle Wars; these procs hold its rules.
 
-// Nobody can attack or be attacked in a safe area. The Duel Arena (lobby and
-// fight zones) and Castle Wars run their own fights, so they only count as safe
-// against attackers from outside: ~pvp_is_attackable hands fights between two
-// players inside them to the minigame rules before this is ever checked.
+// Nobody can attack or be attacked in a safe area: the guarded towns in
+// pvp_safe_zones, Tutorial Island, and the Duel Arena and Castle Wars, which run
+// their own fights. Those two only count as safe against attackers from outside:
+// ~pvp_is_attackable hands fights between two players inside them to the minigame
+// rules before this is ever checked.
 [proc,pvp_in_safe_zone](coord $coord)(boolean)
 if (~inzone_coord_pair_table(pvp_safe_zones, $coord) = true) {
-    return(true);
-}
-if (~inzone_coord_pair_table(bank_zones, $coord) = true) {
     return(true);
 }
 if (~in_tutorial_island($coord) = true) {
@@ -40,3 +38,26 @@ if (%pvp_protection = ^true) {
     %pvp_protection = ^false;
     mes("You are no longer protected from other players.");
 }
+
+// Deadman guards: a skulled player in a safe area is shot every ^dmm_guard_interval
+// ticks until they leave or die. The first hit takes a fifth of their base hitpoints
+// and every hit after that 2 more (Deadman: Reborn). Runs while the skull lasts.
+[softtimer,dmm_guard_check]
+if (~pvp_in_safe_zone(coord) = false) {
+    %dmm_guard_hits = 0;
+    return;
+}
+if (%dmm_guard_hits = 0) {
+    mes("The guards attack you for bringing a skull into a safe area!");
+    mes("Leave the area or they will kill you.");
+}
+def_int $damage = add(divide(stat_base(hitpoints), 5), multiply(%dmm_guard_hits, 2));
+%dmm_guard_hits = add(%dmm_guard_hits, 1);
+~damage_self(max($damage, 1));
+
+// No teleporting for ^pvp_teleport_lock ticks after a PvP hit, dealt or taken.
+[proc,pvp_teleport_locked]()(boolean)
+if (%pvp_combat_clock > 0 & map_clock < add(%pvp_combat_clock, ^pvp_teleport_lock)) {
+    return(true);
+}
+return(false);

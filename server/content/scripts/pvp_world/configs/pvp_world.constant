@@ -5,3 +5,14 @@
 // Spawn protection after respawning, in ticks (100 = 30s at the 300ms prod tickrate).
 // Attacking another player ends it early.
 ^pvp_protection_duration = 100
+// No teleporting for this many ticks after hitting or being hit by a player
+// (24 = 7.2s at 300ms, Deadman: Reborn's teleport delay).
+^pvp_teleport_lock = 24
+
+// Deadman-style rules (see pvp_world.rs2 and dmm_bank_keys.rs2).
+// Guards shoot a skulled player in a safe area every this many ticks
+// (2 = 0.6s at 300ms, the once-a-tick pace of Deadman's 600ms world).
+^dmm_guard_interval = 2
+// Bank keys a player can carry, and the bank stacks a key takes.
+^dmm_max_keys = 5
+^dmm_key_stacks = 10

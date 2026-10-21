@@ -38,11 +38,18 @@ clearqueue(player_death);
 
 def_obj $prev_wep = inv_getobj(worn, ^wearpos_rhand);
 def_boolean $pvp_death = false;
+// pvp-sdk: Deadman bank keys - dying skulled raids your bank (dmm_bank_keys.rs2)
+def_boolean $skulled = false;
+if (%pk_skull > 0) {
+    $skulled = true;
+}
 if (findhero = true) {
     $pvp_death = true;
+    ~dmm_death_to_player($skulled);
     ~pvp_death_lose_items;
     session_log(^log_moderator, "Player died to <.displayname>");
 } else {
+    ~dmm_death_to_npc($skulled);
     ~player_death_lose_items;
     // todo: what npc killed the player
     session_log(^log_moderator, "Player died");
@@ -73,10 +80,10 @@ healenergy(10000);
 [proc,player_death_lose_items]
 if (staffmodlevel > 1 & map_live = true) { return; }
 
+// pvp-sdk: Deadman rules - only an unskulled death to an npc keeps your 3 most
+// valuable items, and Protect Item doesn't add one
 def_boolean $skulled = false;
 if (%pk_skull > 0) { $skulled = true; }
-def_boolean $protecting_item = false;
-if (%prayer8 = ^true) { $protecting_item = true; }
 inv_clear(deathkeep);
 
 def_obj $currentitem;
@@ -84,9 +91,6 @@ def_obj $currentitem;
 if($skulled = false) {
     ~move_priciest_item_on_hero_to_death;
     ~move_priciest_item_on_hero_to_death;
-    ~move_priciest_item_on_hero_to_death;
-}
-if($protecting_item = true) {
     ~move_priciest_item_on_hero_to_death;
 }
 
@@ -137,20 +141,9 @@ inv_clear(deathkeep);
 ~pvp_death_message(.uid);
 if (staffmodlevel > 1 & map_live = true) { return; }
 
-def_boolean $skulled = false;
-if (%pk_skull > 0) { $skulled = true; }
-def_boolean $protecting_item = false;
-if (%prayer8 = ^true) { $protecting_item = true; }
+// pvp-sdk: Deadman rules - a death to another player keeps nothing, skulled or
+// not, and Protect Item doesn't help
 inv_clear(deathkeep);
-
-if($skulled = false) {
-    ~move_priciest_item_on_hero_to_death;
-    ~move_priciest_item_on_hero_to_death;
-    ~move_priciest_item_on_hero_to_death;
-}
-if($protecting_item = true) {
-    ~move_priciest_item_on_hero_to_death;
-}
 
 def_int $i = 0;
 def_int $size = inv_size(inv);

@@ -28,6 +28,9 @@ if (~deserves_pk_skull = true) {
 .%lastcombat = map_clock;
 .%lastcombat_pvp = map_clock;
 .%aggressive_npc = null; // prevents npc's from attacking your opponent after you attack them.
+// pvp-sdk: both fighters are teleport locked for ^pvp_teleport_lock ticks
+%pvp_combat_clock = map_clock;
+.%pvp_combat_clock = map_clock;
 
 // requires active_player
 [proc,pk_skull](int $duration)
@@ -35,11 +38,16 @@ if (~deserves_pk_skull = true) {
 %pk_skull = add(map_clock, $duration);
 clearsofttimer(pk_skull_timer);
 softtimer(pk_skull_timer, $duration);
+// pvp-sdk: the guards watch skulled players (pvp_world.rs2)
+clearsofttimer(dmm_guard_check);
+softtimer(dmm_guard_check, ^dmm_guard_interval);
 
 [proc,clear_pk_skull]
 ~headicon_del(^headicon_skull);
 clearsofttimer(pk_skull_timer);
 %pk_skull = 0;
+clearsofttimer(dmm_guard_check); // pvp-sdk
+%dmm_guard_hits = 0;
 
 [softtimer,pk_skull_timer]
 ~clear_pk_skull;

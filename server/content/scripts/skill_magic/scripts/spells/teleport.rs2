@@ -120,6 +120,11 @@ if(inv_total(inv, thanainabarrel) > 0) {
 }
 
 [proc,pre_tele_checks](coord $coord)(boolean)
+// pvp-sdk: no teleporting out of a PvP fight (pvp_world.rs2)
+if (~pvp_teleport_locked = true) {
+    mes("You can't teleport so soon after fighting another player.");
+    return(false);
+}
 if (~in_tutorial_island(coord) = true) {
     ~mesbox("You cannot teleport from Tutorial Island!"); // https://youtu.be/tt38tH6X30E?t=64
     return(false);

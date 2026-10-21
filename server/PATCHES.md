@@ -389,22 +389,43 @@ Upgrade hazards:
 
 ## PvP world (pvp-sdk fork)
 
-The fork's game-mode changes. Upstream rs-sdk merges (`git fetch upstream && git merge
-upstream/main`) touch the same vendored files, so walk this list after every merge as well.
-Design and roadmap: `docs/PVP_PLAN.md`.
+The fork's game-mode changes, Deadman Mode-style (`docs/DEADMAN.md`). Upstream rs-sdk merges
+(`git fetch upstream && git merge upstream/main`) touch the same vendored files, so walk this
+list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
 
-- [ ] **`scripts/pvp_world/`** (fork-only) — `pvp_world.constant` (`^pvp_combat_range` 15,
-      `^pvp_protection_duration` 100 ticks), `pvp_safe_zones.dbrow` (Lumbridge castle and courtyard),
-      `pvp_world.varp` (`pvp_protection`, varp **1001**, transmitted), `pvp_world.rs2`
-      (`~pvp_in_safe_zone`: that table + `bank_zones` + Tutorial Island + Duel Arena + Castle Wars;
-      spawn protection start/end).
+- [ ] **`scripts/pvp_world/`** (fork-only):
+      - `pvp_world.constant`: `^pvp_combat_range` 15, `^pvp_protection_duration` 100,
+        `^pvp_teleport_lock` 24, `^dmm_guard_interval` 2, `^dmm_max_keys` 5, `^dmm_key_stacks` 10.
+      - `pvp_safe_zones.dbrow`: the guarded towns (Lumbridge, Varrock, Falador, East Ardougne,
+        Yanille) and the Seers'/Catherby banks.
+      - `pvp_world.varp`: `pvp_protection` (**1001**, transmitted), `pvp_combat_clock` (**1002**),
+        `dmm_guard_hits` (**1003**).
+      - `pvp_world.rs2`: `~pvp_in_safe_zone` (that table + Tutorial Island + Duel Arena + Castle
+        Wars), spawn protection, the `dmm_guard_check` softtimer, `~pvp_teleport_locked`.
+      - `dmm_bank_keys.rs2/.inv/.obj`: bank raids, key transfer, the Bank key's Open/Check/Destroy.
+- [ ] **Reserved ids for the bank keys** (saves store them by id, so never renumber):
+      invs `dmm_key_1..5` **1000-1004** and `dmm_raid` **1005** in `inv.pack`; obj
+      `dmm_bank_key` **10000** in `obj.pack` (upstream's objs end at 4088 in 289 and ~6.5k by
+      377). The packers write the gaps as empty entries.
 - [ ] **`skill_combat/scripts/pvp/pvp_combat.rs2` `~pvp_level_check`** — the whole world is a
       combat zone: refuses safe areas (attacker or target), a protected target, and gaps above
       `^pvp_combat_range` + wilderness level. **This proc is the only PvP gate** — the engine
       never checks that the Attack op is set (`OpPlayerHandler` todo), so menu changes are cosmetic.
-- [ ] **`skill_combat/scripts/pvp/pk_skull.rs2` `set_pk_vars`** — attacking ends spawn protection.
-- [ ] **`player/scripts/death.rs2`** — every death respawns at full health with spawn
-      protection (upstream respawns pvp deaths at 1hp via `pvp_death_mark`, now unused there).
+- [ ] **`skill_combat/scripts/pvp/pk_skull.rs2`** — `set_pk_vars` ends spawn protection and
+      stamps `pvp_combat_clock` on both players; `~pk_skull` starts and `~clear_pk_skull` stops
+      the guard softtimer.
+- [ ] **`player/scripts/death.rs2`** — reads the skull before anything clears it, then
+      `~dmm_death_to_player`/`~dmm_death_to_npc` (keys and bank raid); `pvp_death_lose_items`
+      keeps nothing; `player_death_lose_items` keeps 3 only when unskulled and ignores Protect
+      Item; every death respawns at full health with spawn protection (upstream respawns pvp
+      deaths at 1hp via `pvp_death_mark`, now unused there).
+- [ ] **`skill_magic/scripts/spells/teleport.rs2` `~pre_tele_checks`** — the PvP teleport lock.
+      Every teleport (spells, jewellery, quest items) goes through this proc.
+- [ ] **`login_logout/login.rs2`** — `~dmm_sync_key_tokens` so Bank key objs match the keys held.
+- [ ] **`engine/tools/pack/SourceSnapshot.ts`** — reads the running max mtime *after* awaiting
+      each stat. Before, concurrent stats raced and an older file could overwrite a newer one,
+      so a new config was sometimes left unregistered ("cannot be resolved to a game variable")
+      until something else touched its pack. Upstream tooling bug; drop once fixed there.
 - [ ] **Attack op everywhere** — `login_logout/login.rs2` always sets op 2 "Attack";
       `area_wilderness/scripts/wilderness.rs2` `wilderness_exit` no longer clears it;
       `game_castlewars` `castlewars_mapzoneexit` and `game_duelarena` `toggle_duel_challenge_off`
@@ -412,7 +433,7 @@ Design and roadmap: `docs/PVP_PLAN.md`.
       After a sync, grep for new `set_player_op(null, 2` callers.
 - [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`
       from the repo root (needs built content). Server refusal wording is mirrored in
-      `sdk/actions-helpers.ts` `PVP_REFUSALS` — change both together.
+      `sdk/actions-helpers.ts` `PVP_REFUSALS` and in `RULES.md` — change them together.
 
 ---
 

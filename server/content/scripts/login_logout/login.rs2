@@ -51,6 +51,8 @@ queue(macro_event_login, 0, 0);
 ~set_pk_skull_login;
 // so the pvp 1hp-respawn mark persists after logging back in
 ~set_pvp_death_mark_login;
+// pvp-sdk: the Bank key objs mirror the keys a player holds (dmm_bank_keys.rs2)
+~dmm_sync_key_tokens;
 // so antifire persists after logging back in
 ~set_antifire_login;
 // if player is in a duel, they are removed from the duel

@@ -1,6 +1,21 @@
-// pvp-sdk: areas where nobody can attack or be attacked, on top of the banks
-// (bank_zones), Tutorial Island and the minigame lobbies (see ~pvp_in_safe_zone).
+// pvp-sdk: Deadman-style safe areas. Nobody attacks into or out of them, and the
+// guards shoot skulled players inside (see ~pvp_in_safe_zone, which also counts
+// Tutorial Island, the Duel Arena and Castle Wars). Edgeville and other banks
+// outside these towns are not safe, as in Deadman.
 [pvp_safe_zones]
 table=coord_pair_table
-// Lumbridge castle and its courtyard, where every death respawns
-data=coord_pair,0_50_50_0_0,3_50_50_28_37
+// Lumbridge, where every death respawns: castle, courtyard and town (x 3200-3240, z 3200-3260)
+data=coord_pair,0_50_50_0_0,3_50_50_40_60
+// Varrock (x 3175-3290, z 3380-3505)
+data=coord_pair,0_49_52_39_52,3_51_54_26_49
+// Falador (x 2940-3065, z 3305-3395)
+data=coord_pair,0_45_51_60_41,3_47_53_57_3
+// East Ardougne (x 2560-2690, z 3260-3340)
+data=coord_pair,0_40_50_0_60,3_42_52_2_12
+// Yanille (x 2530-2625, z 3070-3110)
+data=coord_pair,0_39_47_34_62,3_41_48_1_38
+// Seers' Village bank
+data=coord_pair,0_42_54_33_34,1_42_54_42_41
+data=coord_pair,0_42_54_36_31,0_42_54_39_33
+// Catherby bank
+data=coord_pair,0_43_53_54_46,0_43_53_60_53
