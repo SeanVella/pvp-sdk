@@ -1,8 +1,8 @@
 # ai.txt
 
-Responsible security pen-testing is welcome on the rs-sdk demo server.
+Responsible security pen-testing is welcome on the pvp-sdk server.
 Please don't break things, delete data, or disrupt the service.
-Report anything you find: https://github.com/maxbittker/rs-sdk/issues
+Report anything you find: https://github.com/SeanVella/pvp-sdk/issues
 
 Out of scope: 
 Underlying fly.io infrastructure, phishing/social engineering attacks. 

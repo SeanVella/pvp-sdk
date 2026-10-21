@@ -51,7 +51,7 @@ describe('preferDirectGateway', () => {
 
     test('the public demo server has a direct gateway, keyed by its derived URL', () => {
         // HTTP helpers keep deriving from the relayed origin; only the socket moves.
-        expect(deriveGatewayUrl('rs-sdk-demo.fly.dev')).toBe('wss://rs-sdk-demo.fly.dev/gateway');
+        expect(deriveGatewayUrl('pvp-sdk.fly.dev')).toBe('wss://pvp-sdk.fly.dev/gateway');
     });
 });
 
