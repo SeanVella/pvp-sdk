@@ -50,8 +50,11 @@ export class SourceSnapshot {
                 }
 
                 const key = makeKey(root, ext);
-                const current = this.latest.get(key) ?? 0;
                 const modified = (await fs.stat(target)).mtimeMs;
+                // Read the running max after the await: the stats resolve concurrently, so a
+                // value read before it can be stale and a late, older file would overwrite
+                // a newer one, leaving new configs unregistered until something else changes.
+                const current = this.latest.get(key) ?? 0;
                 if (modified > current) {
                     this.latest.set(key, modified);
                 }
