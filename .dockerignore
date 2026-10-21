@@ -1,3 +1,6 @@
+# This file must sit at the build-context root (the repo root): Fly's Depot/BuildKit
+# builder only reads .dockerignore from there and ignores fly.toml's `ignorefile`.
+# Without it every deploy uploads .git and host node_modules into the image.
 .git/
 node_modules/
 server/engine/node_modules/
@@ -17,6 +20,14 @@ jobs/
 learnings/
 mcp/
 scripts/
+wiki/
+.agents/
+.claude/
+.codex/
+.gemini/
+.github/
+.tmp/
+.vscode/
 
 # Dev/test files inside server
 server/scripts/

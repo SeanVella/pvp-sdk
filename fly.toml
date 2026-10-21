@@ -1,18 +1,18 @@
-app = "rs-sdk-demo"
+app = "pvp-sdk"
 primary_region = "iad"
 kill_timeout = "120s"
 
 [build]
 dockerfile = "server/Dockerfile"
-ignorefile = "server/.dockerignore"
+ignorefile = ".dockerignore"
 
 [env]
 # SDK bug reports land on the mounted volume so they survive deploys/restarts.
 BUG_REPORTS_FILE = "/opt/server/data/bug-reports.jsonl"
 # Grand Exchange escrow and authoritative player checkpoints survive redeploys.
 GE_DATABASE = "/opt/server/data/market.sqlite"
-# Preserve existing exclusions and keep imported local test presets off every board.
-HISCORES_HIDDEN_NAMES = "georgedroyd,groyper,testsave47,maxbittker,max,ironpick,goldsmith,goldfish,goldfletch,goldvanilla"
+# Comma-separated usernames kept off every hiscores board (e.g. staff or test accounts).
+HISCORES_HIDDEN_NAMES = ""
 NODE_DEBUG = "true"
 BUILD_STARTUP = "false"
 BUILD_STARTUP_UPDATE = "false"
@@ -36,11 +36,14 @@ GATEWAY_PUBLIC_PORT = "7781"
 # Fly-Client-IP, which clients can't spoof.
 MAX_PLAYERS_PER_IP = "100"
 
+# One machine is the whole world: never auto-stop it, and never run a second
+# copy (a second machine would be a separate, empty world with its own volume).
 [http_service]
 auto_start_machines = true
+auto_stop_machines = "off"
 force_https = true
 internal_port = 8080
-min_machines_running = 0
+min_machines_running = 1
 
 [[mounts]]
 destination = "/opt/server/data"
@@ -53,7 +56,7 @@ protocol = "tcp"
   [[services.ports]]
   port = 43594
 
-# SDK gateway, direct: wss://rs-sdk-demo.fly.dev:7443. Compressed state frames,
+# SDK gateway, direct: wss://pvp-sdk.fly.dev:7443. Compressed state frames,
 # and the relay work stays off the game server's tick thread. The SDK and lite
 # runner prefer it and fall back to wss://.../gateway if it is unreachable.
 [[services]]
@@ -64,6 +67,9 @@ protocol = "tcp"
   port = 7443
   handlers = ["tls", "http"]
 
+# Target is performance-1x (dedicated CPU keeps the tick steady); new Fly orgs are
+# refused performance machines until billing unlocks them, so start on shared CPU:
+#   fly scale vm performance-1x --memory 2048 -a pvp-sdk
 [[vm]]
-memory = "4gb"
-size = "performance-2x"
+memory = "2gb"
+size = "shared-cpu-2x"

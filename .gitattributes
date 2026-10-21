@@ -1,0 +1,5 @@
+# Files that run inside the Linux image must stay LF even on Windows checkouts
+# (core.autocrlf=true). A CRLF Dockerfile turns the heredoc entrypoint's shebang
+# into "#!/bin/bash\r", and the machine crash-loops on "entrypoint.sh: not found".
+server/Dockerfile text eol=lf
+*.sh text eol=lf
