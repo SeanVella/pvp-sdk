@@ -18,9 +18,14 @@ import type {
 /**
  * Server refusals that stop a PvP attack or spell before it happens, lowercased.
  * From `~pvp_is_attackable` and friends in
- * server/content/scripts/skill_combat/scripts/pvp/pvp_combat.rs2.
+ * server/content/scripts/skill_combat/scripts/pvp/pvp_combat.rs2 and the
+ * pvp-sdk world rules in server/content/scripts/pvp_world/scripts/pvp_world.rs2.
  */
 export const PVP_REFUSALS = [
+    "you can't attack other players from a safe area",
+    'that player is in a safe area',
+    'that player has just respawned and is protected',
+    // upstream (wilderness-only) servers
     "you can't attack players who aren't in the wilderness",
     'your level difference is too great',
     "i'm already under attack",

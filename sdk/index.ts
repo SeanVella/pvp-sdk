@@ -89,6 +89,7 @@ export function deriveGatewayUrl(server?: string): string {
 // smaller. Keyed by the relayed URL deriveGatewayUrl produces; HTTP endpoints
 // keep using the relayed origin.
 const DIRECT_GATEWAYS: Record<string, string> = {
+    'wss://pvp-sdk.fly.dev/gateway': 'wss://pvp-sdk.fly.dev:7443',
     'wss://rs-sdk-demo.fly.dev/gateway': 'wss://rs-sdk-demo.fly.dev:7443',
 };
 const directGatewayChecks = new Map<string, Promise<string>>();
@@ -1136,7 +1137,7 @@ export class BotSDK {
         return this.sendAction({ type: 'interactNpc', npcIndex, optionIndex: option, reason: 'SDK' });
     }
 
-    /** Interact with a player by index and option (1-5). Option 2 = Attack (wilderness), 3 = Follow, 4 = Trade. */
+    /** Interact with a player by index and option (1-5). Option 2 = Attack, 3 = Follow, 4 = Trade. */
     async sendInteractPlayer(playerIndex: number, option: number = 2): Promise<ActionResult> {
         return this.sendAction({ type: 'interactPlayer', playerIndex, optionIndex: option, reason: 'SDK' });
     }

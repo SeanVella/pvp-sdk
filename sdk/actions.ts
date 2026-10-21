@@ -2895,9 +2895,11 @@ export class BotActions {
      * await bot.attack(sdk.findNearbyPlayer('Zezima')!);
      * ```
      *
-     * PvP attacks are refused outside the wilderness and across too big a level
-     * gap; those come back as `reason: 'not_attackable'` with the server's own
-     * wording in `message`.
+     * PvP attacks work anywhere outside safe areas (banks, Lumbridge castle,
+     * Tutorial Island, minigame lobbies) within 15 combat levels, plus one per
+     * Wilderness level. Refusals - a safe area, spawn protection, too big a level
+     * gap - come back as `reason: 'not_attackable'` with the server's own wording
+     * in `message`.
      */
     async attack(target: CombatTarget, timeout: number = 5000): Promise<AttackResult> {
         await this.dismissBlockingUI();
@@ -3070,16 +3072,18 @@ export class BotActions {
             (event.observationId ?? event.tick) > startRevision;
         const msgBaseline = this.helpers.getMessageTick();
 
-        const engaged = (state: NonNullable<ReturnType<BotSDK['getState']>>) =>
-            (state.player?.combat.inCombat === true &&
-                state.player.combat.targetType === 'player' &&
-                state.player.combat.targetIndex === player.index) ||
+        const hitRequestedTarget = (state: NonNullable<ReturnType<BotSDK['getState']>>) =>
             state.combatEvents.some(event =>
                 eventAfterStart(event) &&
                 event.type === 'damage_dealt' &&
                 event.targetType === 'other_player' &&
                 event.targetIndex === player.index
             );
+        const engaged = (state: NonNullable<ReturnType<BotSDK['getState']>>) =>
+            (state.player?.combat.inCombat === true &&
+                state.player.combat.targetType === 'player' &&
+                state.player.combat.targetIndex === player.index) ||
+            hitRequestedTarget(state);
 
         const result = await this.sdk.sendInteractPlayer(player.index, 2);
         if (!result.success) {
@@ -3124,9 +3128,10 @@ export class BotActions {
             const refusal = this.helpers.findPvpRefusal(msgBaseline);
             if (refusal) {
                 // Auto-retaliate can land a hit in the same tick the server
-                // refuses the manual attack; only requested-target evidence
-                // turns the refusal into success.
-                if (engagedRequestedTarget) {
+                // refuses the manual attack, so a hit on the requested target
+                // still turns the refusal into success. Facing it doesn't: the
+                // server turns us toward the target before its rules refuse.
+                if (hitRequestedTarget(finalState)) {
                     return { success: true, message: `Already fighting ${player.name}`, targetType };
                 }
                 const alreadyFighting = ALREADY_FIGHTING_REFUSALS.some(text => refusal.toLowerCase().includes(text));

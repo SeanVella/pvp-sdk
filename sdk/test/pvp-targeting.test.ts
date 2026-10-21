@@ -40,9 +40,11 @@ interface StateOptions {
     engaged?: 'npc' | 'player';
     message?: string;
     magicXp?: number;
+    /** A damage_dealt event on the rival after the attack started. */
+    hitRival?: boolean;
 }
 
-function state({ engaged, message, magicXp = 0 }: StateOptions) {
+function state({ engaged, message, magicXp = 0, hitRival = false }: StateOptions) {
     return {
         tick: message ? 2 : 1,
         revision: message ? 2 : 1,
@@ -64,7 +66,9 @@ function state({ engaged, message, magicXp = 0 }: StateOptions) {
         gameMessages: message
             ? [{ tick: 2, text: message, type: 0, sender: '', fromSelf: false }]
             : [],
-        combatEvents: [],
+        combatEvents: hitRival
+            ? [{ tick: 2, observationId: 2, type: 'damage_dealt', targetType: 'other_player', targetIndex: rival.index, damage: 1 }]
+            : [],
         dialog: { isOpen: false, options: [], isWaiting: false },
         interface: { isOpen: false, interfaceId: -1, options: [] },
         shop: { isOpen: false },
@@ -118,7 +122,36 @@ describe('BotActions.attack target dispatch', () => {
         expect(result).toMatchObject({ success: false, reason: 'timeout', targetType: 'player' });
     });
 
-    test('reports the wilderness refusal instead of a silent no-op', async () => {
+    test('reports the safe-area refusal instead of a silent no-op', async () => {
+        const harness = createBot(state({ message: 'That player is in a safe area.' }));
+        const result = await harness.bot.attack(rival);
+
+        expect(result).toMatchObject({ success: false, reason: 'not_attackable', targetType: 'player' });
+        expect(result.message).toContain('safe area');
+    });
+
+    test('reports spawn protection and attacking from a safe area as not attackable', async () => {
+        for (const message of ['That player has just respawned and is protected.', "You can't attack other players from a safe area."]) {
+            const result = await createBot(state({ message })).bot.attack(rival);
+            expect(result).toMatchObject({ success: false, reason: 'not_attackable', targetType: 'player' });
+        }
+    });
+
+    test('a refusal is not success just because the server turned us toward the target', async () => {
+        // The engine faces the target before the pvp rules refuse, so the client
+        // briefly reports it as our combat target.
+        const result = await createBot(state({ engaged: 'player', message: 'That player is in a safe area.' })).bot.attack(rival);
+
+        expect(result).toMatchObject({ success: false, reason: 'not_attackable', targetType: 'player' });
+    });
+
+    test('a hit on the target still wins over a same-tick refusal', async () => {
+        const result = await createBot(state({ engaged: 'player', hitRival: true, message: "I'm already under attack." })).bot.attack(rival);
+
+        expect(result).toMatchObject({ success: true, targetType: 'player' });
+    });
+
+    test('still reports the wilderness refusal from upstream servers', async () => {
         const harness = createBot(state({ message: "You can't attack players who aren't in the wilderness." }));
         const result = await harness.bot.attack(rival);
 

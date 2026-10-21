@@ -366,6 +366,7 @@ function deriveGatewayUrl(server: string): string {
 // gateway's own TLS port when it answers (compressed frames, no relay through
 // the game server's tick thread), else keep the relayed /gateway URL.
 const DIRECT_GATEWAYS: Record<string, string> = {
+    'wss://pvp-sdk.fly.dev/gateway': 'wss://pvp-sdk.fly.dev:7443',
     'wss://rs-sdk-demo.fly.dev/gateway': 'wss://rs-sdk-demo.fly.dev:7443',
 };
 async function preferDirectGateway(url: string): Promise<string> {

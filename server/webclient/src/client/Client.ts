@@ -1158,7 +1158,7 @@ export class Client extends GameShell {
 
     /**
      * Interact with a player using a specific option (1-5)
-     * Option 2 is Attack (wilderness only), Option 3 is Follow, Option 4 is Trade
+     * Option 2 is Attack, Option 3 is Follow, Option 4 is Trade
      */
     interactPlayer(playerIndex: number, optionIndex: number): ClientActionResult {
         if (!this.ingame || !this.out || !this.localPlayer) {
