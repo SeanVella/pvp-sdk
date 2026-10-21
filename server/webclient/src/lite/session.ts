@@ -12,6 +12,8 @@
 // a remote hang-up, which leaves `available` at 0 forever, and a socket that goes
 // quiet without closing. A single bad packet is not an ending; see handlePacket.
 
+import { homedir } from 'node:os';
+
 import './dom-shim.js';
 import { loginJitterMs } from './LoginBackoff.js';
 
@@ -106,7 +108,8 @@ export async function startSession(opts: SessionOptions): Promise<LiteSession> {
     }
     const secured = opts.secured ?? !(opts.host.startsWith('localhost') || opts.host.startsWith('127.'));
     const origin = `${secured ? 'https' : 'http'}://${opts.host}`;
-    const cacheDir = opts.cacheDir ?? `${process.env.HOME}/.cache/rs-sdk-lite`;
+    // homedir(), not $HOME: Windows doesn't set HOME, which put the cache in ./undefined/.
+    const cacheDir = opts.cacheDir ?? `${homedir()}/.cache/rs-sdk-lite`;
 
     // Fail with the fix, not a decode error or an opaque login response 6, when the server
     // has moved to another revision. Servers without /api/version skip the check.
