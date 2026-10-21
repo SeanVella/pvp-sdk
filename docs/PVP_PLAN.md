@@ -60,7 +60,11 @@ protection that blocks the killer, and protection running out.
       `pvp-sdk.fly.dev`; web UI links point at this repo. `bot.attack()` no longer reports a
       refused PvP attack as success just because the server turned us toward the target.
 - [x] Fix upstream CI break (`NearbyPlayer` combat-target fields missing from the webclient type).
-- [ ] Deploy the rules to pvp-sdk.fly.dev and smoke-test with two bots there.
+- [x] Deploy the rules to pvp-sdk.fly.dev and smoke-test with two bots there (safe-zone
+      refusals and an attack in the open, through the direct gateway on :7443).
+- [ ] **Add a payment method to the Fly account** (<https://fly.io/trial>). The org is on the
+      trial: Fly stops machines after 5 minutes ("Trial machine stopping") and refuses
+      performance VMs, so the world can't stay up until then.
 - [ ] Merge `pvp-world` into `main`.
 - [ ] `bun run test` on Windows: 13 webclient tests fail with `document is not defined`
       (`graphics/Jpeg.ts` loads before the DOM shim when every file shares one process).
