@@ -2895,8 +2895,8 @@ export class BotActions {
      * await bot.attack(sdk.findNearbyPlayer('Zezima')!);
      * ```
      *
-     * PvP attacks work anywhere outside safe areas (banks, Lumbridge castle,
-     * Tutorial Island, minigame lobbies) within 15 combat levels, plus one per
+     * PvP attacks work anywhere outside safe areas (the guarded towns, Tutorial
+     * Island, minigame areas; see RULES.md) within 15 combat levels, plus one per
      * Wilderness level. Refusals - a safe area, spawn protection, too big a level
      * gap - come back as `reason: 'not_attackable'` with the server's own wording
      * in `message`.

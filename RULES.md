@@ -1,7 +1,9 @@
 # PvP-SDK rules
 
-On this server **the whole world is a PvP area**. Any player can attack any other player almost
-anywhere, not just in the Wilderness. These are the exact rules the server enforces: they live in
+On this server **the whole world is a PvP area**, with rules modelled on Old School RuneScape's
+[Deadman Mode](docs/DEADMAN.md). Any player can attack any other player almost anywhere,
+guarded towns are the only safe places, and dying while skulled hands part of your bank to
+your killer. These are the exact rules the server enforces: they live in
 [`server/content/scripts/pvp_world/`](server/content/scripts/pvp_world) and
 [`pvp_combat.rs2`](server/content/scripts/skill_combat/scripts/pvp/pvp_combat.rs2).
 
@@ -9,11 +11,14 @@ Times are given in game ticks. The server ticks every **300 ms**, so 100 ticks i
 
 | Rule | |
 |---|---|
-| Where you can fight | Everywhere except the [safe areas](#safe-areas) |
+| Where you can fight | Everywhere except the [safe areas](#safe-areas): five guarded towns, two banks and a few minigame areas |
 | Who you can attack | Players within **15 combat levels** of you; **15 + Wilderness level** inside the Wilderness |
-| Spawn protection | 100 ticks (30 s) after respawning; ends early if you attack someone |
-| Death | Keep your 3 most valuable items (4 with Protect Item, 0 if skulled); respawn in Lumbridge at full health |
+| Guards | A **skulled** player in a safe area is shot until they leave or die |
+| Death | A death to a player keeps **nothing**. A death to an NPC keeps your 3 most valuable items, or nothing if skulled. Protect Item doesn't help |
+| Bank keys | Die **skulled** and your 10 most valuable bank stacks go to your killer as a Bank key |
 | Skull | Attacking someone who didn't attack you first skulls you for 2000 ticks (10 min) |
+| Teleporting | Blocked for 24 ticks (7.2 s) after any PvP hit |
+| Spawn protection | 100 ticks (30 s) after respawning; ends early if you attack someone |
 | Combat | Single-combat everywhere except the [multi-combat areas](#multi-combat-areas) |
 
 ## Who can attack whom
@@ -41,68 +46,82 @@ and Castle Wars only lets you attack the other team.
 Nobody can attack **into** or **out of** a safe area. Coordinates are inclusive world coordinates
 (`x`, `z`); "levels" are floors (0 = ground).
 
-### Respawn point
-
 | Area | Bounds |
 |---|---|
-| Lumbridge castle and its courtyard | x 3200-3228, z 3200-3237 (levels 0-3) |
+| Lumbridge (castle, courtyard and town; everyone respawns here) | x 3200-3240, z 3200-3260 (levels 0-3) |
+| Varrock | x 3175-3290, z 3380-3505 (levels 0-3) |
+| Falador | x 2940-3065, z 3305-3395 (levels 0-3) |
+| East Ardougne | x 2560-2690, z 3260-3340 (levels 0-3) |
+| Yanille | x 2530-2625, z 3070-3110 (levels 0-3) |
+| Seers' Village bank | x 2721-2730, z 3490-3497 (levels 0-1)<br>x 2724-2727, z 3487-3489 (level 0) |
+| Catherby bank | x 2806-2812, z 3438-3445 (level 0) |
+| Tutorial Island | x 3053-3156, z 3056-3136 (all levels)<br>x 3072-3118, z 9492-9535 (underground) |
+| Duel Arena | x 3328-3393, z 3203-3325 (level 0); duels still work |
+| Castle Wars | x 2368-2431, z 3072-3135 (all levels)<br>x 2368-2431, z 9472-9535 (level 0); games still work |
 
-### Banks
+**Every other bank is dangerous**, including Edgeville, Draynor, Al Kharid and the Gnome
+Stronghold, as in Deadman Mode. The towns' banks are safe because the towns are.
 
-| Bank | Bounds |
-|---|---|
-| Varrock East | x 3250-3257, z 3416-3424 (levels 0-1)<br>x 3253, z 3425-3427 (level 0) |
-| Varrock West | x 3180-3190, z 3433-3447 (levels 0-1) |
-| Al Kharid | x 3265-3272, z 3161-3173 (level 0) |
-| Draynor Village | x 3088-3097, z 3240-3246 (level 0) |
-| Falador East | x 3009-3021, z 3353-3356 (level 0)<br>x 3011-3014, z 3357-3358 (level 0) |
-| Falador West | x 2945-2949, z 3359-3373 (level 0, several boxes)<br>x 2945-2949, z 3362-3369 (level 1) |
-| Edgeville | x 3091-3098, z 3488-3499 (level 0) |
-| Seers' Village | x 2721-2730, z 3490-3497 (levels 0-1)<br>x 2724-2727, z 3487-3489 (level 0) |
-| Catherby | x 2806-2812, z 3438-3445 (level 0) |
-| Yanille | x 2609-2616, z 3088-3097 (level 0) |
-| Ardougne West | x 2612-2621, z 3330-3335 (level 0) |
-| Ardougne East | x 2649-2658, z 3280-3287 (levels 0-2) |
-| Shilo Village | x 2843-2861, z 2951-2957 (levels 0-1) |
-| Gnome Stronghold | x 2443-2448, z 3415-3434 (level 1)<br>x 2440-2453, z 3416-3496 (level 1, tree banks) |
-| Mage Arena | x 2529-2546, z 4711-4723 (level 0) |
-| Shantay Pass | x 3308-3309, z 3119-3121 (level 0) |
-| Fishing Guild | x 2586-2587, z 3418-3422 (level 0) |
-| Zanaris | x 3148-3155, z 9573-9582 (level 0) |
-| Duel Arena | x 3380-3384, z 3267-3271 (level 0) |
+### Guards
 
-These are the bank interiors from
-[`bank_zones.dbrow`](server/content/scripts/skill_firemaking/configs/bank_zones.dbrow). The street
-outside a bank is not safe.
+A **skulled** player inside a safe area is shot by the guards every 2 ticks until they leave or
+die. The first hit takes a fifth of their base hitpoints, and each hit after that does 2 more.
+The messages are "The guards attack you for bringing a skull into a safe area!" and "Leave the
+area or they will kill you." Losing your skull (it runs out, or you die) ends it.
 
-### Other safe areas
+## Death
 
-| Area | Bounds | Notes |
+| How you died | What you keep | Your bank |
 |---|---|---|
-| Tutorial Island | x 3053-3156, z 3056-3136 (all levels)<br>x 3072-3118, z 9492-9535 (underground) | Where new accounts start |
-| Duel Arena | x 3328-3393, z 3203-3325 (level 0) | The whole compound, including the lobby; duels still work |
-| Castle Wars | x 2368-2431, z 3072-3135 (all levels)<br>x 2368-2431, z 9472-9535 (level 0) | Game areas and waiting rooms; games still work |
+| Killed by a player, not skulled | **Nothing** | Safe |
+| Killed by a player while skulled | **Nothing** | **10 most valuable stacks** go to the killer as a Bank key |
+| Killed by an NPC, not skulled | Your 3 most valuable items | Safe |
+| Killed by an NPC or the guards while skulled | **Nothing** | **10 most valuable stacks** drop where you died, for anyone |
+
+- The Protect Item prayer doesn't save an extra item.
+- Items you lose drop where you died. Tradeable items appear for your killer first and for
+  everyone else a while later; untradeable items drop for you.
+- If a player had damaged you, a death to the guards counts as a death to that player.
+- You respawn in **Lumbridge at full health**, with spawn protection.
+
+## Bank keys
+
+When a **skulled** player dies, their **10 most valuable tradeable bank stacks** (by store value)
+are taken from their bank. If a player killed them, the stacks go into a **Bank key** for that
+player. Otherwise they drop where the player died.
+
+- A Bank key has three options: **Open** sends its stacks to your bank (or to the floor at your
+  feet if the bank is full), **Check** lists its stacks, and **Destroy** throws it and everything
+  in it away.
+- Keys only open **inside a safe area** and **while you're not skulled**. A skulled player can't
+  stay in a safe area because of the guards, so a killer who attacked first has to survive until
+  their skull wears off before they can cash in.
+- You can carry at most **5 keys**. They can't be banked or traded.
+- Kill someone carrying keys and you take their keys. Keys that don't fit drop for you.
+- Die to an NPC with keys and the keys are destroyed.
+
+## Skulls
+
+Attacking a player who hasn't attacked you first gives you a **skull** for **2000 ticks
+(10 minutes)**. Fighting back against someone who attacked you doesn't skull you, and the skull
+timer survives logging out. While skulled:
+
+- the guards attack you in safe areas;
+- dying makes your bank raidable, as described under [Bank keys](#bank-keys);
+- you can't open Bank keys.
+
+## Teleporting
+
+For **24 ticks (7.2 seconds)** after hitting or being hit by another player, no teleport works:
+spells, jewellery or anything else. The message is "You can't teleport so soon after fighting
+another player." In the Wilderness the usual limits also apply: no teleports above level 20
+(amulet of glory: above 30), and a ring of life doesn't save you above level 30.
 
 ## Spawn protection
 
 For **100 ticks (30 s)** after you respawn, nobody can attack you, so the respawn point can't be
 camped. You see "You are protected from other players for a short while." and later "You are no
 longer protected from other players." Attacking another player ends your protection immediately.
-
-## Death
-
-- You keep your **3 most valuable items**, or **4** with the Protect Item prayer. If you are
-  **skulled** you keep **nothing** (plus 1 with Protect Item).
-- Everything else drops where you died. Tradeable items appear for your killer first and for
-  everyone else a while later; untradeable items drop for you instead.
-- You respawn in **Lumbridge castle's courtyard at full health**, with spawn protection.
-
-## Skulls
-
-Attacking a player who hasn't attacked you first gives you a **skull** for **2000 ticks
-(10 minutes)**. A skull doesn't stop you from doing anything, but if you die while skulled you
-keep no items (except one with Protect Item). Fighting back against someone who attacked you
-doesn't skull you, and the skull timer survives logging out.
 
 ## Multi-combat areas
 
@@ -117,18 +136,14 @@ Wizards' Tower, the Asgarnia chaos temple, White Wolf Mountain, the Ranging Guil
 Necromancer tower, the Gnome battlefield, the Varrock sewer, the Ice Queen's lair, the Temple of
 Ikov and Legends' Quest dungeons, Rashiliyia's tomb (Shilo Village), the Elemental Workshop, Death
 Plateau, Trollheim, the Kalphite Queen's chamber and burrow, the Lighthouse dungeon, Ape Atoll, the
-Haunted Mine boss area and Castle Wars.
+Haunted Mine boss area and Castle Wars. (Falador is also a safe town, so you can't fight there.)
 
 The exact tiles are listed in [`multiway.csv`](server/content/maps/multiway.csv).
 
 ## The Wilderness
 
 The Wilderness starts north of the ditch at z 3520 (x 2944-3391), and underground at z 9920. Every
-8 tiles north is one more level. It is still the place for big level gaps, and it keeps the
-original restrictions:
-
-- No teleport spells or jewellery teleports above level 20 (amulet of glory: above 30).
-- A ring of life doesn't save you above level 30.
+8 tiles north is one more level. It is still the place for big level gaps.
 
 ## Logging out
 
@@ -148,6 +163,15 @@ messages with `reason: 'not_attackable'` (or `'already_in_combat'` for the singl
 | Your level difference is too great! | Outside the combat-level range |
 | I'm already under attack. | Single-combat: someone else is fighting you |
 | Someone else is already fighting your opponent. | Single-combat: your target is busy |
+
+Other messages to watch for:
+
+| Message | Meaning |
+|---|---|
+| The guards attack you for bringing a skull into a safe area! | Leave the safe area now |
+| You can't teleport so soon after fighting another player. | Teleport lock |
+| You take a bank key from your victim. | You killed a skulled player (or a key holder) |
+| You can't open a bank key while you're skulled. / Bank keys can only be opened in a safe area. | Wait, or move |
 
 ## Other server settings
 

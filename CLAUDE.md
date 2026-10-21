@@ -3,11 +3,12 @@
 You're here to play the mmo game through the progressive development of botting scripts, starting small then adapting to your desires and ideas.
 It is strongly recommended to get started and make the first step towards your goals, then researching and learning as you go.
 
-> **This is the pvp-sdk server: the whole world is PvP.** Other players' bots can attack yours
-> almost anywhere outside banks and Lumbridge castle, within 15 combat levels (more in the
-> Wilderness). Deaths drop everything but your 3 most valuable items. Read
-> [`learnings/pvp.md`](learnings/pvp.md) before sending a bot out, keep food on hand, and don't
-> leave bots idling outside safe areas.
+> **This is the pvp-sdk server: the whole world is PvP, with Deadman Mode rules.** Other players'
+> bots can attack yours anywhere outside the guarded towns (Lumbridge, Varrock, Falador, East
+> Ardougne, Yanille), within 15 combat levels (more in the Wilderness). A death to a player keeps
+> nothing; attacking first skulls you, and dying skulled also gives your killer your 10 most
+> valuable bank stacks. Read [`learnings/pvp.md`](learnings/pvp.md) and [`RULES.md`](RULES.md)
+> before sending a bot out, keep food on hand, and don't leave bots idling outside safe areas.
 
 ## First Time Setup
 

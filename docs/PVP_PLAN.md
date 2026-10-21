@@ -10,40 +10,51 @@ changes live in a handful of content scripts, listed in `server/PATCHES.md` unde
   MaxBittker/rs-sdk; merge `upstream/main` into `pvp-world` to sync)
 - Player-facing rules: [`RULES.md`](../RULES.md)
 
-## The rules (v1)
+## The rules (v2: Deadman Mode)
+
+v2 models the rules on Old School RuneScape's Deadman Mode; [`DEADMAN.md`](DEADMAN.md) maps
+every DMM mechanic to what we did with it.
 
 | | |
 |---|---|
 | **Where** | Anywhere except safe areas. Attack is on every player's menu. |
 | **Who** | Anyone within **15 combat levels**. Inside the Wilderness each level widens that by one (15 + level, using the shallower of the two players), so deep Wilderness is still where big level gaps meet. |
-| **Safe areas** | Banks (the `bank_zones` table), Lumbridge castle and courtyard (the respawn point), Tutorial Island, the Duel Arena compound and Castle Wars. Nobody attacks into or out of them. Duels and Castle Wars games keep their own rules between players inside them. |
-| **Spawn protection** | 100 ticks (30s at the 300ms production tick) after respawning, nobody can attack you. Attacking someone ends it early. |
-| **Death** | Unchanged RS rules: keep your 3 most valuable items (+1 with Protect Item), none when skulled; everything else drops for the killer. Respawn in Lumbridge **at full health** (upstream rs-sdk respawns PvP deaths at 1 HP; in an all-PvP world that meant long regen waits after every death). |
+| **Safe areas** | DMM-style guarded towns: Lumbridge (the respawn point), Varrock, Falador, East Ardougne and Yanille, plus the Seers' and Catherby banks; also Tutorial Island, the Duel Arena compound and Castle Wars. Nobody attacks into or out of them. Banks elsewhere (Edgeville, Draynor, ...) are not safe. |
+| **Guards** | A skulled player in a safe area is shot every 2 ticks: a fifth of their base hitpoints, then 2 more each hit, until they leave or die. |
+| **Death** | A death to a player keeps nothing. A death to an NPC keeps the 3 most valuable items, or nothing when skulled. Protect Item adds nothing. Respawn in Lumbridge **at full health** with 100 ticks (30 s) of spawn protection, which attacking ends early. |
+| **Bank keys** | Dying skulled moves the 10 most valuable tradeable bank stacks into a Bank key for the killer, or onto the floor if no player gets the credit. Keys open in a safe area while unskulled; at most 5 carried; killing a holder takes their keys. |
 | **Skulls** | Attack someone who didn't attack you first and you're skulled for 2000 ticks (10 min). |
+| **Teleport lock** | No teleports for 24 ticks (7.2 s) after any PvP hit, dealt or taken. |
 | **Multi-combat** | The original multi areas (Falador, Barbarian Village, Al Kharid, much of the Wilderness, ...). Everywhere else is single-combat: one opponent at a time, an 8-tick lock after each hit. |
 | **Wilderness** | Teleport limits (level 20, glory 30) and the ditch warning are unchanged. |
 
 All of it is decided in RuneScript. `~pvp_level_check` in
 `server/content/scripts/skill_combat/scripts/pvp/pvp_combat.rs2` is the single gate for every
 attack and combat spell outside the minigames, and `server/content/scripts/pvp_world/` holds the
-tunables (`^pvp_combat_range`, `^pvp_protection_duration`, the safe-zone table). The engine
-never checks that a player's Attack option is set, so the menu is cosmetic and the script
+rest: tunables in `pvp_world.constant`, the safe towns, guards, teleport lock and bank keys. The
+engine never checks that a player's Attack option is set, so the menu is cosmetic and the script
 checks are the real protection.
 
-Tests: `server/engine/test/pvp-world.test.ts` runs the compiled rules against in-memory
-players (level ranges, safe areas, protection). `sdk/test/pvp-targeting.test.ts` checks that
-the SDK reports every refusal as `not_attackable` instead of a silent no-op. The rules were
-also verified end to end on a local engine with two lite-client bots: refusals in and out of
-Lumbridge castle, an attack in the open, a fight to the death, a full-health respawn with
-protection that blocks the killer, and protection running out.
+Tests: `server/engine/test/pvp-world.test.ts` runs the compiled rules against in-memory players
+(level ranges, safe towns, protection, guard damage, teleport lock, bank raids, key theft and
+overflow). `sdk/test/pvp-targeting.test.ts` checks that the SDK reports every refusal as
+`not_attackable` instead of a silent no-op. End-to-end runs on a local engine with lite-client
+bots covered refusals, a fight to the death, the full-health respawn with protection, and the
+Deadman flow: skull, guards killing the skulled attacker, a key for the killer with the victim's
+coins, and the key opened in town.
 
-### Decisions taken for v1 (cheap to change)
+### Decisions taken (cheap to change)
 
-- **Range 15**, the Old School PvP-world convention. One constant.
-- **Banks are safe.** Bots have to bank to function; unsafe banks would make every bank a
-  killing floor. Remove the `bank_zones` line in `~pvp_in_safe_zone` to flip it.
+- **Range 15**, the Old School PvP-world convention, instead of DMM's fixed bracket worlds.
+- **Safe towns, not banks** (v2, DMM). v1 made every bank safe; DMM keeps banks outside guarded
+  towns dangerous.
+- **Bank keys take 10 stacks**, valued at store price (DMM used 28, then 10; it valued by GE
+  price, which this game doesn't have).
 - **Full-health respawn** plus 30s spawn protection instead of upstream's 1 HP respawn.
-- **No login protection.** Logging out still waits out the usual 10s combat timer.
+- **Skull stays 10 minutes**, with no stacking, and the single-combat lock stays at 8 ticks (DMM
+  varied 5-30 min and 16-24 ticks). Both are one constant each.
+- **No XP loss on death.** Classic DMM had it; DMM since 2023 doesn't.
+- **No login protection.** Logging out still waits out the usual combat timer.
 - **Machine:** shared-cpu-2x / 2 GB. Fly refuses performance VMs for this org until billing
   unlocks them; then `fly scale vm performance-1x --memory 2048 -a pvp-sdk`.
 - **IPs:** shared IPv4 + IPv6 (free). The direct gateway on :7443 works over the shared IPv4
@@ -68,6 +79,9 @@ protection that blocks the killer, and protection running out.
       trial: Fly stops machines after 5 minutes ("Trial machine stopping") and refuses
       performance VMs, so the world can't stay up until then.
 - [x] `pvp-world` is the repo's default branch, with the full rules in `RULES.md`.
+- [x] v2 Deadman Mode rules: guarded towns, guards, lose-everything PvP deaths, bank keys and
+      the teleport lock ([`DEADMAN.md`](DEADMAN.md)). Fixed a race in the pack tool's
+      `SourceSnapshot` that sometimes left new configs unregistered until something else changed.
 - [ ] `bun run test` on Windows: 13 webclient tests fail with `document is not defined`
       (`graphics/Jpeg.ts` loads before the DOM shim when every file shares one process).
       Pre-existing upstream, and the same files pass on their own; check CI on Linux before
@@ -117,18 +131,42 @@ protection that blocks the killer, and protection running out.
 - [ ] Actions: follow, special-attack toggle, auto-retaliate and run toggles, item-on-player,
       autocast, a same-tick gear + prayer switch, and attacking without a full `walkTo` first.
       Safe-zone awareness: `bot.attack()` walks toward the target before attacking, so chasing
-      someone into a bank walks you into the bank too; publish whether each player stands in a
-      safe area and refuse client-side.
+      someone into a safe town walks you into it too, which kills you if you're skulled. Publish
+      whether each player stands in a safe area, and refuse client-side.
       Add snare, entangle, god spells and Iban's blast to the spell table.
+- [ ] Deadman state and helpers: own skull timer, keys held and their contents, a
+      `bot.openBankKey()`; each nearby player's skull (and so whether their bank is at risk).
 - [ ] Reflexes: per-tick eat / pray / switch / attack-player inside the lite runner, so fights
       don't wait on an LLM turn (a draft of NPC reflexes exists in the sibling rs-sdk checkout).
 - [ ] Docs and examples: `learnings/pvp.md` for agents, example bots (hunter, survivor).
 
-### 5. Game design iterations
+### 5. More Deadman
 
-- [ ] Combat lock: no safe-area entry, teleport or logout for ~10s after PvP damage, so a
-      fight can't be dodged by stepping into a bank.
-- [ ] Teleport rules outside the Wilderness; respawn kit; bounty targets; PvP XP bonus.
+From [`DEADMAN.md`](DEADMAN.md), roughly in order of value:
+
+- [ ] Safe deposit box: 10 items that bank raids can't take.
+- [ ] Skull and PJ tuning: DMM's longer skulls for attacking much lower levels, +2 min per
+      re-skull, and a 16-24 tick single-combat lock.
+- [ ] Protection for new accounts (DMM gave 6-12 hours), so fresh bots can get started.
+- [ ] Breaches: scheduled boss events with point rewards.
+- [ ] Seasons: wipes, PvP leaderboards (item 3) and a finale.
+- [ ] Sigils, and optional classic XP loss on death.
+
+### 6. More PvP content (the game version)
+
+This server is RuneScape 2 as of January 2005, not OSRS; [`GAME_VERSIONS.md`](GAME_VERSIONS.md)
+compares the options. The recommendation is to stay on revision 289 and add a clearly labelled
+PvP kit, cherry-picking LostCity's 377-wip scripts where they exist:
+
+- [ ] Abyssal whip and granite maul (scripts in 377-wip).
+- [ ] Tele Block and Ancient Magicks freezes.
+- [ ] Barrows sets.
+- [ ] Take each LostCity/rs-sdk upgrade by walking `server/PATCHES.md`.
+
+### 7. Game design iterations
+
+- [x] Teleport lock after PvP hits (24 ticks).
+- [ ] Respawn kit; bounty targets; PvP XP bonus.
 
 ## Operating the server
 

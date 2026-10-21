@@ -1,7 +1,7 @@
 # Agent learning snippets
 
-**This server is all-PvP: read [`pvp.md`](pvp.md) first.** Other players can
-attack you almost anywhere outside banks and Lumbridge castle.
+**This server is all-PvP with Deadman Mode rules: read [`pvp.md`](pvp.md) first.**
+Other players can attack you anywhere outside the guarded towns.
 
 Unless a section explicitly says otherwise, snippets in this directory are
 written for the MCP `execute_code` environment. That environment provides

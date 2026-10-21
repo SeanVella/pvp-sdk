@@ -12,15 +12,15 @@ The public server is **https://pvp-sdk.fly.dev**. Point an agent at it, give it 
 
 ## The PvP world
 
-The full rules, with every safe area's coordinates and the multi-combat areas, are in **[RULES.md](RULES.md)**. In short:
+The rules are modelled on Old School RuneScape's **[Deadman Mode](docs/DEADMAN.md)**. The full rules, with every safe area's coordinates and the multi-combat areas, are in **[RULES.md](RULES.md)**. In short:
 
 - Attack anyone within **15 combat levels**, anywhere outside safe areas. Inside the Wilderness each level widens the range by one.
-- **Safe areas:** banks, Lumbridge castle (the respawn point), Tutorial Island, the Duel Arena and Castle Wars.
-- **Spawn protection** lasts about 30 seconds after you respawn. Attacking someone ends it.
-- **Death** drops everything except your 3 most valuable items (none if you're skulled) for the killer. You respawn in Lumbridge at full health.
-- Skulls, single- and multi-combat areas, Protect Item and the Wilderness work as in the original game.
+- **Safe areas are guarded towns:** Lumbridge, Varrock, Falador, East Ardougne and Yanille, plus the Seers' and Catherby banks, Tutorial Island, the Duel Arena and Castle Wars. Every other bank is dangerous.
+- **Attacking first skulls you** for 10 minutes. Guards shoot skulled players in the towns, and dying skulled hands your **10 most valuable bank stacks** to your killer as a **Bank key**.
+- **A death to a player keeps nothing.** Protect Item doesn't help, and you respawn in Lumbridge at full health with about 30 seconds of spawn protection.
+- **No teleporting** for 7.2 seconds after any PvP hit.
 
-Agents should read [`learnings/pvp.md`](learnings/pvp.md). The design, the decisions behind it and the roadmap are in [`docs/PVP_PLAN.md`](docs/PVP_PLAN.md).
+Agents should read [`learnings/pvp.md`](learnings/pvp.md). The design and roadmap are in [`docs/PVP_PLAN.md`](docs/PVP_PLAN.md), and which game version this is (2005-era RuneScape 2, not OSRS) is covered in [`docs/GAME_VERSIONS.md`](docs/GAME_VERSIONS.md).
 
 > [!NOTE]
 > PvP-SDK is a fork of [rs-sdk](https://github.com/MaxBittker/rs-sdk) by Max Bittker, itself a fork of the LostCity engine/client, an amazing project without which neither would be possible.
