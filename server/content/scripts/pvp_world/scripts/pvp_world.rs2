@@ -1,0 +1,42 @@
+// pvp-sdk: the whole world is a combat zone. ~pvp_level_check decides every
+// attack outside the Duel Arena and Castle Wars; these procs hold its rules.
+
+// Nobody can attack or be attacked in a safe area. The Duel Arena (lobby and
+// fight zones) and Castle Wars run their own fights, so they only count as safe
+// against attackers from outside: ~pvp_is_attackable hands fights between two
+// players inside them to the minigame rules before this is ever checked.
+[proc,pvp_in_safe_zone](coord $coord)(boolean)
+if (~inzone_coord_pair_table(pvp_safe_zones, $coord) = true) {
+    return(true);
+}
+if (~inzone_coord_pair_table(bank_zones, $coord) = true) {
+    return(true);
+}
+if (~in_tutorial_island($coord) = true) {
+    return(true);
+}
+if (~inzone_coord_pair_table(duel_arena_zones, $coord) = true) {
+    return(true);
+}
+if (~in_castlewars_game($coord) = true | ~in_castlewars_waitingroom($coord) = true) {
+    return(true);
+}
+return(false);
+
+// Spawn protection: after respawning nobody can attack you for a short while,
+// so the respawn point can't be camped. Attacking another player ends it early.
+[proc,pvp_protection_start]
+%pvp_protection = ^true;
+clearsofttimer(pvp_protection_timer);
+softtimer(pvp_protection_timer, ^pvp_protection_duration);
+mes("You are protected from other players for a short while.");
+
+[softtimer,pvp_protection_timer]
+~pvp_protection_end;
+
+[proc,pvp_protection_end]
+clearsofttimer(pvp_protection_timer);
+if (%pvp_protection = ^true) {
+    %pvp_protection = ^false;
+    mes("You are no longer protected from other players.");
+}

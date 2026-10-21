@@ -58,20 +58,16 @@ if (npc_finduid(%follower_uid) = true) {
 anim(null, 0);
 p_stopaction;
 
-if ($pvp_death = true) {
-    ~set_pvp_death_mark;
-}
 ~stat_reset_all;
-// deaths to another player respawn at 1hp instead of full, and the mark
-// keeps any death at 1hp for a while so an npc suicide can't undo it
-if ($pvp_death = true | ~has_pvp_death_mark = true) {
-    stat_sub(hitpoints, calc(stat(hitpoints) - 1), 0);
-}
+// pvp-sdk: every death respawns at full health. Upstream rs-sdk respawns pvp
+// deaths at 1hp (pvp_death_mark); in a world where everyone fights everywhere
+// that would leave each death waiting out a long regen before playing again.
 healenergy(10000);
 ~clear_pk_skull;
 ~clear_poison;
 ~update_all($prev_wep);
 ~initalltabs;
+~pvp_protection_start;
 // todo: end poison timer ~player_end_poison
 
 [proc,player_death_lose_items]

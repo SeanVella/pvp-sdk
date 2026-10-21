@@ -12,6 +12,7 @@ if (.%pk_prey1 = uid | .%pk_prey2 = uid | %pk_predator1 = .uid | %pk_predator2 =
 return(true);
 
 [proc,set_pk_vars]
+if (%pvp_protection = ^true) ~pvp_protection_end; // pvp-sdk: attacking ends spawn protection
 if (~deserves_pk_skull = true) {
     ~pk_skull(^pk_skull_duration);
 }

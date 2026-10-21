@@ -14,17 +14,14 @@ if (%option_brightness = 0) {
 
 minimap_toggle(0); // always reset on login (osrs)
 
+// pvp-sdk: the whole world is a combat zone, so Attack is always on the menu
+set_player_op("Attack", 2, ^false);
 if(~wilderness_level(coord) > 0) {
-    set_player_op("Attack", 2, ^false);
-
     if(coordz(coord) >= ^wilderness_starting_underground_z) {
         if_openoverlay(wilderness_underground_overlay);
     } else {
         if_openoverlay(wilderness_overlay);
     }
-
-} else {
-    set_player_op(null, 2, ^false);
 }
 
 set_player_op("Follow", 3, ^false);

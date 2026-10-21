@@ -387,6 +387,35 @@ Upgrade hazards:
 
 ---
 
+## PvP world (pvp-sdk fork)
+
+The fork's game-mode changes. Upstream rs-sdk merges (`git fetch upstream && git merge
+upstream/main`) touch the same vendored files, so walk this list after every merge as well.
+Design and roadmap: `docs/PVP_PLAN.md`.
+
+- [ ] **`scripts/pvp_world/`** (fork-only) — `pvp_world.constant` (`^pvp_combat_range` 15,
+      `^pvp_protection_duration` 100 ticks), `pvp_safe_zones.dbrow` (Lumbridge castle and courtyard),
+      `pvp_world.varp` (`pvp_protection`, varp **1001**, transmitted), `pvp_world.rs2`
+      (`~pvp_in_safe_zone`: that table + `bank_zones` + Tutorial Island + Duel Arena + Castle Wars;
+      spawn protection start/end).
+- [ ] **`skill_combat/scripts/pvp/pvp_combat.rs2` `~pvp_level_check`** — the whole world is a
+      combat zone: refuses safe areas (attacker or target), a protected target, and gaps above
+      `^pvp_combat_range` + wilderness level. **This proc is the only PvP gate** — the engine
+      never checks that the Attack op is set (`OpPlayerHandler` todo), so menu changes are cosmetic.
+- [ ] **`skill_combat/scripts/pvp/pk_skull.rs2` `set_pk_vars`** — attacking ends spawn protection.
+- [ ] **`player/scripts/death.rs2`** — every death respawns at full health with spawn
+      protection (upstream respawns pvp deaths at 1hp via `pvp_death_mark`, now unused there).
+- [ ] **Attack op everywhere** — `login_logout/login.rs2` always sets op 2 "Attack";
+      `area_wilderness/scripts/wilderness.rs2` `wilderness_exit` no longer clears it;
+      `game_castlewars` `castlewars_mapzoneexit` and `game_duelarena` `toggle_duel_challenge_off`
+      restore it (the latter only outside the fight zones, so a duel keeps its "Fight" option).
+      After a sync, grep for new `set_player_op(null, 2` callers.
+- [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`
+      from the repo root (needs built content). Server refusal wording is mirrored in
+      `sdk/actions-helpers.ts` `PVP_REFUSALS` — change both together.
+
+---
+
 ## Cross-boundary invariants (how things actually break)
 
 These are the rules derived from every severed-wire bug found so far:
@@ -425,7 +454,7 @@ grep -n "ptype === ServerProt.MESSAGE_PUBLIC" server/webclient/src/client/Client
 grep -A2 "Math.pow(2.0, level / 10.0)" server/engine/src/engine/entity/Player.ts server/webclient/src/client/Client.ts
 
 # boot + live endpoints after deploy
-curl -so /dev/null -w "%{http_code}\n" https://rs-sdk-demo.fly.dev/{playercount,hiscores,mapview/}
+curl -so /dev/null -w "%{http_code}\n" https://pvp-sdk.fly.dev/{playercount,hiscores,mapview/}
 
 # custom IDs: reserved ranges still above upstream, tail-appended ones past upstream's max
 grep -n "^40000=\|^1000=" server/content/pack/{interface,varp}.pack
@@ -438,4 +467,4 @@ tail -1 server/content/pack/{loc,npc}.pack
 ```
 
 If content map files changed: regenerate `sdk/collision-data.json` from the MEMBERS prod server:
-`curl https://rs-sdk-demo.fly.dev/api/exportCollision > sdk/collision-data.json`
+`curl https://pvp-sdk.fly.dev/api/exportCollision > sdk/collision-data.json`

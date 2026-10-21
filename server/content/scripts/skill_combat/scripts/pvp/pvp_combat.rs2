@@ -30,17 +30,29 @@ if (~player_autocast_enabled = true) {
 @pvp_melee_attack;
 
 [proc,pvp_level_check]()(boolean)
-// not high enough level
-def_int $combat_level_diff = abs(sub(~player_combat_level, ~.player_combat_level));
-def_int $wilderness_level = min(~wilderness_level(coord), ~wilderness_level(.coord));
-if ($wilderness_level < 1) {
-    // http://i2.photobucket.com/albums/y18/Fallingdeath/anotherkill.png
-    mes("You can't attack players who aren't in the wilderness.");
+// pvp-sdk: the whole world is a combat zone except safe areas (see pvp_world.rs2)
+if (~pvp_in_safe_zone(coord) = true) {
+    mes("You can't attack other players from a safe area.");
     return(false);
 }
-if ($wilderness_level < $combat_level_diff) {
+if (~pvp_in_safe_zone(.coord) = true) {
+    mes("That player is in a safe area.");
+    return(false);
+}
+if (.%pvp_protection = ^true) {
+    mes("That player has just respawned and is protected.");
+    return(false);
+}
+// not high enough level: ^pvp_combat_range anywhere, plus one per Wilderness level
+def_int $combat_level_diff = abs(sub(~player_combat_level, ~.player_combat_level));
+def_int $wilderness_level = min(~wilderness_level(coord), ~wilderness_level(.coord));
+if (add(^pvp_combat_range, $wilderness_level) < $combat_level_diff) {
     mes("Your level difference is too great!");
-    mes("You need to move deeper into the wilderness."); // wilderness is title'd in late 2005/2006 ish
+    if ($wilderness_level > 0) {
+        mes("You need to move deeper into the wilderness."); // wilderness is title'd in late 2005/2006 ish
+    } else {
+        mes("Outside the wilderness the level gap can't exceed <tostring(^pvp_combat_range)>.");
+    }
     return(false);
 }
 // 2007: https://youtu.be/3apk-gE1zh8?t=544

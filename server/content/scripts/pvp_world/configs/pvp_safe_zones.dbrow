@@ -1,0 +1,6 @@
+// pvp-sdk: areas where nobody can attack or be attacked, on top of the banks
+// (bank_zones), Tutorial Island and the minigame lobbies (see ~pvp_in_safe_zone).
+[pvp_safe_zones]
+table=coord_pair_table
+// Lumbridge castle and its courtyard, where every death respawns
+data=coord_pair,0_50_50_0_0,3_50_50_28_37

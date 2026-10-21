@@ -10,4 +10,4 @@ set_player_op("Attack", 2, ^false);
 
 [proc,wilderness_exit]
 if_openoverlay(null);
-set_player_op(null, 2, ^false);
+// pvp-sdk: Attack stays on the menu outside the wilderness too

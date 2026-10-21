@@ -1,0 +1,4 @@
+// pvp-sdk: 1 while the player has spawn protection. Transmitted so bots can see it.
+[pvp_protection]
+protect=no
+transmit=yes

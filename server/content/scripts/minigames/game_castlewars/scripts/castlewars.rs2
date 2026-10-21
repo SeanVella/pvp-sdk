@@ -204,7 +204,7 @@ set_player_op("Take-from", 5, ^false);
 [proc,castlewars_mapzoneexit]
 cleartimer(castlewars_timer);
 if_openoverlay(null);
-set_player_op(null, 2, ^false);
+set_player_op("Attack", 2, ^false); // pvp-sdk: back to the world's Attack option
 set_player_op(null, 5, ^false);
 
 // if (~in_castlewars_game(coord) = false & ~in_castlewars_waitingroom(coord) = false) {

@@ -404,6 +404,10 @@ set_player_op(null, 2, ^false);
 [proc,toggle_duel_challenge_off]
 if_openoverlay(null);
 set_player_op(null, 1, ^false);
+// pvp-sdk: back to the world's Attack option, unless a duel's Fight option holds the slot
+if (~in_duel_arena(coord) = false) {
+    set_player_op("Attack", 2, ^false);
+}
 
 // Messages are taken from a variety of old sources and are always in the same order
 // https://imgur.com/ETH1z4L

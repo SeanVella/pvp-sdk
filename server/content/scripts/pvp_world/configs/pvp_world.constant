@@ -1,0 +1,7 @@
+// pvp-sdk: the whole world is a combat zone. Outside the Wilderness players can
+// fight anyone within this many combat levels of their own; inside it, every
+// Wilderness level widens the range by one more, as it always has.
+^pvp_combat_range = 15
+// Spawn protection after respawning, in ticks (100 = 30s at the 300ms prod tickrate).
+// Attacking another player ends it early.
+^pvp_protection_duration = 100
