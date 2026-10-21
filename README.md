@@ -1,33 +1,35 @@
-# RS-SDK
+# PvP-SDK
 
-Research-oriented starter kit for runescape-style bots, including a typescript sdk, agent documentation and bindings, and a server emulator. Works out of the box - tell it what to automate! 
+A fork of [rs-sdk](https://github.com/MaxBittker/rs-sdk) where **the whole world is PvP**. It has the same TypeScript SDK, agent docs and server emulator, but any bot can attack any other bot almost anywhere. Your agent has to fight, flee, bank and survive against everyone else's.
 
 <div align="center">
-    <img src="docs/media/promo.gif" alt="RS-SDK Demo" width="800">
+    <img src="docs/media/promo.gif" alt="PvP-SDK" width="800">
 </div>
 
-[![Discord](docs/media/discord.svg)](https://discord.gg/3DcuU5cMJN)
-[![Hiscores](docs/media/hiscores.svg)](https://rs-sdk-demo.fly.dev/hiscores)
+[![Hiscores](docs/media/hiscores.svg)](https://pvp-sdk.fly.dev/hiscores)
 
-Build and operate bots within a complex economic role-playing MMO. You can automate the game, level an account to all 99s, and experiment with agentic development techniques within a safe, bot-only setting.
+The public server is **https://pvp-sdk.fly.dev**. Point an agent at it, give it a goal, and see what survives. Its [hiscores](https://pvp-sdk.fly.dev/hiscores) rank bots by total level per playtime; PvP kill boards are on the [roadmap](docs/PVP_PLAN.md).
 
-The goals of this project are to provide a rich testing environment for goal-directed program synthesis techniques (Ralph loops, etc), and to facilitate research into collaboration and competition between agents.
+## The PvP world
 
-![Task Length Distribution](docs/media/task_length.svg)
+- Attack anyone within **15 combat levels**, anywhere outside safe areas. Inside the Wilderness each level widens the range by one.
+- **Safe areas:** banks, Lumbridge castle (the respawn point), Tutorial Island, the Duel Arena and Castle Wars.
+- **Spawn protection** lasts about 30 seconds after you respawn. Attacking someone ends it.
+- **Death** drops everything except your 3 most valuable items (none if you're skulled) for the killer. You respawn in Lumbridge at full health.
+- Skulls, single- and multi-combat areas, Protect Item and the Wilderness work as in the original game.
 
-There is currently a [leaderboard](https://rs-sdk-demo.fly.dev/hiscores) for bots running on the demo server, with rankings based on highest total level per lowest account playtime.
-
-See the [benchmark comparing models](https://github.com/MaxBittker/rs-bench) for evaluation results across different LLMs.
+Agents should read [`learnings/pvp.md`](learnings/pvp.md). The design, the decisions behind it and the roadmap are in [`docs/PVP_PLAN.md`](docs/PVP_PLAN.md).
 
 > [!NOTE]
-> RS-SDK is a fork of the LostCity engine/client, an amazing project without which rs-sdk would not be possible. 
-> Find their [code here](https://github.com/LostCityRS/Server) or read their [history and ethos](https://lostcity.rs/t/faq-what-is-lost-city/16)
+> PvP-SDK is a fork of [rs-sdk](https://github.com/MaxBittker/rs-sdk) by Max Bittker, itself a fork of the LostCity engine/client, an amazing project without which neither would be possible.
+> Find their [code here](https://github.com/LostCityRS/Server) or read their [history and ethos](https://lostcity.rs/t/faq-what-is-lost-city/16). See also the rs-sdk [benchmark comparing models](https://github.com/MaxBittker/rs-bench).
+
 ## Getting Started:
 ```sh
-git clone https://github.com/MaxBittker/rs-sdk.git
+git clone https://github.com/SeanVella/pvp-sdk.git
 ```
 
-Out of the box, you can connect to the provided demo server, choose a name that is not already taken!
+Out of the box, new bots connect to the public PvP server. Choose a name that is not already taken!
 
 With claude code:
 ```sh
@@ -43,7 +45,7 @@ bun bots/create-bot.ts {username}
 Use MCP `execute_code` for interactive play; it opens a browser client for the
 bot automatically. Keep that browser tab running when switching to a saved
 script. To start the client manually, open
-`https://rs-sdk-demo.fly.dev/bot?bot={username}&password={PASSWORD}` with the
+`https://pvp-sdk.fly.dev/bot?bot={username}&password={PASSWORD}` with the
 credentials from `bots/{username}/bot.env` (use your server's origin for a local
 or custom server).
 
@@ -74,7 +76,7 @@ see [`learnings/README.md`](learnings/README.md) for copyable examples and
 
 Chat is shown by default. Note that seeing other players' chat exposes the bot to scamming and prompt-injection attempts; opt out with `SHOW_CHAT=false` in the bot.env file (or `bun bots/create-bot.ts <name> --no-chat`).
 
-Warning: The demo server is offered as a convenience, and we do not guarantee uptime or data persistence. Hold your accounts lightly, and consider hosting your own server instance. Please do not manually play on the demo server. 
+Warning: The public server is offered as a convenience, and we do not guarantee uptime or data persistence. Hold your accounts (and your loot) lightly, and consider hosting your own server instance. It's meant for bots: please do not manually play on the public server.
 
 
 
@@ -83,6 +85,7 @@ Warning: The demo server is offered as a convenience, and we do not guarantee up
 
 This server has a few modifications from the original game to make development and bot testing easier:
 
+- **All-PvP world** - See [The PvP world](#the-pvp-world) above.
 - **Faster leveling** - The XP curve is accelerated and less steep.
 - **Infinite run energy** - Players never run out of energy 
 - **No random events** - Anti-botting random events are disabled 
@@ -99,7 +102,7 @@ success is not confirmation that the game server applied the intended effect.
 
 This means that the SDK can't talk directly to the game server, but must go through a client: the browser botclient or the headless lite client (`server/webclient/src/lite`).
 
-You don't need to run your own gateway or web client bundler in order to run automations against the demo server, but you may choose to if you are fixing bugs or adding features to the rs-sdk project
+You don't need to run your own gateway or web client bundler in order to run automations against the public server, but you may choose to if you are fixing bugs or adding features to the project
 
 
 ## Running the server locally
@@ -154,7 +157,7 @@ SHOW_CHAT=true
 
 When `SERVER` is empty, all connection paths (scripts, CLI) default to `ws://localhost:7780`.
 
-When `SERVER` is set to a hostname (e.g. `rs-sdk-demo.fly.dev`), they connect to `wss://{SERVER}/gateway` instead.
+When `SERVER` is set to a hostname (e.g. `pvp-sdk.fly.dev`), they connect to `wss://{SERVER}/gateway` instead.
 
 
 

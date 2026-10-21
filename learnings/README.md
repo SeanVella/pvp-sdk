@@ -1,5 +1,8 @@
 # Agent learning snippets
 
+**This server is all-PvP: read [`pvp.md`](pvp.md) first.** Other players can
+attack you almost anywhere outside banks and Lumbridge castle.
+
 Unless a section explicitly says otherwise, snippets in this directory are
 written for the MCP `execute_code` environment. That environment provides
 `bot` and `sdk` as globals and accepts TypeScript with top-level `await`:
