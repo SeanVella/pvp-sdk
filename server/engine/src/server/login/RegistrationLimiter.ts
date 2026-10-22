@@ -32,6 +32,14 @@ export default class RegistrationLimiter {
         return true;
     }
 
+    /** Takes back the latest registration from `ip`, for one that didn't happen after all. */
+    release(ip: string): void {
+        const last = this.byIp.get(ip)?.pop();
+        if (last === undefined) return;
+        const i = this.all.lastIndexOf(last);
+        if (i !== -1) this.all.splice(i, 1);
+    }
+
     private prune(since: number): void {
         for (const [ip, times] of this.byIp) {
             if (!times.some(t => t > since)) this.byIp.delete(ip);

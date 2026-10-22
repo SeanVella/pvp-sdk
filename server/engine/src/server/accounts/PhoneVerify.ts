@@ -26,9 +26,16 @@ export class TwilioVerify implements PhoneVerifier {
         if (res.ok) return { ok: true };
         const body = (await res.json().catch(() => ({}))) as { code?: number };
         // https://www.twilio.com/docs/api/errors - the ones a player can do something about
-        if (body.code === 60200 || body.code === 21211) return { ok: false, error: "That doesn't look like a valid mobile number." };
+        if (body.code === 60200 || body.code === 21211 || body.code === 21614) return { ok: false, error: "That doesn't look like a valid mobile number." };
         if (body.code === 60203) return { ok: false, error: 'Too many codes sent to that number. Try again later.' };
-        if (body.code === 60605 || body.code === 60410) return { ok: false, error: "We can't send texts to that number's country." };
+        if (body.code === 60605 || body.code === 60410 || body.code === 21408 || body.code === 21612) {
+            return { ok: false, error: "We can't send texts to that number's country." };
+        }
+        if (body.code === 21608) {
+            // a trial Twilio account only texts numbers verified in its console
+            console.warn('[accounts] Twilio refused an unverified number (21608): the Twilio account is still on trial');
+            return { ok: false, error: 'Sign-up texts are switched off for now. Tell the server owner.' };
+        }
         console.warn(`[accounts] Twilio send failed: ${res.status} ${body.code ?? ''}`);
         return { ok: false, error: "Couldn't send a text right now. Try again in a few minutes." };
     }

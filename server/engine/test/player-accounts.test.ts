@@ -173,8 +173,11 @@ describe('PlayerAccounts', () => {
 
 describe('/account and /api/bots', () => {
     const sent: string[] = [];
+    let refuse = false;
+    const filledSlots = (html: string) => (html.match(/class="slot filled"/g) ?? []).length;
     const verifier: PhoneVerifier = {
         async send(phone) {
+            if (refuse) return { ok: false, error: 'Provider said no.' };
             sent.push(phone);
             return { ok: true };
         },
@@ -237,6 +240,18 @@ describe('/account and /api/bots', () => {
         expect(sent.length).toBe(3);
     });
 
+    test('a text the provider refused does not use up the caps', async () => {
+        sent.length = 0;
+        const r = routes();
+        refuse = true;
+        for (let i = 0; i < 5; i++) {
+            expect(await (await r.call('/account/sms', r.form({ phone: '+35699123456', 'cf-turnstile-response': 'human' })))!.text()).toContain('Provider said no.');
+        }
+        refuse = false;
+        expect(await (await r.call('/account/sms', r.form({ phone: '+35699123456', 'cf-turnstile-response': 'human' })))!.text()).toContain('Enter your code');
+        expect(sent).toEqual(['+35699123456']);
+    });
+
     test('the right code signs you in with a strict, http-only cookie', async () => {
         const r = routes();
         await r.call('/account/sms', r.form({ phone: '+35699123456', 'cf-turnstile-response': 'human' }));
@@ -248,7 +263,9 @@ describe('/account and /api/bots', () => {
         expect(cookie).toContain('SameSite=Strict');
         expect(cookie).toContain('Secure');
         const page = await (await r.call('/account', { headers: { cookie: cookie.split(';')[0]! } }))!.text();
-        expect(page).toContain('0 of 5 slots used');
+        expect(page).toContain('slots used');
+        expect(filledSlots(page)).toBe(0);
+        expect((page.match(/class="slot empty"/g) ?? []).length).toBe(5);
     });
 
     test('a signed-in player creates a bot and sees its password once', async () => {
@@ -257,7 +274,9 @@ describe('/account and /api/bots', () => {
         const html = await (await r.call('/account/bots', r.form({ name: 'Webbot' }, cookie)))!.text();
         expect(html).toMatch(/PASSWORD=[A-Za-z0-9]{16}/);
         expect(html).toContain('SERVER=pvp-sdk.fly.dev');
-        expect(await (await r.call('/account', { headers: { cookie } }))!.text()).toContain('1 of 5 slots used');
+        const after = await (await r.call('/account', { headers: { cookie } }))!.text();
+        expect(filledSlots(after)).toBe(1);
+        expect(after).toContain('webbot');
     });
 
     test('forms from other sites are refused', async () => {
@@ -322,6 +341,8 @@ describe('TwilioVerify', () => {
         expect(await failing(60203).send('+35699123456')).toEqual({ ok: false, error: 'Too many codes sent to that number. Try again later.' });
         expect(await failing(60605).send('+35699123456')).toEqual({ ok: false, error: "We can't send texts to that number's country." });
         expect(await failing(60200).send('+35699123456')).toEqual({ ok: false, error: "That doesn't look like a valid mobile number." });
+        expect(await failing(21608, 403).send('+35699123456')).toEqual({ ok: false, error: 'Sign-up texts are switched off for now. Tell the server owner.' });
+        expect(await failing(21408, 403).send('+35699123456')).toEqual({ ok: false, error: "We can't send texts to that number's country." });
         expect(await failing(20404, 404).check('+35699123456', '1')).toBe(false);
     });
 });
