@@ -113,6 +113,10 @@ const NpcOps: CommandHandlers = {
                 z: npc.z,
                 level: npc.level
             });
+            // pvp-sdk: a breach guardian's death pays its fighters (World.onBreachGuardianKilled)
+            if (type.debugname === 'breach_guardian') {
+                World.onBreachGuardianKilled(npc, [...npc.heroPoints].filter(h => h && h.hash64 !== -1n && h.points > 0));
+            }
         }
         World.removeNpc(npc, type.respawnrate);
     },

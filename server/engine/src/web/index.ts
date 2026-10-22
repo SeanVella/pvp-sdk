@@ -15,6 +15,7 @@ import { WebSocketData, handleWebSocketUpgrade, handleGatewayEndpointGet, websoc
 import { getIp } from './utils.js';
 import { getPlayerPositionsJson } from './worldfeed.js';
 import { handleOwnerSignIn, isOwnerOnlyPath, isOwnerRequest, notFound } from './owner.js';
+import { handleBreachApi } from './pages/breach.js';
 
 export type { WebSocketData };
 
@@ -310,6 +311,9 @@ async function handleRequest(req: Request, server: Bun.Server, url: URL): Promis
 
             const versionResponse = handleVersionApi(url);
             if (versionResponse) return versionResponse;
+
+            const breachResponse = handleBreachApi(url); // pvp-sdk
+            if (breachResponse) return breachResponse;
 
             // Hiscores
             const hiscoresResponse = await handleHiscoresPage(url);

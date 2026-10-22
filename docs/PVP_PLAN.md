@@ -157,9 +157,14 @@ From [`DEADMAN.md`](DEADMAN.md), roughly in order of value:
 - [x] Protection for new accounts: 3 hours of play (the owner's choice; DMM gave 6-12 hours
       at half our tick speed), only for accounts made after it was added; attacking ends it.
       `%pvp_newbie` (varp 1006, perm, transmitted) and the `playtime` command.
-- [ ] Breaches: scheduled boss events with point rewards.
+- [x] Breaches (`engine/pvp/Breaches.ts`, `dmm_breaches.rs2`): every 3 hours at fixed UTC times
+      a breach guardian (npc 2046) spawns at one of six multi-combat sites, announced 10 minutes
+      ahead, for 20 minutes; its fighters earn breach points (varp 1007) by damage and sigils;
+      the breach warden (npc 2047, Lumbridge) sells rewards; `GET /api/breach`. Env:
+      `BREACHES`, `BREACH_INTERVAL_MINUTES`, `BREACH_WARNING_MINUTES`, `BREACH_DURATION_MINUTES`.
 - [ ] Seasons: wipes, PvP leaderboards (item 3) and a finale.
-- [ ] Sigils, and optional classic XP loss on death.
+- [x] Sigils (objs 10001-10005): Fury, Stone, the Feast, Escape, Fortune; perks while carried,
+      destroyed on death. Classic XP loss stays off (owner, 2026-10-22).
 
 ### 6. More PvP content (the game version)
 

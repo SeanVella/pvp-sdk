@@ -203,6 +203,8 @@ export class BotStateCollector implements ScanProvider {
             skullTicksRemaining: this.collectSkullTicks(currentTick, BotStateCollector.hasSkullIcon(c.localPlayer)),
             // pvp-sdk: varp 1006 (pvp_newbie), 1 while new-player protection lasts
             newPlayerProtected: (c.var?.[1006] ?? 0) === 1,
+            // pvp-sdk: varp 1007 (breach_points), spent with the breach warden in Lumbridge
+            breachPoints: c.var?.[1007] ?? 0,
             // A policy-critical setting is an ordinary server varp. Keep it
             // explicit rather than blindly clicking a control that might
             // already be set.

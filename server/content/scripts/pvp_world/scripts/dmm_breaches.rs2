@@ -1,0 +1,46 @@
+// pvp-sdk: breaches and sigils. The engine (engine/pvp/Breaches.ts) opens a breach every
+// few hours: a breach guardian at a random multi-combat site, announced ten minutes
+// ahead. When it dies the engine pays everyone who damaged it in breach points
+// (%breach_points) and hands out sigils. This file holds the sigils' check and the
+// breach warden in Lumbridge, who trades points for rewards. The perks themselves are
+// in the combat and food scripts, each marked "pvp-sdk: sigil of ...".
+
+// Does the active player carry $sigil? A sigil works anywhere in the inventory, and two
+// of a kind don't stack.
+[proc,sigil_carried](obj $sigil)(boolean)
+if (inv_total(inv, $sigil) > 0) {
+    return(true);
+}
+return(false);
+
+[proc,random_sigil]()(namedobj)
+switch_int (random(5)) {
+    case 0 : return(sigil_of_fury);
+    case 1 : return(sigil_of_stone);
+    case 2 : return(sigil_of_the_feast);
+    case 3 : return(sigil_of_escape);
+    case default : return(sigil_of_fortune);
+}
+
+[opnpc1,breach_warden]
+~chatnpc("<p,neutral>Breaches open every few hours somewhere dangerous. Fight what comes through and I'll pay you for it.");
+~chatnpc("<p,neutral>You have <tostring(%breach_points)> breach points.");
+def_int $option = ~p_choice4("Ten sharks (8 points)", 1, "Three prayer potions (10 points)", 2, "A random sigil (60 points)", 3, "Nothing, thanks.", 4);
+switch_int ($option) {
+    case 1 : ~breach_buy(8, shark, 10);
+    case 2 : ~breach_buy(10, 4doseprayerrestore, 3);
+    case 3 : ~breach_buy(60, ~random_sigil, 1);
+}
+
+[proc,breach_buy](int $cost, namedobj $obj, int $count)
+if (%breach_points < $cost) {
+    ~chatnpc("<p,neutral>That costs <tostring($cost)> points, and you have <tostring(%breach_points)>.");
+    return;
+}
+if (inv_itemspace(inv, $obj, $count, inv_size(inv)) = false) {
+    ~chatnpc("<p,neutral>Make some room in your pack first.");
+    return;
+}
+%breach_points = sub(%breach_points, $cost);
+inv_add(inv, $obj, $count);
+mes("You spend <tostring($cost)> breach points. You have <tostring(%breach_points)> left.");

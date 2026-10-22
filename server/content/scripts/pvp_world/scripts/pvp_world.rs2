@@ -116,7 +116,11 @@ if (%pvp_newbie = ^true) {
 
 // No teleporting for ^pvp_teleport_lock ticks after a PvP hit, dealt or taken.
 [proc,pvp_teleport_locked]()(boolean)
-if (%pvp_combat_clock > 0 & map_clock < add(%pvp_combat_clock, ^pvp_teleport_lock)) {
+def_int $lock = ^pvp_teleport_lock;
+if (~sigil_carried(sigil_of_escape) = true) { // sigil of escape (dmm_breaches.rs2)
+    $lock = divide($lock, 2);
+}
+if (%pvp_combat_clock > 0 & map_clock < add(%pvp_combat_clock, $lock)) {
     return(true);
 }
 return(false);

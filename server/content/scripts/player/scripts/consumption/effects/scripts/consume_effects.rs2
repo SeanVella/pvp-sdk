@@ -68,8 +68,16 @@ while ($i < db_getfieldcount($effect_data, consume_table:stat_change)) {
 }
 // stat heal
 $i = 0;
+def_stat $heal_stat;
+def_int $heal_constant;
+def_int $heal_percent;
 while ($i < db_getfieldcount($effect_data, consume_table:stat_heal)) {
-    stat_heal(db_getfield($effect_data, consume_table:stat_heal, $i));
+    $heal_stat, $heal_constant, $heal_percent = db_getfield($effect_data, consume_table:stat_heal, $i);
+    stat_heal($heal_stat, $heal_constant, $heal_percent);
+    // pvp-sdk: sigil of the feast (dmm_breaches.rs2) - food heals half as much again
+    if ($heal_stat = hitpoints & ~sigil_carried(sigil_of_the_feast) = true) {
+        stat_heal($heal_stat, divide($heal_constant, 2), divide($heal_percent, 2));
+    }
     $i = calc($i + 1);
 }
 if (db_getfieldcount($effect_data, consume_table:healenergy) > 0) {

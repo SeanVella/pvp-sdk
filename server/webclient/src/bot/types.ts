@@ -471,6 +471,8 @@ export interface BotState {
     skullTicksRemaining: number | null;
     /** New-player protection: nobody can attack you, until 3 hours of play or your first attack. */
     newPlayerProtected: boolean;
+    /** Breach points earned fighting breach guardians, to spend with the breach warden. */
+    breachPoints: number;
     /** Authoritative client varp 172: server auto-retaliation is enabled. */
     autoRetaliateEnabled: boolean;
     /** Whether the server accepted or silently discarded recent ops */

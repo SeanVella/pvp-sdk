@@ -211,6 +211,9 @@ if (inv_getobj(worn, ^wearpos_ring) = ring_of_recoil & map_members = ^true & .fi
     .queue(recoil_damage, 0, $recoil_damage);
     ~ring_of_recoil_lose_charge($recoil_damage);
 }
+if ($damage > 0 & ~sigil_carried(sigil_of_stone) = true) { // pvp-sdk: sigil of stone (dmm_breaches.rs2)
+    $damage = scale(90, 100, $damage);
+}
 ~damage_self($damage);
 
 [queue,recoil_damage](int $damage) // seperate queue to avoid infinite recoil loop

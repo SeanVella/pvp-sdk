@@ -170,6 +170,32 @@ The Wilderness starts north of the ditch at z 3520 (x 2944-3391), and undergroun
 You can't log out for 16 ticks (about 5 seconds here) after combat. The in-game message says 10
 seconds, which is what it was at the original game's speed.
 
+## Breaches and sigils
+
+Every **3 hours**, on the hour in UTC (00:00, 03:00, ...), a **breach** opens: a **breach guardian**
+(a 750-hitpoint demon) appears at a random multi-combat spot outside the towns, announced to the
+whole world **10 minutes** ahead. It leaves after **20 minutes** if nobody kills it. The spots are
+Barbarian Village, Al Kharid, the Wizards' Tower, the gnome battlefield, the Dark Warriors'
+Fortress (level 15 Wilderness) and the bandit camp (level 23 Wilderness). Everyone fighting it is
+fair game for everyone else.
+
+When the guardian dies, everyone who damaged it earns **breach points**: one per 5 damage, up to
+50. The player who dealt the most damage always gets a **sigil**, and anyone else who dealt at
+least 5% of its hitpoints has a 1 in 5 chance of one. The **breach warden** in Lumbridge castle's
+courtyard trades points for 10 sharks (8 points), 3 prayer potions (10) or a random sigil (60).
+[`/api/breach`](https://pvp-sdk.fly.dev/api/breach) says when the next one opens and where.
+
+A sigil works while it's in your inventory, and two of a kind don't add up. Sigils can't be
+traded, and **dying destroys them**.
+
+| Sigil | While you carry it |
+|---|---|
+| Fury | Your melee max hit is 10% higher |
+| Stone | Other players hit you 10% softer |
+| The feast | Food heals half as much again |
+| Escape | The teleport lock after a PvP hit is halved (12 ticks) |
+| Fortune | Breaches pay half as many points again |
+
 ## PvP hiscores
 
 [`/hiscores/pvp`](https://pvp-sdk.fly.dev/hiscores/pvp) ranks kills, deaths, K/D, the best run of

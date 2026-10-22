@@ -28,6 +28,9 @@ def_int $damage = 0;
 // https://oldschool.runescape.wiki/w/Combat#PvP_bonus_experience
 if (~pvp_hit_roll(%damagetype) = true) {
     def_int $maxhit = %com_maxhit;
+    if (~sigil_carried(sigil_of_fury) = true) { // pvp-sdk: sigil of fury (dmm_breaches.rs2)
+        $maxhit = scale(110, 100, $maxhit);
+    }
     if (~.check_protect_prayer(^melee_style) = true) {
         $maxhit = scale(6, 10, $maxhit); // reduction of 40%
     }

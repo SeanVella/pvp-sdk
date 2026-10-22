@@ -107,6 +107,7 @@ import HashTable from '#/datastruct/HashTable.js';
 import Midi from '#/cache/midi/Midi.js';
 import { WorldQueue } from '#/engine/WorldQueue.js';
 import { KillJudge, PAIR_COOLDOWN_MS, comparableIp, riskedValue, type Stack } from '#/engine/pvp/PvpKills.js';
+import { BREACH_SITES, BreachSchedule, breachPayouts } from '#/engine/pvp/Breaches.js';
 
 const priv = forge.pki.privateKeyFromPem(fs.readFileSync('data/config/private.pem', 'ascii'));
 
@@ -121,6 +122,14 @@ class World {
     private loggerThread = new Worker(new URL('../server/logger/LoggerThread.ts', import.meta.url));
     // pvp-sdk: decides which PvP kills count toward /hiscores/pvp (engine/pvp/PvpKills.ts)
     private readonly killJudge = new KillJudge(PAIR_COOLDOWN_MS, Environment.PVP_KILL_MIN_RISK);
+    // pvp-sdk: breaches (engine/pvp/Breaches.ts), driven from cycle()
+    readonly breaches = new BreachSchedule(
+        Environment.BREACH_INTERVAL_MINUTES * 60_000,
+        Environment.BREACH_WARNING_MINUTES * 60_000,
+        Environment.BREACH_DURATION_MINUTES * 60_000,
+        () => BREACH_SITES[Math.floor(Math.random() * BREACH_SITES.length)]!
+    );
+    private breachGuardian: Npc | null = null;
     private devThread: Worker | null = null;
 
     private static readonly PLAYERS: number = 2047;
@@ -462,6 +471,9 @@ class World {
 
             // rs-sdk: live world feed for spectator viewers (reads the info masks before cleanup)
             cycleWorldFeed();
+
+            // pvp-sdk: breach warnings, openings and closings
+            this.cycleBreaches();
 
             // cleanup
             // - reset zones
@@ -2812,6 +2824,64 @@ class World {
             offender,
             reason
         });
+    }
+
+    // pvp-sdk: announce, open and close breaches on their schedule (engine/pvp/Breaches.ts)
+    private cycleBreaches(): void {
+        if (!Environment.BREACHES) return;
+        const now = Date.now();
+        for (const event of this.breaches.tick(now)) {
+            if (event.kind === 'warn') {
+                const minutes = Math.max(1, Math.round((event.opensAt - now) / 60_000));
+                this.broadcastMes(`A breach will open near ${event.site.name} in ${minutes} minute${minutes === 1 ? '' : 's'}!`);
+            } else if (event.kind === 'open') {
+                const type = NpcType.getByName('breach_guardian');
+                if (!type) continue;
+                const npc = new Npc(0, event.site.x, event.site.z, type.size, type.size, EntityLifeCycle.DESPAWN, this.getNextNid(), type.id, type.blockwalk);
+                // Despawns by itself a little after the close, in case a tick runs long.
+                this.addNpc(npc, Math.ceil((event.closesAt - now) / Environment.NODE_TICKRATE) + 100);
+                this.breachGuardian = npc;
+                this.broadcastMes(`A breach has opened near ${event.site.name}! Its guardian won't stay long.`);
+            } else {
+                if (this.breachGuardian?.isActive) this.removeNpc(this.breachGuardian, -1);
+                this.breachGuardian = null;
+                this.broadcastMes(`The breach near ${event.site.name} has closed.`);
+            }
+        }
+    }
+
+    // pvp-sdk: a breach guardian died (NPC_DEL): pay out breach points and sigils by damage
+    onBreachGuardianKilled(npc: Npc, heroes: { hash64: bigint; points: number }[]) {
+        const site = this.breaches.guardianKilled();
+        this.breachGuardian = null;
+        const fortune = ObjType.getId('sigil_of_fortune');
+        const fighters = heroes
+            .map(h => ({ player: this.getPlayerByHash64(h.hash64), damage: h.points }))
+            .filter((f): f is { player: Player; damage: number } => !!f.player);
+        const payouts = breachPayouts(
+            fighters.map(f => ({ username: f.player.username, damage: f.damage, fortune: f.player.invTotal(InvType.INV, fortune) > 0 })),
+            npc.baseLevels[NpcStat.HITPOINTS],
+            Math.random
+        );
+        const pointsVarp = VarPlayerType.getId('breach_points');
+        const sigils = ['sigil_of_fury', 'sigil_of_stone', 'sigil_of_the_feast', 'sigil_of_escape', 'sigil_of_fortune'].map(n => ObjType.getId(n));
+        for (const payout of payouts) {
+            const player = fighters.find(f => f.player.username === payout.username)!.player;
+            const total = (player.getVar(pointsVarp) as number) + payout.points;
+            player.setVar(pointsVarp, total);
+            player.messageGame(`You earn ${payout.points} breach points (${total} in all).`);
+            if (payout.sigil) {
+                const sigil = sigils[Math.floor(Math.random() * sigils.length)]!;
+                if (player.invFreeSpace(InvType.INV) > 0) {
+                    player.invAdd(InvType.INV, sigil, 1);
+                } else {
+                    this.addObj(new Obj(player.level, player.x, player.z, EntityLifeCycle.DESPAWN, sigil, 1), player.hash64, 200);
+                }
+                player.messageGame(`You find a ${(ObjType.get(sigil).name ?? "sigil").toLowerCase()} in the breach!`);
+            }
+        }
+        const top = payouts[0] ? fighters.find(f => f.player.username === payouts[0]!.username)!.player.displayName : null;
+        this.broadcastMes(`The breach guardian${site ? ` near ${site.name}` : ''} has fallen!${top ? ` ${top} dealt the most damage.` : ''}`);
     }
 
     // pvp-sdk: one row per death to a player (hiscores /pvp), called before the loot

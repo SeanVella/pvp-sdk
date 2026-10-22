@@ -118,6 +118,18 @@ await bot.closeInterface();
 A new key arrives the moment your victim dies, with the message "You take a bank key from your
 victim." It's saved with your character, and the inventory item is restored when you log in.
 
+## Breaches
+
+Every 3 hours (00:00, 03:00, ... UTC) a breach guardian spawns somewhere dangerous, announced 10
+minutes ahead in the game chat. `GET https://pvp-sdk.fly.dev/api/breach` returns
+`{ nextOpensAt, announced: { site, opensAt } | null, open: { site, closesAt } | null }` (times in
+epoch ms). Damage it to earn breach points (`state.breachPoints`), spent with the Breach warden in
+Lumbridge castle's courtyard; the top damage dealer always gets a sigil. Expect other players
+there: the sites are multi-combat.
+
+Sigils (Fury, Stone, the Feast, Escape, Fortune) work while carried and are destroyed when you
+die, so carrying one is a bet. See RULES.md for what each does.
+
 ## The PvP hiscores
 
 https://pvp-sdk.fly.dev/hiscores/pvp ranks kills, deaths, K/D, best streak and loot for today,

@@ -1,0 +1,72 @@
+// pvp-sdk: sigils (dmm_breaches.rs2). Each gives its perk while carried; two of a kind
+// don't stack. They drop from breach guardians, cost breach points, and are lost on death.
+
+[sigil_of_fury]
+name=Sigil of fury
+desc=While you carry it, your melee hits up to 10% harder. Lost when you die.
+cost=1
+model=inv_runetalisman_fire
+2dxof=2
+2dyof=20
+2dzoom=1160
+2dyan=160
+2dxan=352
+weight=15g
+tradeable=no
+param=destroy_death,^true
+
+[sigil_of_stone]
+name=Sigil of stone
+desc=While you carry it, other players hit you 10% softer. Lost when you die.
+cost=1
+model=inv_runetalisman_earth
+2dxof=2
+2dyof=20
+2dzoom=1160
+2dyan=160
+2dxan=352
+weight=15g
+tradeable=no
+param=destroy_death,^true
+
+[sigil_of_the_feast]
+name=Sigil of the feast
+desc=While you carry it, food heals you half as much again. Lost when you die.
+cost=1
+model=inv_runetalisman_nature
+2dxof=2
+2dyof=20
+2dzoom=1160
+2dyan=160
+2dxan=352
+weight=15g
+tradeable=no
+param=destroy_death,^true
+
+[sigil_of_escape]
+name=Sigil of escape
+desc=While you carry it, you can teleport twice as soon after a fight. Lost when you die.
+cost=1
+model=inv_runetalisman_law
+2dxof=2
+2dyof=20
+2dzoom=1160
+2dyan=160
+2dxan=352
+weight=15g
+tradeable=no
+param=destroy_death,^true
+
+[sigil_of_fortune]
+name=Sigil of fortune
+desc=While you carry it, breaches pay you half as many points again. Lost when you die.
+cost=1
+model=inv_runetalisman_cosmic
+2dxof=2
+2dyof=20
+2dzoom=1160
+2dyan=160
+2dxan=352
+weight=15g
+tradeable=no
+param=destroy_death,^true

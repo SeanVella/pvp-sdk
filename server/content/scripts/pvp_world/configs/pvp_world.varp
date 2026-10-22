@@ -29,3 +29,10 @@ transmit=yes
 protect=no
 scope=perm
 transmit=yes
+
+// Breach points to spend with the breach warden (dmm_breaches.rs2). Saved, and
+// transmitted so bots can see them.
+[breach_points]
+protect=no
+scope=perm
+transmit=yes

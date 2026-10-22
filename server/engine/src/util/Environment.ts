@@ -71,5 +71,11 @@ export default {
     REGISTRATIONS_PER_IP_PER_HOUR: tryParseInt(process.env.REGISTRATIONS_PER_IP_PER_HOUR, 10),
     REGISTRATIONS_PER_HOUR: tryParseInt(process.env.REGISTRATIONS_PER_HOUR, 200),
     // pvp-sdk: a kill counts toward /hiscores/pvp only if the victim risked this much (gp)
-    PVP_KILL_MIN_RISK: tryParseInt(process.env.PVP_KILL_MIN_RISK, 1000)
+    PVP_KILL_MIN_RISK: tryParseInt(process.env.PVP_KILL_MIN_RISK, 1000),
+    // pvp-sdk: breaches (engine/pvp/Breaches.ts) open every BREACH_INTERVAL_MINUTES at
+    // fixed UTC times, announced BREACH_WARNING_MINUTES ahead, for BREACH_DURATION_MINUTES.
+    BREACHES: tryParseBoolean(process.env.BREACHES, true),
+    BREACH_INTERVAL_MINUTES: tryParseInt(process.env.BREACH_INTERVAL_MINUTES, 180),
+    BREACH_WARNING_MINUTES: tryParseInt(process.env.BREACH_WARNING_MINUTES, 10),
+    BREACH_DURATION_MINUTES: tryParseInt(process.env.BREACH_DURATION_MINUTES, 20)
 };

@@ -475,6 +475,17 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `state.safeBox`, `sendSafeBoxStore/Withdraw` (the trade code's `sendInvButton`),
       `bot.openSafeDepositBox/storeInSafeDepositBox/withdrawFromSafeDepositBox`. Verify: the
       fixture test, and `bun test sdk/test/safe-box.test.ts`.
+- [ ] **Breaches and sigils** — `engine/pvp/Breaches.ts` (fork-only) and `World.cycleBreaches` /
+      `World.onBreachGuardianKilled` (called from `NPC_DEL` in `handlers/NpcOps.ts` for
+      `breach_guardian`); `web/pages/breach.ts` (`/api/breach`, routed in `web/index.ts`).
+      Content (fork-only): `pvp_world/configs/breach.npc`, `dmm_sigils.obj`,
+      `scripts/dmm_breaches.rs2`; varp `breach_points` **1007**; npcs `breach_guardian` **2046**,
+      `breach_warden` **2047** (`npc.pack`; NPC ids must stay under **2048**: NPC info sends the
+      type in 11 bits); objs **10001-10005** sigils (`obj.pack`); the warden's spawn in
+      `maps/m50_50.jm2` (`0 25 20: 2047`). Sigil hooks in upstream files, each marked:
+      `player_melee.rs2` and `pvp_melee.rs2` (fury), `pvp_combat.rs2` `[queue,pvp_damage]`
+      (stone), `consume_effects.rs2` stat heal (feast); `pvp_world.rs2` (escape). Verify: `bun
+      test server/engine/test/breaches.test.ts` and the fixture tests.
 - [ ] **PvP kills** (`docs/PVP_PLAN.md` item 3). Opcode **10012** `PVP_KILL` (`ScriptOpcode.ts`,
       `ScriptOpcodePointers.ts`, handler in `handlers/DebugOps.ts`), declared in
       `content/scripts/engine.rs2` and called in `player/scripts/death.rs2` before

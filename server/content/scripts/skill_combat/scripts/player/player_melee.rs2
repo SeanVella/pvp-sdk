@@ -28,6 +28,9 @@ if (~player_npc_hit_roll(%damagetype) = true) {
     if (npc_param(undead) = ^true & inv_total(worn, crystalshard_necklace) > 0) {
         $maxhit = scale($maxhit, 7, 6); // seems like damage bonus... todo: figure this out
     }
+    if (~sigil_carried(sigil_of_fury) = true) { // pvp-sdk: sigil of fury (dmm_breaches.rs2)
+        $maxhit = scale(110, 100, $maxhit);
+    }
     $damage = randominc(~npc_max_dealt($maxhit, 0));
     def_int $damage_capped = min($damage, npc_stat(hitpoints));
     ~give_combat_experience(%damagestyle, $damage_capped, %npc_combat_xp_multiplier);

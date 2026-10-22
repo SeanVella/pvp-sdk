@@ -275,6 +275,8 @@ describe('BotStateCollector combat state', () => {
         expect(collector.collectState(1, true).newPlayerProtected).toBeFalse();
         client.var[1006] = 1;
         expect(collector.collectState(2, true).newPlayerProtected).toBeTrue();
+        client.var[1007] = 42;
+        expect(collector.collectState(3, true).breachPoints).toBe(42);
     });
 
     test('reports which nearby players show the skull', () => {

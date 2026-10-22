@@ -623,6 +623,9 @@ export interface BotWorldState {
     /** New-player protection (accounts made after it was added): nobody can attack you
      * until 3 hours of play, or until you attack someone. Absent on older clients. */
     newPlayerProtected?: boolean;
+    /** Breach points, earned by damaging breach guardians and spent with the breach warden
+     * in Lumbridge. When the next breach opens: GET /api/breach. Absent on older clients. */
+    breachPoints?: number;
     /** Absent when the connected client predates authoritative auto-retaliate telemetry. */
     autoRetaliateEnabled?: boolean;
     /** Absent when the connected client predates the signal. */

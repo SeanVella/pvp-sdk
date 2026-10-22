@@ -331,6 +331,52 @@ test('dying skulled raids your 10 most valuable tradeable bank stacks into a key
     expect(stacks(killer, INV).get(KEY) ?? 0).toBe(0);
 });
 
+test('sigils of escape and stone change the teleport lock and damage taken from players', () => {
+    World.currentTick = 2000;
+    const p = player('sigil_holder', 40, FIELD.x, FIELD.z);
+    p.vars[varp('pvp_combat_clock')] = 1995; // hit 5 ticks ago
+    expect(run('[proc,pvp_teleport_locked]', p).popInt()).toBe(1);
+    p.invAdd(INV, obj('sigil_of_escape'), 1);
+    World.currentTick = 2007; // 12 ticks after: past half of the 24-tick lock
+    expect(run('[proc,pvp_teleport_locked]', p).popInt()).toBe(0);
+
+    const hp = p.levels[PlayerStat.HITPOINTS];
+    run('[queue,pvp_damage]', p, null, [20]);
+    expect(p.levels[PlayerStat.HITPOINTS]).toBe(hp - 20);
+    p.invAdd(INV, obj('sigil_of_stone'), 1);
+    run('[queue,pvp_damage]', p, null, [20]);
+    expect(p.levels[PlayerStat.HITPOINTS]).toBe(hp - 20 - 18);
+});
+
+test('the breach warden trades points for rewards', () => {
+    const p = player('breacher', 10, LUMBRIDGE_SPAWN.x, LUMBRIDGE_SPAWN.z);
+    p.vars[varp('breach_points')] = 70;
+    run('[proc,breach_buy]', p, null, [8, obj('shark'), 10]);
+    expect(stacks(p, INV).get(obj('shark'))).toBe(10);
+    expect(p.vars[varp('breach_points')]).toBe(62);
+    expect(p.messages).toContain('You spend 8 breach points. You have 62 left.');
+});
+
+test('a breach guardian\'s death pays its fighters in points and sigils', () => {
+    const big = player('big_hitter', 40, FIELD.x, FIELD.z);
+    const small = player('small_hitter', 10, FIELD.x + 1, FIELD.z);
+    small.vars[varp('breach_points')] = 5;
+    const byHash = new Map([[big.hash64, big], [small.hash64, small]]);
+    const original = World.getPlayerByHash64;
+    World.getPlayerByHash64 = (hash64: bigint) => byHash.get(hash64) ?? null;
+    try {
+        const guardian = { baseLevels: [0, 0, 0, 750, 0, 0] } as any;
+        World.onBreachGuardianKilled(guardian, [{ hash64: big.hash64, points: 600 }, { hash64: small.hash64, points: 20 }]);
+    } finally {
+        World.getPlayerByHash64 = original;
+    }
+    expect(big.vars[varp('breach_points')]).toBe(50);
+    expect(small.vars[varp('breach_points')]).toBe(9);
+    expect(big.messages).toContain('You earn 50 breach points (50 in all).');
+    const sigils = ['sigil_of_fury', 'sigil_of_stone', 'sigil_of_the_feast', 'sigil_of_escape', 'sigil_of_fortune'].map(obj);
+    expect([...stacks(big, INV).keys()].some(id => sigils.includes(id))).toBe(true); // the top damage dealer always gets one
+});
+
 test('the safe deposit box keeps ten stacks out of a bank raid', () => {
     const SAFE = inv('dmm_safe_box');
     const p = player('saver', 10, VARROCK_SQUARE.x, VARROCK_SQUARE.z);
