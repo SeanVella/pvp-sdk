@@ -170,6 +170,28 @@ model pvp_kill {
     @@index([timestamp])
 }
 
+// pvp-sdk: fair play (docs/FAIR_PLAY.md). A player is one verified phone number, kept only
+// as a keyed hash; player_bot gives them up to BOTS_PER_PLAYER accounts a season.
+model player {
+    id Int @id @default(autoincrement())
+
+    phone_hash   String  @unique
+    api_key_hash String? @unique
+    created      DateTime
+}
+
+model player_bot {
+    id Int @id @default(autoincrement())
+
+    player_id  Int
+    account_id Int
+    season     Int
+    created    DateTime
+
+    @@unique([account_id, season])
+    @@index([player_id, season])
+}
+
 model runite_mine {
     id Int @id @default(autoincrement())
 

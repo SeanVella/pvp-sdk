@@ -41,6 +41,12 @@ GATEWAY_PUBLIC_PORT = "7781"
 # Concurrent game sessions per source IP (code default 200). Keyed on
 # Fly-Client-IP, which clients can't spoof.
 MAX_PLAYERS_PER_IP = "100"
+# pvp-sdk: fair play (docs/FAIR_PLAY.md) - 5 bots per player per season, made on /account by a
+# phone-verified player; only those bots log in. It starts enforcing once the Fly secrets
+# ACCOUNTS_SECRET, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_SERVICE_SID,
+# TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY are all set; until then the server runs as before.
+PLAYER_ACCOUNTS = "true"
+BOTS_PER_PLAYER = "5"
 
 # One machine is the whole world: never auto-stop it, and never run a second
 # copy (a second machine would be a separate, empty world with its own volume).

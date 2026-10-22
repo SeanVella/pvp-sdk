@@ -20,9 +20,68 @@ async function replaceInFile(filePath: string, replacements: Record<string, stri
     await writeFile(filePath, content);
 }
 
-async function createBot(username?: string, serverOverride?: string, hideChat?: boolean) {
+// pvp-sdk: fair play (docs/FAIR_PLAY.md). A server can give each player a few bots a season;
+// then the server makes the account, in one of your slots, and needs your API key from its
+// /account page (PVP_SDK_KEY in the project's .env, or --key=). Elsewhere, as before, the
+// account registers itself on its first login with the password made here.
+type FairPlay = { enabled: boolean; season: number; botsPerPlayer: number; signup: string };
+
+function serverBase(server: string): string {
+    return server === 'localhost' ? 'http://localhost:8888' : `https://${server}`;
+}
+
+async function fairPlay(base: string): Promise<FairPlay | null> {
+    try {
+        const res = await fetch(`${base}/api/accounts`, { signal: AbortSignal.timeout(5000) });
+        return res.ok ? ((await res.json()) as FairPlay) : null;
+    } catch {
+        return null; // older server, or not running yet
+    }
+}
+
+async function botApi(base: string, path: string, key: string, body: object): Promise<{ username?: string; password?: string; error?: string }> {
+    const res = await fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    return (await res.json().catch(() => ({ error: `HTTP ${res.status}` }))) as { username?: string; password?: string; error?: string };
+}
+
+function needKey(base: string, rules: FairPlay): never {
+    console.error(`This server gives each player ${rules.botsPerPlayer} bots a season (docs/FAIR_PLAY.md).`);
+    console.error(`1. Sign up at ${base}${rules.signup} and create an API key there.`);
+    console.error(`2. Put PVP_SDK_KEY=<key> in the project's .env (or pass --key=<key>), then run this again.`);
+    process.exit(1);
+}
+
+/** Puts an existing bots/<name>/ (made before fair play) into one of your slots. */
+async function claimBot(username: string, serverOverride: string | undefined, key: string | undefined) {
+    const envPath = join(process.cwd(), 'bots', username, 'bot.env');
+    if (!existsSync(envPath)) {
+        console.error(`Error: no bots/${username}/bot.env to claim`);
+        process.exit(1);
+    }
+    const env = await readFile(envPath, 'utf-8');
+    const value = (name: string) => env.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1]?.trim() ?? '';
+    const base = serverBase(serverOverride ?? (value('SERVER') || 'pvp-sdk.fly.dev'));
+    const rules = await fairPlay(base);
+    if (!rules?.enabled) {
+        console.log(`${base} doesn't use bot slots; nothing to claim.`);
+        return;
+    }
+    if (!key) needKey(base, rules);
+    const result = await botApi(base, '/api/bots/claim', key, { username: value('BOT_USERNAME') || username, password: value('PASSWORD') });
+    if (result.error) {
+        console.error(`Error: ${result.error}`);
+        process.exit(1);
+    }
+    console.log(`✓ "${result.username}" is now one of your ${rules.botsPerPlayer} bots for season ${rules.season}.`);
+}
+
+async function createBot(username?: string, serverOverride?: string, hideChat?: boolean, key?: string) {
     // Generate username if not provided
-    const botUsername = username || generateRandomString(9);
+    let botUsername = username || generateRandomString(9);
 
     // Validate username
     if (botUsername.length > 12) {
@@ -36,7 +95,6 @@ async function createBot(username?: string, serverOverride?: string, hideChat?: 
     }
 
     const templateDir = join(process.cwd(), 'bots', '_template');
-    const botDir = join(process.cwd(), 'bots', botUsername);
 
     // Check if template exists
     if (!existsSync(templateDir)) {
@@ -45,17 +103,31 @@ async function createBot(username?: string, serverOverride?: string, hideChat?: 
     }
 
     // Check if bot already exists
-    if (existsSync(botDir)) {
-        console.error(`Error: Bot directory already exists at ${botDir}`);
+    if (existsSync(join(process.cwd(), 'bots', botUsername))) {
+        console.error(`Error: Bot directory already exists at ${join(process.cwd(), 'bots', botUsername)}`);
         process.exit(1);
     }
+
+    // Generate random password, or have the server make the account in one of your slots
+    let password = generateRandomString(12);
+    const base = serverBase(serverOverride ?? 'pvp-sdk.fly.dev');
+    const rules = await fairPlay(base);
+    if (rules?.enabled) {
+        if (!key) needKey(base, rules);
+        const made = await botApi(base, '/api/bots', key, { username: botUsername });
+        if (made.error || !made.username || !made.password) {
+            console.error(`Error: ${made.error ?? 'the server did not return the new account'}`);
+            process.exit(1);
+        }
+        botUsername = made.username;
+        password = made.password;
+        console.log(`Account "${botUsername}" made in one of your ${rules.botsPerPlayer} slots for season ${rules.season}.`);
+    }
+    const botDir = join(process.cwd(), 'bots', botUsername);
 
     // Copy template directory
     await cp(templateDir, botDir, { recursive: true });
     console.log(`Created bot directory: ${botDir}`);
-
-    // Generate random password
-    const password = generateRandomString(12);
 
     // Replace placeholders in all files
     const replacements = {
@@ -110,9 +182,15 @@ const args = process.argv.slice(2);
 const positional: string[] = [];
 let serverOverride: string | undefined;
 let hideChat = false;
+let claim = false;
+let key: string | undefined = process.env.PVP_SDK_KEY || undefined; // Bun loads the project's .env
 
 for (const arg of args) {
-    if (arg === '--local') {
+    if (arg === '--claim') {
+        claim = true;
+    } else if (arg.startsWith('--key=')) {
+        key = arg.slice('--key='.length);
+    } else if (arg === '--local') {
         serverOverride = 'localhost';
     } else if (arg.startsWith('--server=')) {
         serverOverride = arg.slice('--server='.length);
@@ -125,4 +203,12 @@ for (const arg of args) {
     }
 }
 
-createBot(positional[0], serverOverride, hideChat).catch(console.error);
+if (claim) {
+    if (!positional[0]) {
+        console.error('Usage: bun bots/create-bot.ts <name> --claim');
+        process.exit(1);
+    }
+    claimBot(positional[0], serverOverride, key).catch(console.error);
+} else {
+    createBot(positional[0], serverOverride, hideChat, key).catch(console.error);
+}

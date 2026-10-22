@@ -16,6 +16,26 @@ import { getIp } from './utils.js';
 import { getPlayerPositionsJson } from './worldfeed.js';
 import { handleOwnerSignIn, isOwnerOnlyPath, isOwnerRequest, notFound } from './owner.js';
 import { handleBreachApi } from './pages/breach.js';
+import { createAccountRoutes } from './pages/account.js';
+import { db } from '#/db/query.js';
+import PlayerAccounts from '#/server/accounts/Players.js';
+import { phoneVerifier, verifyTurnstile } from '#/server/accounts/PhoneVerify.js';
+
+// pvp-sdk: fair play - sign-up and bot slots on /account and /api/bots (docs/FAIR_PLAY.md)
+const handleAccount = createAccountRoutes({
+    accounts: new PlayerAccounts(db, Environment.SEASON, Environment.BOTS_PER_PLAYER, Environment.BANNED_USERNAME_WORDS),
+    verifier: phoneVerifier(),
+    secret: Environment.ACCOUNTS_SECRET,
+    enforced: Environment.PLAYER_ACCOUNTS,
+    turnstileSiteKey: Environment.TURNSTILE_SITE_KEY,
+    turnstile: verifyTurnstile,
+    smsPerIpPerHour: Environment.SMS_PER_IP_PER_HOUR,
+    smsPerDay: Environment.SMS_PER_DAY,
+    allowedPrefixes: Environment.SMS_ALLOWED_PREFIXES
+});
+if (Environment.PLAYER_ACCOUNTS_REQUESTED && !Environment.PLAYER_ACCOUNTS) {
+    console.warn('[accounts] PLAYER_ACCOUNTS is on, but ACCOUNTS_SECRET and the Twilio and Turnstile keys are not all set: fair play is NOT enforced yet (docs/FAIR_PLAY.md)');
+}
 
 export type { WebSocketData };
 
@@ -100,6 +120,8 @@ async function handleRequest(req: Request, server: Bun.Server, url: URL): Promis
             if (isOwnerOnlyPath(url.pathname) && !isOwnerRequest(req)) return notFound();
             const ownerSignIn = await handleOwnerSignIn(req, url);
             if (ownerSignIn) return ownerSignIn;
+            const accountResponse = await handleAccount(req, url, getIp(req));
+            if (accountResponse) return accountResponse;
             // Handle WebSocket upgrades first
             const wsResponse = handleWebSocketUpgrade(req, server, url);
             if (wsResponse !== undefined) {

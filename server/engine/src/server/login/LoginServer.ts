@@ -20,6 +20,7 @@ import ObjType from '#/cache/config/ObjType.js';
 import VarPlayerType from '#/cache/config/VarPlayerType.js';
 import { outfitAppearance } from '#/server/login/OutfitAppearance.js';
 import RegistrationLimiter from '#/server/login/RegistrationLimiter.js';
+import PlayerAccounts from '#/server/accounts/Players.js';
 
 // bcrypt-ts is pure JS: one compare pins this thread for ~50-200ms. Prod outage
 // 2026-08-17: a reconnect stampede after a redeploy (~5 auths/s across fleets and
@@ -293,6 +294,9 @@ export default class LoginServer {
     private loginRequests: Set<string> = new Set();
     // pvp-sdk: caps new accounts per IP and overall (RegistrationLimiter.ts)
     private registrations = new RegistrationLimiter(Environment.REGISTRATIONS_PER_IP_PER_HOUR, Environment.REGISTRATIONS_PER_HOUR);
+    // pvp-sdk: fair play (docs/FAIR_PLAY.md) - with PLAYER_ACCOUNTS on, accounts come only from
+    // /account, and only bots in a player's slots this season (and staff) may log in.
+    private players = new PlayerAccounts(db, Environment.SEASON, Environment.BOTS_PER_PLAYER);
     // In-memory tracking of concurrent logins per IP
     private ipLoginCount: Map<string, Set<number>> = new Map();
     private accountIp: Map<number, string> = new Map();
@@ -437,7 +441,7 @@ export default class LoginServer {
                                 .selectAll()
                                 .executeTakeFirst();
 
-                            if (!Environment.website.registration && !account) {
+                            if (!Environment.website.registration && !Environment.PLAYER_ACCOUNTS && !account) {
                                 // reject usernames containing banned words
                                 const lower = username.toLowerCase();
                                 if (Environment.BANNED_USERNAME_WORDS.some(w => lower.includes(w))) {
@@ -508,6 +512,18 @@ export default class LoginServer {
 
                             if (account.banned_until !== null && new Date(account.banned_until) > new Date()) {
                                 // account disabled
+                                s.send(
+                                    JSON.stringify({
+                                        replyTo,
+                                        response: 5
+                                    })
+                                );
+                                return;
+                            }
+
+                            // pvp-sdk: fair play - not in any player's slots this season. The game
+                            // client can only say "account disabled"; the SDK path says why.
+                            if (Environment.PLAYER_ACCOUNTS && !(await this.players.mayLogIn(account.id, account.staffmodlevel))) {
                                 s.send(
                                     JSON.stringify({
                                         replyTo,
@@ -850,12 +866,12 @@ export default class LoginServer {
 
                         let account = await db.selectFrom('account')
                             .where('username', '=', username)
-                            .select(['id', 'password', 'banned_until'])
+                            .select(['id', 'password', 'banned_until', 'staffmodlevel'])
                             .executeTakeFirst();
 
                         // Auto-register if account doesn't exist (same as player_login)
                         let registrationFailed = false;
-                        if (!Environment.WEBSITE_REGISTRATION && !account) {
+                        if (!Environment.WEBSITE_REGISTRATION && !Environment.PLAYER_ACCOUNTS && !account) {
                             // reject usernames containing banned words
                             const sdkLower = username.toLowerCase();
                             if (Environment.BANNED_USERNAME_WORDS.some(w => sdkLower.includes(w))) {
@@ -891,7 +907,7 @@ export default class LoginServer {
                                 if (typeof insertResult.insertId !== 'undefined') {
                                     account = await db.selectFrom('account')
                                         .where('username', '=', username)
-                                        .select(['id', 'password', 'banned_until'])
+                                        .select(['id', 'password', 'banned_until', 'staffmodlevel'])
                                         .executeTakeFirst();
                                 } else {
                                     registrationFailed = true;
@@ -903,7 +919,7 @@ export default class LoginServer {
                                     // Username was taken between check and insert - re-fetch and try password
                                     account = await db.selectFrom('account')
                                         .where('username', '=', username)
-                                        .select(['id', 'password', 'banned_until'])
+                                        .select(['id', 'password', 'banned_until', 'staffmodlevel'])
                                         .executeTakeFirst();
                                 } else {
                                     console.error('[SDK Auth] Registration error:', err);
@@ -923,6 +939,15 @@ export default class LoginServer {
 
                         const sdkPasswordMatch = account ? await comparePassword(password, account.password) : false;
 
+                        if (!account && Environment.PLAYER_ACCOUNTS) {
+                            s.send(JSON.stringify({
+                                replyTo,
+                                success: false,
+                                error: "No such bot. Bots are created on the server's /account page (docs/FAIR_PLAY.md)"
+                            }));
+                            return;
+                        }
+
                         if (!account || !sdkPasswordMatch) {
                             s.send(JSON.stringify({
                                 replyTo,
@@ -937,6 +962,16 @@ export default class LoginServer {
                                 replyTo,
                                 success: false,
                                 error: 'Account is banned'
+                            }));
+                            return;
+                        }
+
+                        // pvp-sdk: fair play - say exactly what to do; the gateway shows this to the bot
+                        if (Environment.PLAYER_ACCOUNTS && !(await this.players.mayLogIn(account.id, account.staffmodlevel))) {
+                            s.send(JSON.stringify({
+                                replyTo,
+                                success: false,
+                                error: `This bot isn't in any player's slots for season ${Environment.SEASON}. Claim it on the server's /account page (docs/FAIR_PLAY.md)`
                             }));
                             return;
                         }

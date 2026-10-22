@@ -514,6 +514,18 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       limit exceeded"), and `sdk_auth` checks IP bans and records the IP the gateway now sends
       (`authenticateSDK(…, ip)` in `gateway.ts`). `REGISTRATIONS_PER_IP_PER_HOUR` /
       `REGISTRATIONS_PER_HOUR` in `Environment.ts`.
+- [ ] **Fair play (player accounts)** — fork-only `engine/src/server/accounts/Players.ts`
+      (players are phone hashes, `player_bot` slots per season, claims, API keys, `mayLogIn`),
+      `accounts/PhoneVerify.ts` (Twilio Verify, Turnstile) and `web/pages/account.ts`
+      (`/account`, `/api/bots`, `/api/accounts`, routed at the top of `web/index.ts`). In
+      `LoginServer.ts`, with `PLAYER_ACCOUNTS` (enforced only when `accountsReady()` in
+      `Environment.ts`), both auto-registration paths are off and both login paths refuse an
+      account with no slot this season: `player_login` answers 5 ("account disabled"), and
+      `sdk_auth` explains. Tables `player` and `player_bot` are in both prisma schemas
+      (migration `20261022100000_player_accounts`) and `db/types.ts`.
+      `webclient/src/lite/runner.ts` turns "account disabled" into a claim hint when the
+      server reports fair play. `bots/create-bot.ts` takes `PVP_SDK_KEY`/`--key=` and
+      `--claim`. Verify: `bun test server/engine/test/player-accounts.test.ts`.
 - [ ] **`fly.toml`: no 43594 service.** The login block is encrypted with the committed RSA key.
 - [ ] **`bots/create-bot.ts --local`** — the `SERVER=localhost` rewrite matches `\r?\n`. The
       template is CRLF on a Windows checkout, and upstream's `'\n'` match silently left a bot

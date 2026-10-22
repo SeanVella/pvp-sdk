@@ -14,6 +14,14 @@ const config = migrateFromLegacyEnv(loadWorldConfig(), process.env as Record<str
 // (marketDatabasePath). Earlier seasons stay on disk, viewable on the hiscores with
 // ?profile=; setting SEASON back brings one back. An explicit NODE_PROFILE wins.
 const SEASON = Math.max(1, tryParseInt(process.env.SEASON, 1));
+
+// pvp-sdk: fair play can only be enforced once players can sign up (docs/FAIR_PLAY.md).
+function accountsReady(): boolean {
+    if (!process.env.ACCOUNTS_SECRET) return false;
+    if (process.env.PHONE_VERIFY === 'dev') return true;
+    return Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_VERIFY_SERVICE_SID &&
+        process.env.TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY);
+}
 if (SEASON >= 2 && !process.env.NODE_PROFILE) {
     config.node.profile = `season-${SEASON}`;
 }
@@ -90,5 +98,28 @@ export default {
     BREACH_INTERVAL_MINUTES: tryParseInt(process.env.BREACH_INTERVAL_MINUTES, 180),
     BREACH_WARNING_MINUTES: tryParseInt(process.env.BREACH_WARNING_MINUTES, 10),
     BREACH_DURATION_MINUTES: tryParseInt(process.env.BREACH_DURATION_MINUTES, 20),
-    SEASON
+    SEASON,
+
+    // pvp-sdk: fair play (docs/FAIR_PLAY.md). On, accounts no longer register themselves:
+    // a player verifies a phone number on /account and gets BOTS_PER_PLAYER bots a season,
+    // and only those bots (and staff) can log in. ACCOUNTS_SECRET keys the phone hashes and
+    // session cookies; the SMS and Turnstile keys are Fly secrets, never fly.toml.
+    // It only takes effect once sign-up can work: refusing every unslotted login while
+    // nobody can sign up would lock the whole server out (web/index.ts warns instead).
+    PLAYER_ACCOUNTS: tryParseBoolean(process.env.PLAYER_ACCOUNTS, false) && accountsReady(),
+    PLAYER_ACCOUNTS_REQUESTED: tryParseBoolean(process.env.PLAYER_ACCOUNTS, false),
+    BOTS_PER_PLAYER: Math.max(1, tryParseInt(process.env.BOTS_PER_PLAYER, 5)),
+    ACCOUNTS_SECRET: process.env.ACCOUNTS_SECRET || '',
+    // 'twilio' sends real texts; 'dev' accepts the code 000000 and must never run in production.
+    PHONE_VERIFY: process.env.PHONE_VERIFY === 'dev' ? 'dev' as const : 'twilio' as const,
+    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || '',
+    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN || '',
+    TWILIO_VERIFY_SERVICE_SID: process.env.TWILIO_VERIFY_SERVICE_SID || '',
+    TURNSTILE_SITE_KEY: process.env.TURNSTILE_SITE_KEY || '',
+    TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
+    // Every text costs money, so sends are capped per address and per day, and optionally
+    // limited to country codes (comma-separated, e.g. "+1,+44,+356"; empty = any).
+    SMS_PER_IP_PER_HOUR: tryParseInt(process.env.SMS_PER_IP_PER_HOUR, 3),
+    SMS_PER_DAY: tryParseInt(process.env.SMS_PER_DAY, 100),
+    SMS_ALLOWED_PREFIXES: (process.env.SMS_ALLOWED_PREFIXES || '').split(',').map(s => s.trim()).filter(Boolean)
 };

@@ -169,6 +169,19 @@ export type pvp_kill = {
     counted: Generated<number>;
     reason: string | null;
 };
+export type player = {
+    id: Generated<number>;
+    phone_hash: string;
+    api_key_hash: string | null;
+    created: Timestamp;
+};
+export type player_bot = {
+    id: Generated<number>;
+    player_id: number;
+    account_id: number;
+    season: number;
+    created: Timestamp;
+};
 export type player_skills_log = {
     id: Generated<number>;
     timestamp: Timestamp;
@@ -187,6 +200,8 @@ export type DB = {
     ignorelist: ignorelist;
     input_report: input_report;
     ipban: ipban;
+    player: player;
+    player_bot: player_bot;
     player_telemetry: player_telemetry;
     player_telemetry_segment: player_telemetry_segment;
     player_skills_log: player_skills_log;

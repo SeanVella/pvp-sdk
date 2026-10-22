@@ -12,7 +12,7 @@
 
 import { fileURLToPath } from 'node:url';
 
-import { OutdatedClientError } from './net/GameConnection.js';
+import { LoginError, OutdatedClientError } from './net/GameConnection.js';
 import { startSession, type LiteSession } from './session.js';
 import { type ActionResult } from '#/bot/ActionExecutor.js';
 import { BotActionQueue, type QueuedBotAction } from '#/bot/ActionQueue.js';
@@ -406,11 +406,24 @@ const session = await startSession({
     password: env.PASSWORD!,
     profanityFilter: ['false', '0', 'off', 'no'].includes(profanityRaw) ? false : undefined,
     quiet: true
-}).catch((err: unknown) => {
+}).catch(async (err: unknown) => {
     // A revision mismatch won't fix itself: exit 3 so a supervisor can stop restarting us
     if (err instanceof OutdatedClientError) {
         console.error(`[lite-runner] ${err.message}`);
         process.exit(3);
+    }
+    // pvp-sdk: fair play (docs/FAIR_PLAY.md). On a server with bot slots, "account disabled"
+    // almost always means this bot isn't in anyone's slots this season yet, so say that.
+    if (err instanceof LoginError && err.code === 4) {
+        const base = /^(localhost|127\.)/.test(host) ? `http://${host}` : `https://${host}`;
+        const rules = await fetch(`${base}/api/accounts`, { signal: AbortSignal.timeout(5000) })
+            .then(res => (res.ok ? (res.json() as Promise<{ enabled?: boolean; season?: number }>) : null))
+            .catch(() => null);
+        if (rules?.enabled) {
+            console.error(`[lite-runner] '${env.BOT_USERNAME}' isn't in any player's bot slots for season ${rules.season}. ` +
+                `Claim it at ${base}/account, or run: bun bots/create-bot.ts ${env.BOT_USERNAME} --claim`);
+            process.exit(1);
+        }
     }
     throw err;
 });
