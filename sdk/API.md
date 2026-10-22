@@ -94,6 +94,9 @@
 | `async withdrawItem(target: BankItem \| string \| RegExp \| number, amount: number = 1, options: { asNote?: boolean } = {}): Promise<BankWithdrawResult>` | Withdraw an item from the bank by slot, name, or BankItem. `asNote: true` withdraws as a banknote: the note/item toggle is synced first (and synced back to items on the next plain withdrawal), and completion is detected on the noted item's arrival. Items the engine cannot note are withdrawn unnoted with a game message; the result then carries the unnoted item. |
 | `async checkBankKeys(timeout: number = 5000): Promise<BankKeyContents[]>` | List what each Bank key you hold contains (the key's Check option). Keys come from killing skulled players; see learnings/pvp.md. Empty when you hold none. |
 | `async openBankKey(timeout: number = 5000): Promise<OpenBankKeyResult>` | Open the first Bank key you hold: its stacks go to your bank, or fall at your feet if the bank is full. The server only allows it in a safe area while unskulled; a refusal comes back as `reason: 'skulled'` or `'not_in_safe_area'`. |
+| `async openSafeDepositBox(timeout: number = 15000): Promise<ActionResult>` | pvp-sdk: open your safe deposit box by talking to a banker and picking it from their options. Its ten stacks are never taken by a bank raid, so keep what you can't afford to lose there. Contents are in `sdk.getSafeBox()` while it's open. |
+| `async storeInSafeDepositBox(target: InventoryItem \| string \| RegExp, amount: number = -1, timeout: number = 5000): Promise<ActionResult>` | pvp-sdk: store an inventory item in the open safe deposit box (-1 = all of it). The box holds ten stacks; open it first with {@link openSafeDepositBox}. |
+| `async withdrawFromSafeDepositBox(target: BankItem \| string \| RegExp, amount: number = -1, timeout: number = 5000): Promise<ActionResult>` | pvp-sdk: take an item out of the open safe deposit box (-1 = all of it). |
 
 ### Player Trading
 
@@ -207,6 +210,7 @@
 | `getGroundItems(): GroundItem[]` | Get all ground items. |
 | `getDialog(): DialogState \| null` | Get current dialog state. |
 | `getTradeState(): TradeState` | Current player-to-player trade session state. Returns a closed-trade default when no state has arrived or the connected client predates trade support. |
+| `getSafeBox(): SafeBoxState` | pvp-sdk: the safe deposit box, read while it's open. |
 | `getPrayerState(): PrayerState \| null` | Get current prayer state from world state. |
 | `isPrayerActive(prayer: PrayerName \| number): boolean` | Check if a specific prayer is currently active. |
 | `getActivePrayers(): PrayerName[]` | Get list of all currently active prayer names. |
@@ -289,6 +293,8 @@
 | `async sendTradeRequest(playerIndex: number): Promise<ActionResult>` | Send (or accept) a trade request to another player. There is no separate "accept" packet: requesting a player who already requested you is the acceptance, and opens the trade screen for both. Otherwise the partner sees "<you> wishes to trade with you." and the trade opens when they request back. |
 | `async sendOfferItem(slot: number, amount: number = 1): Promise<ActionResult>` | Move items from your (trade-screen) side inventory into your offer. `slot` is the inventory slot. Amounts 1/5/10 and -1 (All) map to the game's offer buttons; any other amount uses Offer-X plus the count dialog. Only valid while the offer screen is open. |
 | `async sendRetractItem(slot: number, amount: number = 1): Promise<ActionResult>` | Remove items from your offer back to your inventory. Same amount semantics as {@link sendOfferItem}. Note: removing (or adding) items resets both players' accepts server-side. |
+| `async sendSafeBoxStore(slot: number, amount: number = 1): Promise<ActionResult>` | pvp-sdk: move items from your inventory (the side panel beside the open safe deposit box) into the box. Same amount rules as {@link sendOfferItem}. |
+| `async sendSafeBoxWithdraw(slot: number, amount: number = 1): Promise<ActionResult>` | pvp-sdk: move items from the open safe deposit box to your inventory. |
 | `async sendAcceptTrade(): Promise<ActionResult>` | Accept the currently open trade screen (first or confirm). The trade only advances when both players accept; an offer change resets accepts. |
 | `async sendDeclineTrade(): Promise<ActionResult>` | Decline the open trade (closes the screen; both sides get their items back and the partner sees "Other player declined trade."). |
 | `async sendSetCombatStyle(style: number): Promise<ActionResult>` | Set combat style (0-3). |
@@ -418,6 +424,18 @@ interface ShopState {
   shopItems: ShopItem[];
   playerItems: ShopItem[];
   shopConfig?: ShopConfig;
+}
+```
+
+### SafeBoxState
+
+pvp-sdk: the safe deposit box - ten stacks a bank raid never takes.
+
+```typescript
+interface SafeBoxState {
+  isOpen: boolean;
+  /** Only filled in while the box is open (`bot.openSafeDepositBox()`). */
+  items: BankItem[];
 }
 ```
 
@@ -568,6 +586,8 @@ interface BotWorldState {
   bank: BankState;
   /** Absent when the connected client predates trade support. */
   trade?: TradeState;
+  /** pvp-sdk: the safe deposit box. Absent on older clients. */
+  safeBox?: SafeBoxState;
   /** Null outside the exchange; absent on older clients. */
   ge?: GEState | null;
   modalOpen: boolean;

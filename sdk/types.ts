@@ -327,6 +327,13 @@ export interface BankItem {
     count: number;
 }
 
+/** pvp-sdk: the safe deposit box - ten stacks a bank raid never takes. */
+export interface SafeBoxState {
+    isOpen: boolean;
+    /** Only filled in while the box is open (`bot.openSafeDepositBox()`). */
+    items: BankItem[];
+}
+
 export interface BankState {
     isOpen: boolean;
     items: BankItem[];
@@ -596,6 +603,8 @@ export interface BotWorldState {
     bank: BankState;
     /** Absent when the connected client predates trade support. */
     trade?: TradeState;
+    /** pvp-sdk: the safe deposit box. Absent on older clients. */
+    safeBox?: SafeBoxState;
     /** Null outside the exchange; absent on older clients. */
     ge?: GEState | null;
     modalOpen: boolean;

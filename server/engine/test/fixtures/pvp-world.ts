@@ -331,6 +331,38 @@ test('dying skulled raids your 10 most valuable tradeable bank stacks into a key
     expect(stacks(killer, INV).get(KEY) ?? 0).toBe(0);
 });
 
+test('the safe deposit box keeps ten stacks out of a bank raid', () => {
+    const SAFE = inv('dmm_safe_box');
+    const p = player('saver', 10, VARROCK_SQUARE.x, VARROCK_SQUARE.z);
+    p.invAdd(INV, obj('rune_platebody'), 1);
+    p.invAdd(INV, obj('coins'), 5000);
+    p.invAdd(INV, KEY, 1);
+
+    run('[label,dmm_safe_box_store]', p, null, [0, 1]);
+    run('[label,dmm_safe_box_store]', p, null, [1, 2147483647]);
+    expect(stacks(p, SAFE)).toEqual(new Map([[obj('rune_platebody'), 1], [obj('coins'), 5000]]));
+    expect(stacks(p, INV).has(obj('rune_platebody'))).toBe(false);
+
+    // Bank keys stand for keys held elsewhere, so they can't go in.
+    p.messages = [];
+    run('[label,dmm_safe_box_store]', p, null, [2, 1]);
+    expect(p.messages).toEqual(["That can't go in your safe deposit box."]);
+    expect(stacks(p, INV).get(KEY)).toBe(1);
+
+    // A skulled death's raid takes the bank's best stacks and never the box.
+    p.invAdd(BANK, obj('dragon_longsword'), 1);
+    const killer = player('raider', 10, FIELD.x + 1, FIELD.z);
+    run('[proc,dmm_death_to_player]', p, killer, [1]);
+    expect(stacks(killer, inv('dmm_key_1')).get(obj('dragon_longsword'))).toBe(1);
+    expect(stacks(p, SAFE).get(obj('rune_platebody'))).toBe(1);
+    expect(stacks(p, SAFE).get(obj('coins'))).toBe(5000);
+
+    // Withdrawing gives back what fits.
+    run('[label,dmm_safe_box_withdraw]', p, null, [1, 1000]);
+    expect(stacks(p, SAFE).get(obj('coins'))).toBe(4000);
+    expect(stacks(p, INV).get(obj('coins'))).toBe(1000);
+});
+
 test('an unskulled victim keeps their bank but loses carried keys to the killer', () => {
     const holder = player('holder', 10, FIELD.x, FIELD.z);
     const killer = player('killer', 10, FIELD.x + 1, FIELD.z);

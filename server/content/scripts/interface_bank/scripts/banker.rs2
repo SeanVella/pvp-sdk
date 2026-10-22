@@ -22,11 +22,15 @@ if (npc_range(coord) > 2) {
 // todo: Confirm this for 2004.
 ~chatnpcrange("<p,quiz>Good day, how may I help you?");
 
-def_int $option = ~p_choice2("I'd like to access my bank account, please.", 1, "What is this place?", 2);
+// pvp-sdk: the safe deposit box (pvp_world/scripts/dmm_safe_box.rs2)
+def_int $option = ~p_choice3("I'd like to access my bank account, please.", 1, "I'd like to use my safe deposit box.", 3, "What is this place?", 2);
 switch_int ($option) {
     case 1 :
         ~chatplayer("<p,quiz>I'd like to access my bank account, please.");
         @openbank;
+    case 3 :
+        ~chatplayer("<p,quiz>I'd like to use my safe deposit box.");
+        @dmm_open_safe_box;
     case 2 :
         ~chatplayer("<p,neutral>What is this place?");
         ~chatnpcrange("<p,happy>This is a branch of the Bank of RuneScape. We have branches in many towns.");

@@ -32,6 +32,9 @@ import {
     TRADE_CONFIRM_OTHER_INV1_ID,
     TRADE_CONFIRM_OTHER_INV2_ID,
     TRADE_CONFIRM_STATUS_TEXT_ID,
+    SAFE_BOX_ID,
+    SAFE_BOX_INV_ID,
+    type SafeBoxState,
     type BotState,
     type SkillState,
     type InventoryItem,
@@ -184,6 +187,7 @@ export class BotStateCollector implements ScanProvider {
             shop: this.collectShopState(),
             bank: this.collectBankState(),
             trade: this.collectTradeState(),
+            safeBox: this.collectSafeBoxState(), // pvp-sdk
             ge: collectGEState(IfType.list, c.mainModalId ?? -1),
             inGame: c.ingame || false,
             combatEvents: [...this.combatEvents], // Return copy of events
@@ -1484,6 +1488,22 @@ export class BotStateCollector implements ScanProvider {
         }
 
         return shopState;
+    }
+
+    /** pvp-sdk: the safe deposit box's ten slots, from dmm_safe_box:inv while it's open. */
+    private collectSafeBoxState(): SafeBoxState {
+        const c = this.client as any;
+        if ((c.mainModalId ?? -1) !== SAFE_BOX_ID) return { isOpen: false, items: [] };
+        const component = IfType.list[SAFE_BOX_INV_ID];
+        const items: SafeBoxState['items'] = [];
+        for (let slot = 0; slot < (component?.linkObjType?.length ?? 0); slot++) {
+            const raw = component!.linkObjType![slot]!;
+            if (raw > 0) {
+                const obj = ObjType.list(raw - 1);
+                items.push({ slot, id: obj.id, name: obj.name || `Unknown(${obj.id})`, count: component!.linkObjNumber?.[slot] || 1 });
+            }
+        }
+        return { isOpen: true, items };
     }
 
     private collectBankState(): BankState {

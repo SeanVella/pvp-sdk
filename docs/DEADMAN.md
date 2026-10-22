@@ -33,7 +33,7 @@ Research done October 2026 from official Jagex news posts and the OSRS Wiki. Ver
 
 | DMM mechanic | Why not yet | Plan |
 |---|---|---|
-| Safe deposit box (10 raid-proof items) | Needs an interface | Use a perm inv and reuse the bank interface layout |
+| Safe deposit box (10 raid-proof items) | Yes: 10 stacks in the `dmm_safe_box` inv, opened from any banker's talk-to options | Built from the bank interface (`pvp_world/interfaces`) |
 | Skull timers: 30 min (P15), 15 min +2 per re-skull (2016), 5 min (R21+); 30 min for attacking someone 30+ levels lower | Ours stays 10 min (2000 ticks) | Make the duration and stacking constants, then tune |
 | PJ timer (16 to 24 ticks in modern DMM) | Ours is the standard 8-tick single-combat lock | One constant in `~pvp_in_combat_check` |
 | XP loss on death with 5 protected skills (P15/SEAS) | Modern DMM dropped it for brackets | Possible later: needs two small engine commands to read and set XP |

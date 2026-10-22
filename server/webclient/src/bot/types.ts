@@ -42,6 +42,11 @@ export const TRADE_CONFIRM_OTHER_INV2_ID = 3539; // tradeconfirm:otherinv2 - par
 export const TRADE_CONFIRM_STATUS_TEXT_ID = 3535; // tradeconfirm:com_91 - "Are you sure..."/"Waiting for other player."/"Other player has accepted."
 export const TRADE_CONFIRM_ACCEPT_ID = 3546; // tradeconfirm:accept - IF_BUTTON
 
+// pvp-sdk: the safe deposit box (content pvp_world/interfaces, ids in pack/interface.pack)
+export const SAFE_BOX_ID = 40496; // dmm_safe_box - mainModalId while open
+export const SAFE_BOX_INV_ID = 40589; // dmm_safe_box:inv - INV_BUTTON1..5 = Withdraw 1/5/10/All/X
+export const SAFE_BOX_SIDE_INV_ID = 40592; // dmm_safe_box_side:inv - INV_BUTTON1..5 = Store 1/5/10/All/X
+
 // Interfaces for state data
 export interface SkillState {
     name: string;
@@ -273,6 +278,13 @@ export interface TradeState {
     partnerAccepted: boolean;
 }
 
+/** pvp-sdk: the safe deposit box - ten stacks a bank raid never takes. */
+export interface SafeBoxState {
+    isOpen: boolean;
+    /** Only filled in while the box is open. */
+    items: BankItem[];
+}
+
 export interface BankState {
     isOpen: boolean;
     items: BankItem[];
@@ -436,6 +448,8 @@ export interface BotState {
     shop: ShopState;
     bank: BankState;
     trade: TradeState;
+    /** pvp-sdk: the safe deposit box, read while it's open. */
+    safeBox: SafeBoxState;
     ge?: GEState | null;
     inGame: boolean;
     /** Recent combat events (damage, kills) - bounded to last ~50 ticks */

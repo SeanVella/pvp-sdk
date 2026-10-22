@@ -257,6 +257,17 @@ describe('BotStateCollector combat state', () => {
         expect(collector.collectState(80, true).skullTicksRemaining).toBe(0);
     });
 
+    test('reads the safe deposit box only while its interface is open', () => {
+        const client = createClient();
+        (IfType.list as any)[40589] = { id: 40589, linkObjType: new Int32Array(10), linkObjNumber: new Int32Array(10) };
+        const collector = new BotStateCollector(client);
+
+        client.mainModalId = -1;
+        expect(collector.collectState(1, true).safeBox).toEqual({ isOpen: false, items: [] });
+        client.mainModalId = 40496;
+        expect(collector.collectState(2, true).safeBox).toEqual({ isOpen: true, items: [] });
+    });
+
     test('reports new-player protection from varp 1006', () => {
         const client = createClient();
         client.var = [];

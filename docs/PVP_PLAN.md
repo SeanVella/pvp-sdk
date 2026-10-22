@@ -150,7 +150,8 @@ v2 deploy (2026-10-22).
 
 From [`DEADMAN.md`](DEADMAN.md), roughly in order of value:
 
-- [ ] Safe deposit box: 10 items that bank raids can't take.
+- [x] Safe deposit box: 10 stacks that bank raids can't take (`dmm_safe_box.rs2`), opened from
+      any banker's talk-to options; `bot.openSafeDepositBox()` and friends for bots.
 - [ ] Skull and PJ tuning: DMM's longer skulls for attacking much lower levels, +2 min per
       re-skull, and a 16-24 tick single-combat lock.
 - [x] Protection for new accounts: 3 hours of play (the owner's choice; DMM gave 6-12 hours

@@ -103,6 +103,18 @@ if (!opened.success) console.log(opened.reason); // 'skulled', 'not_in_safe_area
 
 Each "Bank key" item in your inventory is one key; `openBankKey` opens the first.
 
+## Your safe deposit box
+
+Ten stacks that a bank raid never takes. Keep what you can't afford to lose there:
+
+```typescript
+await bot.openSafeDepositBox();                    // walks to a bank and asks the banker
+await bot.storeInSafeDepositBox(/rune platebody/i);  // -1 (the default) stores the whole stack
+console.log(sdk.getSafeBox().items);               // only filled in while the box is open
+await bot.withdrawFromSafeDepositBox('coins', 1000);
+await bot.closeInterface();
+```
+
 A new key arrives the moment your victim dies, with the message "You take a bank key from your
 victim." It's saved with your character, and the inventory item is restored when you log in.
 

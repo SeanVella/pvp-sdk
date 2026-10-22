@@ -3000,6 +3000,97 @@ export class BotActions {
         return { success: true, message: fell ? `${reply} ${fell}` : reply, banked, dropped };
     }
 
+    /**
+     * pvp-sdk: open your safe deposit box by talking to a banker and picking it from
+     * their options. Its ten stacks are never taken by a bank raid, so keep what you
+     * can't afford to lose there. Contents are in `sdk.getSafeBox()` while it's open.
+     */
+    async openSafeDepositBox(timeout: number = 15000): Promise<ActionResult> {
+        if (this.sdk.getSafeBox().isOpen) return { success: true, message: 'Safe deposit box already open' };
+        await this.dismissBlockingUI();
+        // Bankers stand behind the counter, where talkTo's reachability check fails;
+        // the game talks across it from 2 tiles, so walk to a booth as openBank does.
+        const booth = this.findUsableBankBooth();
+        const near = booth ?? this.sdk.findNearbyNpc(/banker/i);
+        if (!near) return { success: false, message: 'No banker nearby', reason: 'no_banker' };
+        if (near.distance > 2) {
+            const walk = await this.walkTo(near.x, near.z, 2);
+            if (!walk.success) return { success: false, message: `Cannot reach the bank: ${walk.message}`, reason: 'cant_reach' };
+        }
+        const banker = this.sdk.findNearbyNpc(/banker/i);
+        const talkOp = banker?.optionsWithIndex.find(o => /talk/i.test(o.text));
+        if (!banker || !talkOp) return { success: false, message: 'No banker to talk to nearby', reason: 'no_banker' };
+        await this.sdk.sendInteractNpc(banker.index, talkOp.opIndex);
+
+        const deadline = Date.now() + timeout;
+        while (Date.now() < deadline) {
+            if (this.sdk.getSafeBox().isOpen) return { success: true, message: 'Safe deposit box opened' };
+            const dialog = this.sdk.getState()?.dialog;
+            if (dialog?.isOpen && dialog.options.length > 0) {
+                const choice = dialog.options.find(o => /safe deposit box/i.test(o.text));
+                if (!choice && dialog.options.length > 1) {
+                    return { success: false, message: 'This banker offers no safe deposit box', reason: 'no_option' };
+                }
+                // Guarded to the page it was read from: a click aimed at "continue"
+                // must not land on the next page, where option 1 opens the bank.
+                const text = (choice ?? dialog.options[0]!).text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                await this.sdk.clickDialogByText(new RegExp(`^${text}$`));
+            }
+            await this.sdk.waitForTicks(1);
+        }
+        return { success: false, message: 'Timed out opening the safe deposit box', reason: 'timeout' };
+    }
+
+    /**
+     * pvp-sdk: store an inventory item in the open safe deposit box (-1 = all of it).
+     * The box holds ten stacks; open it first with {@link openSafeDepositBox}.
+     */
+    async storeInSafeDepositBox(target: InventoryItem | string | RegExp, amount: number = -1, timeout: number = 5000): Promise<ActionResult> {
+        if (!this.sdk.getSafeBox().isOpen) return { success: false, message: 'The safe deposit box is not open', reason: 'not_open' };
+        const item = typeof target === 'object' && 'slot' in target ? target : this.sdk.findInventoryItem(target);
+        if (!item) return { success: false, message: `Not in your inventory: ${target}`, reason: 'no_match' };
+
+        const stored = () => this.sdk.getSafeBox().items.filter(i => i.id === item.id).reduce((n, i) => n + i.count, 0);
+        const before = stored();
+        const baseline = this.helpers.getMessageTick();
+        const refused = () => this.helpers.findRefusal(baseline, ['your safe deposit box is full', "can't go in your safe deposit box"]);
+        const sent = await this.sdk.sendSafeBoxStore(item.slot, amount);
+        if (!sent.success) return sent;
+        try {
+            await this.sdk.waitForCondition(() => stored() > before || refused() !== null, timeout);
+        } catch {
+            return { success: false, message: `No change after storing ${item.name}`, reason: 'timeout' };
+        }
+        const refusal = refused();
+        if (refusal) return { success: false, message: refusal, reason: 'refused' };
+        return { success: true, message: `Stored ${stored() - before} x ${item.name}` };
+    }
+
+    /** pvp-sdk: take an item out of the open safe deposit box (-1 = all of it). */
+    async withdrawFromSafeDepositBox(target: BankItem | string | RegExp, amount: number = -1, timeout: number = 5000): Promise<ActionResult> {
+        const box = this.sdk.getSafeBox();
+        if (!box.isOpen) return { success: false, message: 'The safe deposit box is not open', reason: 'not_open' };
+        const item = typeof target === 'object' && 'slot' in target
+            ? target
+            : box.items.find(i => (typeof target === 'string' ? new RegExp(target, 'i') : target).test(i.name));
+        if (!item) return { success: false, message: `Not in your safe deposit box: ${target}`, reason: 'no_match' };
+
+        const left = () => this.sdk.getSafeBox().items.filter(i => i.id === item.id).reduce((n, i) => n + i.count, 0);
+        const before = left();
+        const baseline = this.helpers.getMessageTick();
+        const refused = () => this.helpers.findRefusal(baseline, ["you don't have enough inventory space"]);
+        const sent = await this.sdk.sendSafeBoxWithdraw(item.slot, amount);
+        if (!sent.success) return sent;
+        try {
+            await this.sdk.waitForCondition(() => left() < before || refused() !== null, timeout);
+        } catch {
+            return { success: false, message: `No change after withdrawing ${item.name}`, reason: 'timeout' };
+        }
+        const refusal = refused();
+        if (refusal && left() === before) return { success: false, message: refusal, reason: 'refused' };
+        return { success: true, message: `Withdrew ${before - left()} x ${item.name}` };
+    }
+
     private async attackNpcEntity(npc: NearbyNpc, timeout: number): Promise<AttackResult> {
         const targetType = 'npc' as const;
 

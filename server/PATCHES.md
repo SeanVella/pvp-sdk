@@ -464,6 +464,17 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `pvp_combat.rs2` `~pvp_level_check` (refuses a protected target), `pk_skull.rs2`
       `set_pk_vars` (attacking ends it). SDK: the refusal in `PVP_REFUSALS`,
       `state.newPlayerProtected` from varp 1006.
+- [ ] **Safe deposit box** — `pvp_world/scripts/dmm_safe_box.rs2` and
+      `pvp_world/interfaces/dmm_safe_box{,_side}.if` (fork-only, built from `bank_main.if` /
+      `bank_side.if` without the note/rearrange buttons). Reserved ids: inv `dmm_safe_box`
+      **1006** (`inv.pack`); interfaces **40496-40592** (`interface.pack` and `interface.order`;
+      `dmm_safe_box` 40496, `:inv` 40589, `dmm_safe_box_side:inv` 40592, mirrored in
+      `webclient/src/bot/types.ts` and `sdk/index.ts`). Upstream file:
+      `interface_bank/scripts/banker.rs2` `talk_to_banker` offers it as option 2 (`p_choice3`),
+      keeping the bank first because `bot.openBank()` clicks the first option. SDK:
+      `state.safeBox`, `sendSafeBoxStore/Withdraw` (the trade code's `sendInvButton`),
+      `bot.openSafeDepositBox/storeInSafeDepositBox/withdrawFromSafeDepositBox`. Verify: the
+      fixture test, and `bun test sdk/test/safe-box.test.ts`.
 - [ ] **PvP kills** (`docs/PVP_PLAN.md` item 3). Opcode **10012** `PVP_KILL` (`ScriptOpcode.ts`,
       `ScriptOpcodePointers.ts`, handler in `handlers/DebugOps.ts`), declared in
       `content/scripts/engine.rs2` and called in `player/scripts/death.rs2` before

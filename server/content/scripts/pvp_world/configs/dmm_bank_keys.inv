@@ -37,3 +37,9 @@ scope=temp
 size=10
 stackall=yes
 protect=no
+
+// pvp-sdk: the safe deposit box (dmm_safe_box.rs2): ten stacks a bank raid never takes.
+[dmm_safe_box]
+scope=perm
+size=10
+stackall=yes

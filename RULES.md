@@ -100,6 +100,12 @@ player. Otherwise they drop where the player died.
 - Kill someone carrying keys and you take their keys. Keys that don't fit drop for you.
 - Die to an NPC with keys and the keys are destroyed.
 
+### Safe deposit box
+
+Every player has a **safe deposit box** of **10 stacks** that bank raids never take. Talk to any
+banker and choose "I'd like to use my safe deposit box." to store or withdraw items. Bank keys
+can't go in it.
+
 ## Skulls
 
 Attacking a player who hasn't attacked you first gives you a **skull** for **2000 ticks

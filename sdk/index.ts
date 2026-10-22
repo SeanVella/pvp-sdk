@@ -30,7 +30,7 @@ import type {
     FindOptions,
     PvpAttackAssessment
 } from './types';
-import type { TradeState } from './types';
+import type { SafeBoxState, TradeState } from './types';
 import { assessPvpAttack, safeZoneAt, wildernessLevel } from './pvp';
 import { PRAYER_INDICES, PRAYER_NAMES, PLAYER_CHAT_TYPES, isPlayerChat, TRADE_REQUEST_CHAT_TYPE } from './types';
 import { ChatHistory } from './chat-history';
@@ -51,6 +51,9 @@ const TRADE_SIDE_INV_ID = 3322;     // tradeside:inv - INV_BUTTON = Offer 1/5/10
 const TRADE_MAIN_INV_ID = 3415;     // trademain:inv - INV_BUTTON = Remove 1/5/10/All/X
 const TRADE_MAIN_ACCEPT_ID = 3420;  // trademain:accept
 const TRADE_CONFIRM_ACCEPT_ID = 3546; // tradeconfirm:accept
+// pvp-sdk: the safe deposit box (server/webclient/src/bot/types.ts has the map)
+const SAFE_BOX_INV_ID = 40589;      // dmm_safe_box:inv - INV_BUTTON = Withdraw 1/5/10/All/X
+const SAFE_BOX_SIDE_INV_ID = 40592; // dmm_safe_box_side:inv - INV_BUTTON = Store 1/5/10/All/X
 
 function applyFindOptions<T extends { reachable?: boolean }>(match: T | null, options?: FindOptions): T | null {
     if (options?.reachable === true && match?.reachable === false) return null;
@@ -1454,7 +1457,7 @@ export class BotSDK {
      * dialog. Only valid while the offer screen is open.
      */
     async sendOfferItem(slot: number, amount: number = 1): Promise<ActionResult> {
-        return this.sendTradeInvButton(TRADE_SIDE_INV_ID, slot, amount);
+        return this.sendInvButton(TRADE_SIDE_INV_ID, slot, amount);
     }
 
     /**
@@ -1463,12 +1466,13 @@ export class BotSDK {
      * resets both players' accepts server-side.
      */
     async sendRetractItem(slot: number, amount: number = 1): Promise<ActionResult> {
-        return this.sendTradeInvButton(TRADE_MAIN_INV_ID, slot, amount);
+        return this.sendInvButton(TRADE_MAIN_INV_ID, slot, amount);
     }
 
-    private async sendTradeInvButton(componentId: number, slot: number, amount: number): Promise<ActionResult> {
+    /** An inventory component's 1/5/10/All/X buttons (trade offers, the safe deposit box). */
+    private async sendInvButton(componentId: number, slot: number, amount: number): Promise<ActionResult> {
         if (!Number.isInteger(amount) || amount === 0 || (amount < 0 && amount !== -1)) {
-            return { success: false, message: `Invalid trade amount: ${amount}`, reason: 'invalid_amount' };
+            return { success: false, message: `Invalid amount: ${amount}`, reason: 'invalid_amount' };
         }
         const option = amount === 1 ? 1
             : amount === 5 ? 2
@@ -1479,6 +1483,24 @@ export class BotSDK {
         if (!result.success || option !== 5) return result;
         // Offer-X: the server opens a count dialog; this waits for it and submits.
         return this.sendCountDialog(amount);
+    }
+
+    /** pvp-sdk: the safe deposit box, read while it's open. */
+    getSafeBox(): SafeBoxState {
+        return this.state?.safeBox ?? { isOpen: false, items: [] };
+    }
+
+    /**
+     * pvp-sdk: move items from your inventory (the side panel beside the open safe
+     * deposit box) into the box. Same amount rules as {@link sendOfferItem}.
+     */
+    async sendSafeBoxStore(slot: number, amount: number = 1): Promise<ActionResult> {
+        return this.sendInvButton(SAFE_BOX_SIDE_INV_ID, slot, amount);
+    }
+
+    /** pvp-sdk: move items from the open safe deposit box to your inventory. */
+    async sendSafeBoxWithdraw(slot: number, amount: number = 1): Promise<ActionResult> {
+        return this.sendInvButton(SAFE_BOX_INV_ID, slot, amount);
     }
 
     /**
