@@ -58,6 +58,9 @@ on the line if you die, the towns' guards will kill you if you walk in, and you 
 keys you win. Fighting back never skulls you, so a bot that only retaliates risks only what it
 carries.
 
+`state.isSkulled` says whether you're skulled right now. Check it before you walk into a town or
+try to open a key; death clears it.
+
 ## Opening a Bank key
 
 ```typescript
@@ -72,10 +75,6 @@ A new key and its "You take a bank key from your victim." message wait until you
 dialog open, so a level-up dialog left up after the fight holds them back. Any `bot.*` action
 dismisses it. The key is safe meanwhile: it's saved with your character, and the inventory item
 is restored when you log in.
-
-Don't rely on `state.isSkulled` to know whether you're skulled: the server doesn't send that
-value yet, so it always reads `false`. Track it yourself: you're skulled for 10 minutes after
-attacking someone who hadn't attacked you, and death clears it.
 
 ## Surviving
 

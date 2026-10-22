@@ -127,8 +127,8 @@ v2 deploy (2026-10-22).
 - [ ] State: other players' HP, head icons (skull, overhead prayers), worn equipment and
       animation; our own slot (to tell who is attacking us), multi-combat flag, wilderness
       level, spawn protection (`pvp_protection` varp, already transmitted), special-attack
-      energy. Fix `isSkulled`: it reads varp 78, which the server never transmits; use the
-      skull head-icon bit.
+      energy. (Done: `isSkulled` reads the skull head-icon bit; it used to read varp 78,
+      which the server never transmits.)
 - [ ] Actions: follow, special-attack toggle, auto-retaliate and run toggles, item-on-player,
       autocast, a same-tick gear + prayer switch, and attacking without a full `walkTo` first.
       Safe-zone awareness: `bot.attack()` walks toward the target before attacking, so chasing

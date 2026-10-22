@@ -568,7 +568,7 @@ interface BotWorldState {
   combatStyle?: CombatStyleState;
   combatEvents: CombatEvent[];
   prayers: PrayerState;
-  /** Absent when the connected client predates authoritative PK-skull telemetry. */
+  /** Whether you carry a PK skull, read from your skull head icon. Absent when the connected client predates PK-skull telemetry; clients from before the head-icon fix always report false. */
   isSkulled?: boolean;
   /** Absent when the connected client predates authoritative auto-retaliate telemetry. */
   autoRetaliateEnabled?: boolean;
