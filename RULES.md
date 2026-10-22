@@ -129,6 +129,16 @@ spells, jewellery or anything else. The message is "You can't teleport so soon a
 another player." In the Wilderness the usual limits also apply: no teleports above level 20
 (amulet of glory: above 30), and a ring of life doesn't save you above level 30.
 
+### Tele Block
+
+**Tele Block** (Magic 85; a law, a death and a chaos rune; 80 xp) is cast on another player under
+the usual attack rules. If it lands, they can't teleport for **1000 ticks (5 minutes)**, or **500
+(2.5 minutes)** if they were praying Protect from Magic when it hit. It stops teleport spells,
+jewellery and the Wilderness levers, with "A magical force stops you from teleporting." It lasts
+through logging out and ends when you die. It can't be cast on someone who's already blocked
+("That player is already affected by this spell."). Like any attack, it can miss and it can
+skull you. It's in the spellbook after Charge.
+
 ## Spawn protection
 
 For **100 ticks (30 s)** after you respawn, nobody can attack you, so the respawn point can't be

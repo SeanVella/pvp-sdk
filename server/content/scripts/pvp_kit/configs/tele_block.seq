@@ -1,0 +1,21 @@
+// pvp-sdk: Tele Block's impact, from LostCity's Content repository, branch 377-wip
+// (scripts/_unpack/377/all.seq), MIT licence as server/content/LICENSE, at 377's id (seq.pack
+// 1822). Its frames are 377's animset 461 (engine/tools/pvp/import377TeleBlock.ts).
+
+[tele_block_impact]
+frame1=anim_13405
+frame2=anim_13413
+frame3=anim_13414
+frame4=anim_13415
+frame5=anim_13416
+frame6=anim_13417
+frame7=anim_13418
+frame8=anim_13419
+frame9=anim_13420
+frame10=anim_13406
+frame11=anim_13407
+frame12=anim_13408
+frame13=anim_13409
+frame14=anim_13410
+frame15=anim_13411
+frame16=anim_13412

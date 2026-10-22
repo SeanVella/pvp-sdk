@@ -1,0 +1,17 @@
+// pvp-sdk: Tele Block (pvp_kit/scripts/tele_block.rs2): level 85, a law, death and chaos rune,
+// 80 xp. The cast and travel graphics are Curse's; the impact is 377's (tele_block.spotanim).
+[magic_spell_tele_block]
+table=magic_spell_table
+data=spell,^tele_block
+data=spellcom,magic:tele_block
+data=members,true
+data=levelrequired,85
+data=runesrequired,lawrune,1,deathrune,1,chaosrune,1
+data=experience,800
+data=anim,human_castcurse
+data=staffanim,human_castcurse_staff
+data=spotanim_origin,curse_casting
+data=spotanim_proj,curse_travel,43,31,51,16,-5,64,10
+data=spotanim_target,tele_block_impact,0
+data=sound_success,curse_all
+data=continue_by_autocast,false

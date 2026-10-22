@@ -30,6 +30,12 @@ function skullLeft(state: BotWorldState): string {
     return typeof ticks === 'number' && ticks > 0 ? ` (~${Math.ceil((ticks * 0.3) / 60)} min left)` : '';
 }
 
+/** pvp-sdk: " | TELE BLOCKED (~3 min left)" while a Tele Block stops you teleporting, else "". */
+function teleBlocked(state: BotWorldState): string {
+    const ticks = state.teleBlockTicksRemaining;
+    return typeof ticks === 'number' && ticks > 0 ? ` | TELE BLOCKED (~${Math.ceil((ticks * 0.3) / 60)} min left)` : '';
+}
+
 export function formatWorldStateSummary(
     state: BotWorldState,
     stateAgeMs?: number,
@@ -49,7 +55,7 @@ export function formatWorldStateSummary(
             const target = state.nearbyNpcs.find(n => n.index === p.combat.targetIndex);
             combat = ` | fighting ${target?.name ?? `idx ${p.combat.targetIndex}`}`;
         }
-        lines.push(`Pos (${p.worldX}, ${p.worldZ})${p.level ? ` lvl ${p.level}` : ''}${hpStr}${dead}${skull}${combat}${stale}`);
+        lines.push(`Pos (${p.worldX}, ${p.worldZ})${p.level ? ` lvl ${p.level}` : ''}${hpStr}${dead}${skull}${teleBlocked(state)}${combat}${stale}`);
     } else {
         lines.push(`Not in game (tick ${state.tick})${stale}`);
     }

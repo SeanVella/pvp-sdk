@@ -611,3 +611,75 @@ test('an armed special attack still stops at the PvP gate', () => {
         expect(queuedDamage(townsfolk)).toEqual([]);
     }
 });
+
+// PvP kit: Tele Block (scripts/pvp_kit/scripts/tele_block.rs2).
+test('Tele Block is a level 85 spell costing a law, a death and a chaos rune', () => {
+    const table = DbTableType.getByName('magic_spell_table')!;
+    const row = DbRowType.getByName('magic_spell_tele_block')!;
+    const column = (name: string) => row.columnValues[table.columnNames.indexOf(name)];
+    expect(column('levelrequired')).toEqual([85]);
+    expect(column('runesrequired')).toEqual([obj('lawrune'), 1, obj('deathrune'), 1, obj('chaosrune'), 1]);
+    expect(column('experience')).toEqual([800]);
+});
+
+test('Tele Block stops every teleport for 5 minutes, half that under Protect from Magic', () => {
+    World.currentTick = 5000;
+    const caster = player('blocker', 90, FIELD.x, FIELD.z);
+    const target = player('runner', 90, FIELD.x + 1, FIELD.z);
+    run('[proc,pvp_tele_block_hit]', caster, target);
+    expect(target.vars[varp('pvp_tele_block')]).toBe(6000);
+    expect(target.vars[varp('pvp_tele_block_ticks')]).toBe(1000);
+    expect(target.messages).toContain('A teleport block has been cast on you. It should wear off in 5 minutes.');
+
+    World.currentTick = 5999;
+    target.messages = [];
+    expect(run('[proc,pre_tele_checks]', target, null, [0]).popInt()).toBe(0);
+    expect(target.messages).toContain('A magical force stops you from teleporting.');
+    World.currentTick = 6000;
+    expect(run('[proc,pre_tele_checks]', target, null, [0]).popInt()).toBe(1);
+
+    const praying = player('praying', 90, FIELD.x + 2, FIELD.z);
+    praying.vars[varp('prayer12')] = 1; // Protect from Magic
+    run('[proc,pvp_tele_block_hit]', caster, praying);
+    expect(praying.vars[varp('pvp_tele_block_ticks')]).toBe(500);
+    expect(praying.messages).toContain('A teleport block has been cast on you. It should wear off in 2 minutes 30 seconds.');
+});
+
+test("a Tele Blocked player can't be blocked again until it wears off", () => {
+    World.currentTick = 7000;
+    const caster = player('blocker2', 90, FIELD.x, FIELD.z);
+    const target = player('blocked2', 90, FIELD.x + 1, FIELD.z);
+    run('[proc,pvp_tele_block_hit]', caster, target);
+    caster.messages = [];
+    expect(run('[proc,pvp_tele_block_allowed]', caster, target).popInt()).toBe(0);
+    expect(caster.messages).toContain('That player is already affected by this spell.');
+    World.currentTick = 8000;
+    expect(run('[proc,pvp_tele_block_allowed]', caster, target).popInt()).toBe(1);
+});
+
+test('a Tele Block lasts through logging out, is capped after a restart, and ends on death', () => {
+    World.currentTick = 9000;
+    const caster = player('blocker3', 90, FIELD.x, FIELD.z);
+    const target = player('blocked3', 90, FIELD.x + 1, FIELD.z);
+    run('[proc,pvp_tele_block_hit]', caster, target);
+
+    World.currentTick = 9400;
+    run('[proc,pvp_tele_block_login]', target);
+    expect(target.vars[varp('pvp_tele_block')]).toBe(10000);
+    expect(target.vars[varp('pvp_tele_block_ticks')]).toBe(600);
+
+    // the server restarted: map_clock starts again, and the block is never longer than a full one
+    World.currentTick = 50;
+    run('[proc,pvp_tele_block_login]', target);
+    expect(target.vars[varp('pvp_tele_block')]).toBe(1050);
+    expect(target.vars[varp('pvp_tele_block_ticks')]).toBe(1000);
+
+    run('[proc,pvp_tele_block_clear]', target); // what death calls
+    expect(target.vars[varp('pvp_tele_block')]).toBe(0);
+    expect(run('[proc,pre_tele_checks]', target, null, [0]).popInt()).toBe(1);
+
+    // an expired block is cleared at login
+    target.vars[varp('pvp_tele_block')] = 40;
+    run('[proc,pvp_tele_block_login]', target);
+    expect(target.vars[varp('pvp_tele_block')]).toBe(0);
+});

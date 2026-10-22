@@ -72,6 +72,7 @@ p_stopaction;
 // that would leave each death waiting out a long regen before playing again.
 healenergy(10000);
 ~clear_pk_skull;
+~pvp_tele_block_clear; // pvp-sdk: dying lifts a Tele Block (pvp_kit/scripts/tele_block.rs2)
 ~clear_poison;
 ~update_all($prev_wep);
 ~initalltabs;

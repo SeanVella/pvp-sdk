@@ -62,3 +62,5 @@
 ^flames_of_zamorak_npc = 102
 ^claws_of_guthix_npc = 103
 ^saradomin_strike_npc = 104
+// pvp-sdk: PvP kit (pvp_kit/scripts/tele_block.rs2)
+^tele_block = 105

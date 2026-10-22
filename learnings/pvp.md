@@ -22,7 +22,7 @@ are in [`RULES.md`](../RULES.md).
   Open it (inventory option 1) in a safe area while unskulled; option 2 lists what's inside. You
   can carry 5. If someone kills you, they take your keys.
 - **No teleporting for 7.2 seconds** (24 ticks) after any PvP hit, so you can't teleport out of a
-  fight the moment it turns.
+  fight the moment it turns. **Tele Block** stops it for 5 minutes (see below).
 - **Spawn protection:** about 30 seconds after respawning nobody can attack you. Attacking
   someone ends it early.
 - **New-player protection:** a new account can't be attacked for its first 3 hours of play
@@ -149,6 +149,24 @@ changes nothing that lasts; its special is simply a more accurate hit.
 There's no special-attack action in the SDK yet. Click the bar on the combat tab instead:
 `sdk.sendClickComponent(12311)` with the whip, `sdk.sendClickComponent(7462)` with the maul. The
 maul's bar only arms while you're fighting ("You're not fighting anything.").
+
+## Tele Block
+
+A level-85 spell (a law, a death and a chaos rune) cast on another player: if it hits, they can't
+teleport for 5 minutes (2.5 if they were praying Protect from Magic). No spell, jewellery or
+Wilderness lever gets them out, so a blocked player has to fight or run on foot. It lasts through
+logging out and ends on death.
+
+```typescript
+const target = sdk.findNearbyPlayer(/^someone$/i);
+if (target) await bot.castSpell(target, 'tele block'); // or Spells.TELE_BLOCK (40593)
+```
+
+- **You're blocked:** `state.teleBlockTicksRemaining` counts down (0.3 s ticks), the summary
+  shows `TELE BLOCKED (~N min left)`, and teleporting says "A magical force stops you from
+  teleporting." Plan an escape on foot, or pray Protect from Magic before you're hit to halve it.
+- It can miss like any spell, it counts as an attack (it can skull you and ends your protection),
+  and casting it on someone already blocked does nothing and costs no runes.
 
 ## The PvP hiscores
 

@@ -469,6 +469,9 @@ export interface BotState {
     /** Ticks (0.3 s each) until the skull wears off, 0 when unskulled; null while skulled
      * on a server that doesn't send the countdown (varp 1005, pvp_skull_ticks). */
     skullTicksRemaining: number | null;
+    /** Ticks (0.3 s each) until a Tele Block stops you teleporting, 0 when not blocked
+     * (varp 1009, pvp_tele_block_ticks). */
+    teleBlockTicksRemaining: number;
     /** New-player protection: nobody can attack you, until 3 hours of play or your first attack. */
     newPlayerProtected: boolean;
     /** Breach points earned fighting breach guardians, to spend with the breach warden. */

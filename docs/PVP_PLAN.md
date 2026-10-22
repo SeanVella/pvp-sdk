@@ -192,7 +192,13 @@ PvP kit, cherry-picking LostCity's 377-wip scripts where they exist:
       so `engine/tools/pvp/import377Weapons.ts` converts the animations and worn models; the
       whip's lash swings rigidly. Open: the whip's run energy drain does nothing while
       `NODE_INFINITE_RUN` (default true) refills everyone's energy every tick.
-- [ ] Tele Block and Ancient Magicks freezes.
+- [x] Tele Block (`scripts/pvp_kit/scripts/tele_block.rs2`): level 85, 5 minutes (2.5 under
+      Protect from Magic), stops spells, jewellery and the Wilderness levers, survives logout,
+      ends on death. 377-wip has the impact graphic but no spell, so the spell, its spellbook
+      button and its icon are ours (`engine/tools/pvp/import377TeleBlock.ts`). The SDK exposes
+      `state.teleBlockTicksRemaining` and `Spells.TELE_BLOCK`.
+- [ ] Ancient Magicks: their own spellbook, unlocked at an altar in the Wilderness (the owner's
+      choice, 2026-10-22). 377-wip has every ancient spell's graphics, but no spells.
 - [ ] Barrows sets.
 - [ ] Take each LostCity/rs-sdk upgrade by walking `server/PATCHES.md`.
 

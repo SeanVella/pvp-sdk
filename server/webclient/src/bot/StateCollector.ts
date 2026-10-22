@@ -123,6 +123,8 @@ export class BotStateCollector implements ScanProvider {
     // pvp-sdk: skull countdown - see collectSkullTicks
     private skullTicksValue: number = 0;
     private skullTicksSince: number = -1;
+    private teleBlockTicksValue: number = 0;
+    private teleBlockTicksSince: number = -1;
 
     // Cached prayer component map (built once on first use)
     private prayerComponentMap: PrayerComponentMap | null = null;
@@ -201,6 +203,7 @@ export class BotStateCollector implements ScanProvider {
             // it always read 0; the icon is set and cleared with the skull.
             isSkulled: BotStateCollector.hasSkullIcon(c.localPlayer),
             skullTicksRemaining: this.collectSkullTicks(currentTick, BotStateCollector.hasSkullIcon(c.localPlayer)),
+            teleBlockTicksRemaining: this.collectTeleBlockTicks(currentTick),
             // pvp-sdk: varp 1006 (pvp_newbie), 1 while new-player protection lasts
             newPlayerProtected: (c.var?.[1006] ?? 0) === 1,
             // pvp-sdk: varp 1007 (breach_points), spent with the breach warden in Lumbridge
@@ -442,6 +445,21 @@ export class BotStateCollector implements ScanProvider {
         if (!skulled) return 0;
         if (value <= 0) return null;
         return Math.max(0, value - (currentTick - this.skullTicksSince));
+    }
+
+    /**
+     * pvp-sdk: ticks until a Tele Block wears off. Varp 1009 (pvp_tele_block_ticks) holds what
+     * was left when the server wrote it (at the hit and at login), so count down from the tick
+     * the value changed. 0 when not blocked.
+     */
+    private collectTeleBlockTicks(currentTick: number): number {
+        const value: number = (this.client as any).var?.[1009] ?? 0;
+        if (value !== this.teleBlockTicksValue || this.teleBlockTicksSince === -1) {
+            this.teleBlockTicksValue = value;
+            this.teleBlockTicksSince = currentTick;
+        }
+        if (value <= 0) return 0;
+        return Math.max(0, value - (currentTick - this.teleBlockTicksSince));
     }
 
     private collectCombatEvents(currentTick: number): void {

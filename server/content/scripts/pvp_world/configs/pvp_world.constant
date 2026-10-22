@@ -24,3 +24,7 @@
 // 1 = the Deadman rules, which turned the v1 open ground around the towns into
 // guarded safe zones.
 ^dmm_rules_version = 1
+
+// PvP kit: Tele Block stops the target teleporting for this many ticks (1000 = 5 minutes at
+// 300ms), half that if they were praying Protect from Magic when it hit.
+^pvp_tele_block_ticks = 1000

@@ -51,6 +51,8 @@ queue(macro_event_login, 0, 0);
 ~dmm_rules_login;
 // pvp-sdk: new accounts are protected for their first hours of play (pvp_world.rs2)
 ~pvp_newbie_login;
+// pvp-sdk: a Tele Block lasts through logging out (pvp_kit/scripts/tele_block.rs2)
+~pvp_tele_block_login;
 // so pk skulls persist after logging back in
 ~set_pk_skull_login;
 // so the pvp 1hp-respawn mark persists after logging back in

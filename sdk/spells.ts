@@ -6,6 +6,9 @@
 export const Spells = {
     // Combat spells
     WIND_STRIKE: 1152,
+    // pvp-sdk: PvP kit. Level 85, a law, death and chaos rune; players only. A hit stops the
+    // target teleporting for 5 minutes (2.5 under Protect from Magic).
+    TELE_BLOCK: 40593,
     CONFUSE: 1153,
     WATER_STRIKE: 1154,
     ENCHANT_LVL1: 1155, // Sapphire

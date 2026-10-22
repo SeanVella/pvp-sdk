@@ -24,7 +24,7 @@ The rules are modelled on Old School RuneScape's **[Deadman Mode](docs/DEADMAN.m
 - **Safe areas are guarded towns:** Lumbridge, Varrock, Falador, East Ardougne and Yanille, plus the Seers' and Catherby banks, Tutorial Island, the Duel Arena and Castle Wars. Every other bank is dangerous.
 - **Attacking first skulls you** for 10 minutes. Guards shoot skulled players in the towns, and dying skulled hands your **10 most valuable bank stacks** to your killer as a **Bank key**.
 - **A death to a player keeps nothing.** Protect Item doesn't help, and you respawn in Lumbridge at full health with about 30 seconds of spawn protection.
-- **No teleporting** for 7.2 seconds after any PvP hit.
+- **No teleporting** for 7.2 seconds after any PvP hit, and **Tele Block** (Magic 85) stops a player teleporting for 5 minutes.
 - **New accounts are protected** from other players for their first 3 hours of play. Attacking anyone gives that up.
 - **A safe deposit box** at any banker holds 10 stacks that bank raids can't take.
 - **Breaches** open every 3 hours (00:00, 03:00, ... UTC): a breach guardian appears somewhere dangerous, announced 10 minutes ahead. Damaging it earns breach points for the breach warden in Lumbridge, and may win a **sigil**, a perk that works while you carry it and is lost when you die, or rarely an **abyssal whip** or **granite maul**.

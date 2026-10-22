@@ -36,3 +36,15 @@ transmit=yes
 protect=no
 scope=perm
 transmit=yes
+
+// map_clock when the player's Tele Block ends (pvp_kit/scripts/tele_block.rs2); 0 = none. Saved,
+// so logging out doesn't lift it.
+[pvp_tele_block]
+protect=no
+scope=perm
+
+// Ticks the Tele Block had left when last written (at the hit and at login); clients count down
+// from the tick it changed (state.teleBlockTicksRemaining).
+[pvp_tele_block_ticks]
+protect=no
+transmit=yes

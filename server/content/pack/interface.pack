@@ -12579,3 +12579,13 @@
 40590=dmm_safe_box:note
 40591=dmm_safe_box_side
 40592=dmm_safe_box_side:inv
+40593=magic:tele_block
+40594=magic:tele_block_info
+40595=magic:tele_block_title
+40596=magic:tele_block_text
+40597=magic:tele_block_law
+40598=magic:tele_block_death
+40599=magic:tele_block_chaos
+40600=magic:tele_block_law_count
+40601=magic:tele_block_death_count
+40602=magic:tele_block_chaos_count

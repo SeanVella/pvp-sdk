@@ -86,6 +86,12 @@ describe('formatWorldStateSummary', () => {
         expect(formatWorldStateSummary(state({ isSkulled: true, skullTicksRemaining: 1400 }), 0)).toContain('| SKULLED (~7 min left)');
     });
 
+    test('flags a Tele Block with the time it has left', () => {
+        // 1000 ticks of 0.3 s is 5 minutes.
+        expect(formatWorldStateSummary(state({ teleBlockTicksRemaining: 1000 }), 0)).toContain('| TELE BLOCKED (~5 min left)');
+        expect(formatWorldStateSummary(state({ teleBlockTicksRemaining: 0 }), 0)).not.toContain('TELE BLOCKED');
+    });
+
     test('reports xp gained per skill', () => {
         const out = formatWorldStateSummary(state(), 0, {
             xpBefore: { Hitpoints: 1300, Woodcutting: 220 }

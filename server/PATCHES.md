@@ -543,6 +543,17 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       Wilderness and level range; `sdk/test/pvp-rules.test.ts` fails if the content tables move
       without it. `BotActions.attackPlayerEntity` attaches its warnings but never refuses. Verify: `cd server/webclient && bun test
       src/bot/StateCollector.test.ts`, and `bun test sdk/test/state-summary.test.ts`.
+- [ ] **PvP kit: Tele Block** — fork-only `content/scripts/pvp_kit/scripts/tele_block.rs2`,
+      `pvp_kit/configs/tele_block.{dbrow,seq,spotanim}` and the impact graphic in
+      `content/models/pvp_kit/` (377-wip's animset 461, model 5799, seq 1822, spotanim 345), by
+      `engine/tools/pvp/import377TeleBlock.ts`, which also draws the icon into tile 5 of
+      `sprites/magicon2.png` and `magicoff2.png`. Upstream files touched: `magic.if` (the button
+      and its hover panel at the end, components 40593-40602 in `interface.pack` and
+      `interface.order`), `spells.constant` (`^tele_block = 105`), `teleport.rs2`
+      (`~pre_tele_checks`), the four Wilderness levers (`wilderness_lever.rs2`,
+      `king_black_dragon.rs2`), `login.rs2` and `death.rs2`. Varps 1008/1009 in
+      `pvp_world.varp`. SDK: `teleBlockTicksRemaining` (StateCollector, both types files,
+      formatter), `Spells.TELE_BLOCK`. Verify: `bun test server/engine/test/pvp-world.test.ts`.
 - [ ] **PvP kit: abyssal whip and granite maul** (`docs/PVP_PLAN.md` item 6), ported from
       LostCity's Content repository, branch `377-wip` (MIT). Fork-only: `content/scripts/pvp_kit/`
       (objs, seqs, spotanims, the whip's style table and combat tab, wield requirements),

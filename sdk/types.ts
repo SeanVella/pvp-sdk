@@ -620,6 +620,10 @@ export interface BotWorldState {
      * on a server that doesn't send the countdown yet; absent on older clients. Accurate
      * to about 50 ticks after you re-skull yourself. */
     skullTicksRemaining?: number | null;
+    /** Ticks (0.3 s each) until a Tele Block lets you teleport again, 0 when you aren't blocked.
+     * While it lasts no spell, jewellery or Wilderness lever teleports you. Absent on older
+     * clients. */
+    teleBlockTicksRemaining?: number;
     /** New-player protection (accounts made after it was added): nobody can attack you
      * until 3 hours of play, or until you attack someone. Absent on older clients. */
     newPlayerProtected?: boolean;

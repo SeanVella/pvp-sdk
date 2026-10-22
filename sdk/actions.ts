@@ -3399,6 +3399,7 @@ export class BotActions {
 
     private static readonly SPELL_COMPONENTS: Record<string, number> = {
         'wind strike': 1152,
+        'tele block': 40593, // pvp-sdk: PvP kit, players only
         'confuse': 1153,
         'water strike': 1154,
         'earth strike': 1156,

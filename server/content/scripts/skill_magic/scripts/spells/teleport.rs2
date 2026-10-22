@@ -125,6 +125,10 @@ if (~pvp_teleport_locked = true) {
     mes("You can't teleport so soon after fighting another player.");
     return(false);
 }
+// pvp-sdk: Tele Block (pvp_kit/scripts/tele_block.rs2)
+if (~pvp_tele_blocked = true) {
+    return(false);
+}
 if (~in_tutorial_island(coord) = true) {
     ~mesbox("You cannot teleport from Tutorial Island!"); // https://youtu.be/tt38tH6X30E?t=64
     return(false);

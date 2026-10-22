@@ -1,0 +1,86 @@
+// pvp-sdk: Tele Block, the PvP kit's anti-escape spell (level 85: a law, a death and a chaos rune).
+// If it lands, the target can't teleport for ^pvp_tele_block_ticks (5 minutes), half that if they
+// were praying Protect from Magic. It stops teleport spells and jewellery (~pre_tele_checks) and
+// the Wilderness levers, lasts through logging out, and ends on death. Neither 289 nor LostCity's
+// 377-wip has the spell; its impact graphic is 377's (engine/tools/pvp/import377TeleBlock.ts).
+[applayert,magic:tele_block]
+def_dbrow $spell_data = ~get_spell_data(^tele_block);
+if (~pvp_combat_spell_checks($spell_data) = false) {
+    return;
+}
+if (~pvp_tele_block_allowed = false) {
+    return;
+}
+def_int $duration = ~pvp_spell_cast($spell_data);
+if (~pvp_hit_roll(^magic_style) = true) {
+    ~pvp_spell_success($spell_data, null, $duration);
+    ~pvp_tele_block_hit;
+} else {
+    ~pvp_spell_fail($spell_data, $duration);
+}
+
+// Casting it on someone already blocked does nothing and costs no runes.
+[proc,pvp_tele_block_allowed]()(boolean)
+if (.%pvp_tele_block > map_clock) {
+    mes("That player is already affected by this spell.");
+    p_stopaction;
+    return(false);
+}
+return(true);
+
+// The hit: the active player is the caster, the other (.) the target.
+[proc,pvp_tele_block_hit]
+def_int $ticks = ^pvp_tele_block_ticks;
+if (~.check_protect_prayer(^magic_style) = true) {
+    $ticks = divide($ticks, 2);
+}
+// Clients restart their countdown when this value changes, so a new block of the same length as
+// the last one is a tick shorter.
+if (.%pvp_tele_block_ticks = $ticks) {
+    $ticks = sub($ticks, 1);
+}
+.%pvp_tele_block = add(map_clock, $ticks);
+.%pvp_tele_block_ticks = $ticks;
+def_string $left = ~pvp_ticks_as_time($ticks);
+.mes("A teleport block has been cast on you. It should wear off in <$left>.");
+
+// "5 minutes", "2 minutes 30 seconds", at the 300ms tick.
+[proc,pvp_ticks_as_time](int $ticks)(string)
+def_int $seconds = divide(multiply($ticks, 3), 10);
+def_int $minutes = divide($seconds, 60);
+$seconds = modulo($seconds, 60);
+if ($seconds = 0) {
+    return("<tostring($minutes)> minutes");
+}
+return("<tostring($minutes)> minutes <tostring($seconds)> seconds");
+
+// Every way to teleport asks this first (~pre_tele_checks and the Wilderness levers).
+[proc,pvp_tele_blocked]()(boolean)
+if (%pvp_tele_block > map_clock) {
+    mes("A magical force stops you from teleporting.");
+    return(true);
+}
+return(false);
+
+// At login an unexpired block carries on, and the client is told how long is left; an expired one
+// is cleared. map_clock restarts with the server, so a block saved before a restart could look
+// endless: it's capped at a full one.
+[proc,pvp_tele_block_login]
+if (%pvp_tele_block = 0) {
+    return;
+}
+if (%pvp_tele_block <= map_clock) {
+    ~pvp_tele_block_clear;
+    return;
+}
+def_int $left = sub(%pvp_tele_block, map_clock);
+if ($left > ^pvp_tele_block_ticks) {
+    $left = ^pvp_tele_block_ticks;
+    %pvp_tele_block = add(map_clock, $left);
+}
+%pvp_tele_block_ticks = $left;
+
+// Death lifts it (player/scripts/death.rs2).
+[proc,pvp_tele_block_clear]
+%pvp_tele_block = 0;
+%pvp_tele_block_ticks = 0;

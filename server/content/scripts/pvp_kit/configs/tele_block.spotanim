@@ -1,0 +1,7 @@
+// pvp-sdk: Tele Block's impact graphic, from LostCity's Content repository, branch 377-wip
+// (scripts/_unpack/377/all.spotanim), MIT licence as server/content/LICENSE, at 377's id
+// (spotanim.pack 345).
+
+[tele_block_impact]
+model=spot_tele_block_impact
+anim=tele_block_impact
