@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 // Runs the compiled pvp-sdk world rules (pvp_world.rs2, dmm_bank_keys.rs2, ~pvp_level_check)
 // from the built pack against in-memory players: who can attack whom, where, spawn
 // protection, the Deadman guards, bank keys, the teleport lock and the login skull migration.
+// The last tests cover the PvP kit's abyssal whip and granite maul (scripts/pvp_kit/).
 const output = process.env.PVP_WORLD_TEST_OUTPUT!;
 const cache = resolve('data/pack');
 
@@ -18,6 +19,7 @@ const { default: World } = await import('../../src/engine/World.js');
 const { default: VarPlayerType } = await import('../../src/cache/config/VarPlayerType.js');
 const { default: VarBitType } = await import('../../src/cache/config/VarBitType.js');
 const { default: ParamType } = await import('../../src/cache/config/ParamType.js');
+const { ParamHelper } = await import('../../src/cache/config/ParamHelper.js');
 const { default: ObjType } = await import('../../src/cache/config/ObjType.js');
 const { default: InvType } = await import('../../src/cache/config/InvType.js');
 const { default: EnumType } = await import('../../src/cache/config/EnumType.js');
@@ -442,4 +444,51 @@ test('dying to an npc destroys carried keys, and a skulled one drops the raided 
     expect(stacks(p, inv('dmm_key_2')).size).toBe(0);
     expect(stacks(p, BANK).has(obj('rune_full_helm'))).toBe(false);
     expect(drops).toEqual([{ obj: obj('rune_full_helm'), count: 1, receiver: Obj.NO_RECEIVER }]);
+});
+
+// The PvP kit: LostCity 377-wip's abyssal whip and granite maul (scripts/pvp_kit/).
+const WHIP = 4151;
+const MAUL = 4153;
+const intParam = (id: number, name: string) => ParamHelper.getIntParam(ParamType.getId(name), ObjType.get(id), -1);
+
+test('the abyssal whip and granite maul load at their 377 ids, with their 377 animations', async () => {
+    for (const [id, name] of [[4151, 'abyssal_whip'], [4152, 'cert_abyssal_whip'], [4153, 'granite_maul'], [4154, 'cert_granite_maul']] as const) {
+        expect(ObjType.get(id).debugname).toBe(name);
+    }
+    expect(ObjType.get(4152).certlink).toBe(WHIP);
+    expect(ObjType.get(4154).certlink).toBe(MAUL);
+    expect(ObjType.get(WHIP).name).toBe('Abyssal whip');
+    expect(ObjType.get(MAUL).wearpos2).toBe(5); // two-handed: also takes the shield slot
+    expect([intParam(WHIP, 'slashattack'), intParam(WHIP, 'strengthbonus'), intParam(WHIP, 'sa_energy'), intParam(WHIP, 'specwep')]).toEqual([82, 82, 500, 1]);
+    expect([intParam(MAUL, 'crushattack'), intParam(MAUL, 'strengthbonus'), intParam(MAUL, 'attackrate'), intParam(MAUL, 'sa_energy')]).toEqual([81, 79, 7, 500]);
+
+    // Animations sit at 377's seq ids and every frame exists in the packed animsets: the
+    // player frames re-encoded for 289's skeleton, the special attack graphics' own sets.
+    const { default: OnDemand } = await import('../../src/engine/OnDemand.js');
+    const { default: FileStream } = await import('../../src/io/FileStream.js');
+    const { default: SeqType } = await import('../../src/cache/config/SeqType.js');
+    const { default: SpotanimType } = await import('../../src/cache/config/SpotanimType.js');
+    const { default: AnimFrame } = await import('../../src/cache/graphics/AnimFrame.js');
+    OnDemand.cache = new FileStream(cache, false, true); // read-only: the fixture runs from a temp dir
+    SeqType.load(cache);
+    SpotanimType.load(cache);
+    const seqs = [
+        'slayer_abyssal_whip_attack', 'slayer_abyssal_whip_defend', 'slayer_abyssal_whip_walk', 'slayer_abyssal_whip_run',
+        'slayer_granite_maul_ready', 'slayer_granite_maul_walk', 'slayer_granite_maul_run', 'slayer_granite_maul_attack',
+        'slayer_granite_maul_defend', 'slayer_granite_maul_special_attack', 'slayer_maul_sp_attack', 'slayer_whip_sp_attack'
+    ];
+    seqs.forEach((name, i) => {
+        expect(SeqType.getId(name)).toBe(1658 + i);
+        for (const frame of SeqType.get(1658 + i).frames!) expect(AnimFrame.instances[frame]).toBeDefined();
+    });
+    // durations come from the frames' own delays (in client cycles), as in 377
+    expect(SeqType.getByName('slayer_abyssal_whip_attack')!.duration).toBe(39);
+    expect(SeqType.getByName('slayer_granite_maul_special_attack')!.duration).toBe(18);
+    expect(intParam(WHIP, 'slashattack_anim')).toBe(1658);
+    expect(intParam(MAUL, 'ready_baseanim')).toBe(1662);
+    expect(intParam(MAUL, 'crushattack_anim')).toBe(1665);
+    expect(SpotanimType.getId('sp_attack_maul_spotanim')).toBe(340);
+    expect(SpotanimType.getId('sp_attack_abyssal_whip')).toBe(341);
+    expect(SpotanimType.get(340).anim).toBe(SeqType.getId('slayer_maul_sp_attack'));
+    expect(SpotanimType.get(341).anim).toBe(SeqType.getId('slayer_whip_sp_attack'));
 });

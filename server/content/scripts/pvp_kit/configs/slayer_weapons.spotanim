@@ -1,0 +1,15 @@
+// pvp-sdk: the whip and granite maul special attack graphics, from LostCity's Content
+// repository, branch 377-wip (scripts/_unpack/377/all.spotanim), MIT licence as
+// server/content/LICENSE, at 377's ids (spotanim.pack 340-341).
+
+[sp_attack_maul_spotanim]
+model=spot_sp_attack_maul_spotanim
+anim=slayer_maul_sp_attack
+ambient=50
+contrast=50
+
+[sp_attack_abyssal_whip]
+model=spot_sp_attack_abyssal_whip
+anim=slayer_whip_sp_attack
+ambient=50
+contrast=50

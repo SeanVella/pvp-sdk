@@ -1,0 +1,13 @@
+// pvp-sdk: the whip's attack styles (Flick, Lash, Deflect, all slash), from LostCity's Content
+// repository, branch 377-wip (scripts/skill_combat/configs/combat.dbrow), MIT licence as
+// server/content/LICENSE. combat.rs2 combat_get_weapon_style_data picks it for weapon_whip.
+// val=weapon_whip,weapon_whip_table
+
+[weapon_whip_table]
+table=combat_style_table
+data=damagestyle,^style_melee_accurate
+data=damagestyle,^style_melee_controlled
+data=damagestyle,^style_melee_defensive
+data=damagetype,^slash_style
+data=damagetype,^slash_style
+data=damagetype,^slash_style

@@ -527,6 +527,29 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       Wilderness and level range; `sdk/test/pvp-rules.test.ts` fails if the content tables move
       without it. `BotActions.attackPlayerEntity` attaches its warnings but never refuses. Verify: `cd server/webclient && bun test
       src/bot/StateCollector.test.ts`, and `bun test sdk/test/state-summary.test.ts`.
+- [ ] **PvP kit: abyssal whip and granite maul** (`docs/PVP_PLAN.md` item 6), ported from
+      LostCity's Content repository, branch `377-wip` (MIT). Fork-only: `content/scripts/pvp_kit/`
+      (objs, seqs, spotanims, the whip's style table and combat tab, wield requirements),
+      `content/models/pvp_kit/`, `content/synth/pvp_kit/`, and `engine/tools/pvp/import377Weapons.ts`,
+      which regenerates every binary there from a 377-wip checkout.
+      **377 re-rigged the player** (117 skeleton groups to 289's 89, vertex labels renumbered), so
+      377's player frames and worn models can't be copied: the tool re-encodes the 96 player
+      frames against 289's own player base (groups 0-88 are the same bones; the whip's 377-only
+      lash groups 90-102 are dropped, so the lash swings rigidly) and puts the worn models on
+      289's held-weapon label 50 with no face labels. Any later 377 port (Barrows) needs the same.
+      Ids, 377's wherever 289 leaves them free: obj **4151-4154** (whip, noted whip, maul, noted
+      maul; saves store these), model 5409/5410/5412/5413/5415/5416, seq 1658-1669, spotanim
+      340-341, interface `combat_whip` 12290-12335 (`interface.pack` and `interface.order`),
+      animsets 409-410 (the special attack graphics, with their own skeletons), frames
+      12467-12483 and 12501-12596. Not 377's: animset **1044** (the player frames; 377 keeps them
+      in its anim_28, a different set in 289), frames **33568-33573** (377 reused
+      7071/7073/7076/7078/7080/7082, which are still player frames in 289), synths **975-978**
+      (377 has them at 1079-1082, but the 289 client's `JagFX` tables hold ids below 1000).
+      Upstream files: `skill_combat/scripts/combat.rs2` (`weapon_whip` style table),
+      `player_attackstyles.rs2` (both `update_weapon_category` switches) and
+      `sprites/combaticons3.png` (377's two whip icons pasted into 289's empty tiles 13-14; 289's
+      tiles 0-12 stay, since 377's versions differ slightly). At a 377 upgrade, delete
+      `pvp_kit/` and these pack lines: 377 brings the originals.
 - [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`
       from the repo root (needs built content). Server refusal wording is mirrored in
       `sdk/actions-helpers.ts` `PVP_REFUSALS` and in `RULES.md` — change them together.

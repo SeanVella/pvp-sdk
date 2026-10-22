@@ -1,0 +1,18 @@
+// pvp-sdk: the abyssal whip's attack style buttons and the wield requirements of the whip and
+// granite maul, from LostCity's Content repository, branch 377-wip
+// (scripts/skill_combat/scripts/player/player_attackstyles.rs2, scripts/levelrequire/scripts/tier70.rs2
+// and tier50.rs2), MIT licence as server/content/LICENSE.
+
+[if_button,combat_whip:whip0] ~set_attackstyle(0);
+[if_button,combat_whip:whip1] ~set_attackstyle(1);
+[if_button,combat_whip:whip2] ~set_attackstyle(2);
+
+[opheld2,abyssal_whip] @levelrequire_attack_caps(70, last_slot);
+
+[opheld2,granite_maul]
+if (stat_base(attack) < 50 | stat_base(strength) < 50) {
+    mes("You are not a high enough level to use this item.");
+    mes("You need to have Attack and Strength levels of 50.");
+    return;
+}
+~equip(last_slot);

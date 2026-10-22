@@ -35,6 +35,7 @@ switch_category(oc_category($weapon)) {
     case weapon_staff : return(weapon_staff_table);
     case weapon_claws : return(weapon_claws_table);
     case weapon_polearm : return(weapon_polearm_table);
+    case weapon_whip : return(weapon_whip_table); // pvp-sdk: abyssal whip (pvp_kit/configs/slayer_weapons.dbrow)
     case default : return(weapon_unarmed_table);
 }
 

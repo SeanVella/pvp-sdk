@@ -15,7 +15,7 @@ test('compiled pvp-world rules: level range, safe areas, protection, guards and 
         });
         const output = result.stdout.toString() + result.stderr.toString();
         if (result.exitCode !== 0) throw new Error(output);
-        expect(output).toContain('19 pass');
+        expect(output).toContain('20 pass');
         expect(output).toContain('0 fail');
     } finally {
         rmSync(dir, { recursive: true, force: true });

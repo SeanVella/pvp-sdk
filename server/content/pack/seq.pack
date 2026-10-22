@@ -1502,3 +1502,15 @@
 1501=seq_1501
 1502=wings_summon
 1503=summon_spell
+1658=slayer_abyssal_whip_attack
+1659=slayer_abyssal_whip_defend
+1660=slayer_abyssal_whip_walk
+1661=slayer_abyssal_whip_run
+1662=slayer_granite_maul_ready
+1663=slayer_granite_maul_walk
+1664=slayer_granite_maul_run
+1665=slayer_granite_maul_attack
+1666=slayer_granite_maul_defend
+1667=slayer_granite_maul_special_attack
+1668=slayer_maul_sp_attack
+1669=slayer_whip_sp_attack

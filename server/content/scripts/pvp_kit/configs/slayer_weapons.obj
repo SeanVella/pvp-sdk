@@ -1,0 +1,68 @@
+// pvp-sdk: the abyssal whip and granite maul, ported from LostCity's Content repository, branch
+// 377-wip (scripts/_unpack/377/all.obj), MIT licence as server/content/LICENSE. They are 377's
+// configs at 377's ids (obj.pack 4151-4154, the noted forms are generated from cert_*); only the
+// models are converted, see engine/tools/pvp/import377Weapons.ts. Revision 289 predates both
+// (they arrived with Slayer in 291-295), so here they are sold in the Varrock Swordshop.
+
+[abyssal_whip]
+name=Abyssal whip
+desc=A weapon from the abyss.
+model=obj_abyssal_whip
+2dxof=-2
+2dyof=56
+2dzoom=840
+2dxan=280
+iop2=Wield
+wearpos=righthand
+manwear=obj_abyssal_whip_manwear,0
+womanwear=obj_abyssal_whip_manwear,6
+members=yes
+cost=100001
+category=weapon_whip
+weight=1lb
+param=stabattack,0
+param=slashattack,82
+param=crushattack,0
+param=slashdefence,0
+param=strengthbonus,82
+param=slashattack_anim,slayer_abyssal_whip_attack
+param=defend_anim,slayer_abyssal_whip_defend
+param=slash_sound,whip
+param=specwep,^true
+param=sa_energy,500
+
+[granite_maul]
+name=Granite maul
+desc=Simplicity is the best weapon.
+model=obj_granite_maul
+2dxof=-1
+2dyof=17
+2dyan=36
+2dxan=308
+iop2=Wield
+manwear=obj_granite_maul_manwear,0
+womanwear=obj_granite_maul_manwear,6
+members=yes
+cost=50000
+wearpos=righthand
+wearpos2=lefthand
+weight=10lb
+category=weapon_blunt
+param=attackrate,7
+param=stabattack,0
+param=slashattack,0
+param=crushattack,81
+param=slashdefence,0
+param=strengthbonus,79
+param=ready_baseanim,slayer_granite_maul_ready
+param=turnonspot_baseanim,slayer_granite_maul_ready
+param=walk_f_baseanim,slayer_granite_maul_walk
+param=walk_b_baseanim,slayer_granite_maul_walk
+param=walk_l_baseanim,slayer_granite_maul_walk
+param=walk_r_baseanim,slayer_granite_maul_walk
+param=running_baseanim,slayer_granite_maul_run
+param=crushattack_anim,slayer_granite_maul_attack
+param=defend_anim,slayer_granite_maul_defend
+param=crush_sound,granite_maul
+param=specwep,^true
+param=sa_energy,500
