@@ -136,6 +136,8 @@ export interface NearbyPlayer {
     combatTargetType?: 'npc' | 'player' | 'none';
     combatTargetIndex?: number;
     inCombat?: boolean;
+    /** The player shows the PK skull: their bank is at risk if they die. */
+    isSkulled?: boolean;
 }
 
 export interface GroundItem {

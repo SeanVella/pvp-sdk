@@ -79,6 +79,11 @@ describe('formatWorldStateSummary', () => {
         expect(out).not.toContain('NPCs:');
     });
 
+    test('flags our own skull on the position line', () => {
+        expect(formatWorldStateSummary(state({ isSkulled: true }), 0)).toContain('HP 7/10 | SKULLED');
+        expect(formatWorldStateSummary(state({ isSkulled: false }), 0)).not.toContain('SKULLED');
+    });
+
     test('reports xp gained per skill', () => {
         const out = formatWorldStateSummary(state(), 0, {
             xpBefore: { Hitpoints: 1300, Woodcutting: 220 }
@@ -158,5 +163,19 @@ describe('formatWorldState brief mode', () => {
         expect(out).toContain('Fishing: 1 (0 xp)');
         expect(out).toContain('(idx: 42) [Talk-to, Pickpocket]');
         expect(out).toContain('[Chop down]');
+    });
+
+    test('shows our skull and nearby players\' skulls', () => {
+        const out = formatWorldState(state({
+            isSkulled: true,
+            nearbyPlayers: [
+                { name: 'Zezima', combatLevel: 126, distance: 4, isSkulled: true },
+                { name: 'Bob', combatLevel: 20, distance: 6, isSkulled: false }
+            ] as any
+        }), 0);
+
+        expect(out).toContain('Skulled: yes');
+        expect(out).toContain('- Zezima (Combat 126) [skulled] - 4 tiles');
+        expect(out).toContain('- Bob (Combat 20) - 6 tiles');
     });
 });

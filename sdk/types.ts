@@ -144,6 +144,9 @@ export interface NearbyPlayer {
     combatTargetType?: 'npc' | 'player' | 'none';
     combatTargetIndex?: number;
     inCombat?: boolean;
+    /** The player shows the PK skull, so dying would cost them their 10 most valuable
+     * bank stacks. Absent when the connected client predates it. */
+    isSkulled?: boolean;
 }
 
 /**

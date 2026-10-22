@@ -232,6 +232,21 @@ describe('BotStateCollector combat state', () => {
         client.var[78] = 12_345;
         expect(collector.collectState(3, true).isSkulled).toBeFalse();
     });
+
+    test('reports which nearby players show the skull', () => {
+        const client = createClient();
+        const other = (name: string, headicons: number) => ({
+            name, headicons, combatLevel: 3, x: 256, z: 128, faceEntity: -1, combatCycle: 0
+        });
+        client.players = { 3: other('Skulled', 0x1), 4: other('Praying', 0x8) };
+        client.playerIds = [3, 4];
+        client.playerCount = 2;
+        const collector = new BotStateCollector(client);
+
+        const players = (collector as any).collectNearbyPlayers(100);
+
+        expect(players.map((p: any) => [p.name, p.isSkulled])).toEqual([['Skulled', true], ['Praying', false]]);
+    });
 });
 
 describe('BotStateCollector op feedback', () => {

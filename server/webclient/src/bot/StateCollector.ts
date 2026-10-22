@@ -1052,6 +1052,7 @@ export class BotStateCollector implements ScanProvider {
                 combatTargetType: target.type,
                 combatTargetIndex: target.index,
                 inCombat: corroborated,
+                isSkulled: BotStateCollector.hasSkullIcon(player), // pvp-sdk
                 reachable: this.reachProbeReady()
                     ? this.reachProbe.canReachEntity(player.routeX?.[0] ?? (player.x || 0) >> 7, player.routeZ?.[0] ?? (player.z || 0) >> 7, 1)
                     : undefined

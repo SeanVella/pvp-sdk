@@ -48,8 +48,9 @@ Refusals come back as `reason: 'not_attackable'` with the server's message:
 `bot.attack()` walks toward the target before attacking. If the target is in a safe town, that
 walk can take you into the town too: check where they stand first.
 
-`sdk.getNearbyPlayers()` gives each player's `combatLevel`, position, `distance` and, while
-they're fighting, `combatTargetType`/`combatTargetIndex`. Check the level gap before you commit.
+`sdk.getNearbyPlayers()` gives each player's `combatLevel`, position, `distance`, `isSkulled`
+and, while they're fighting, `combatTargetType`/`combatTargetIndex`. Check the level gap before
+you commit. A skulled player's bank is at risk: kill them and you get a Bank key.
 
 ## Attacking first is a trade-off
 

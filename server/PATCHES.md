@@ -439,8 +439,10 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       After a sync, grep for new `set_player_op(null, 2` callers.
 - [ ] **`webclient/src/bot/StateCollector.ts` `hasSkullIcon`** — `state.isSkulled` reads bit 0
       (`^headicon_skull`) of our own head icons. Upstream reads varp 78 (`pk_skull`), which has
-      no `transmit=yes`, so it always reported false. Verify: `cd server/webclient && bun test
-      src/bot/StateCollector.test.ts`.
+      no `transmit=yes`, so it always reported false. `collectNearbyPlayers` sets each player's
+      `isSkulled` the same way (`NearbyPlayer` in both `bot/types.ts` and `sdk/types.ts`), and
+      `sdk/formatter.ts` prints `SKULLED` / `[skulled]`. Verify: `cd server/webclient && bun test
+      src/bot/StateCollector.test.ts`, and `bun test sdk/test/state-summary.test.ts`.
 - [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`
       from the repo root (needs built content). Server refusal wording is mirrored in
       `sdk/actions-helpers.ts` `PVP_REFUSALS` and in `RULES.md` — change them together.

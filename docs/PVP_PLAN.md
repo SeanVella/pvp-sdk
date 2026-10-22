@@ -136,7 +136,7 @@ v2 deploy (2026-10-22).
       whether each player stands in a safe area, and refuse client-side.
       Add snare, entangle, god spells and Iban's blast to the spell table.
 - [ ] Deadman state and helpers: own skull timer, keys held and their contents, a
-      `bot.openBankKey()`; each nearby player's skull (and so whether their bank is at risk).
+      `bot.openBankKey()`. (Done: each nearby player's skull, `nearbyPlayers[].isSkulled`.)
 - [ ] Reflexes: per-tick eat / pray / switch / attack-player inside the lite runner, so fights
       don't wait on an LLM turn (a draft of NPC reflexes exists in the sibling rs-sdk checkout).
 - [ ] Docs and examples: `learnings/pvp.md` for agents, example bots (hunter, survivor).

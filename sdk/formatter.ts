@@ -37,12 +37,13 @@ export function formatWorldStateSummary(
         const hp = (state.skills || []).find(s => s.name === 'Hitpoints');
         const hpStr = hp ? ` | HP ${hp.level}/${hp.baseLevel}` : '';
         const dead = p.isDead ? ' | DEAD' : '';
+        const skull = state.isSkulled ? ' | SKULLED' : ''; // pvp-sdk: the guards shoot it in towns
         let combat = '';
         if (p.combat.inCombat) {
             const target = state.nearbyNpcs.find(n => n.index === p.combat.targetIndex);
             combat = ` | fighting ${target?.name ?? `idx ${p.combat.targetIndex}`}`;
         }
-        lines.push(`Pos (${p.worldX}, ${p.worldZ})${p.level ? ` lvl ${p.level}` : ''}${hpStr}${dead}${combat}${stale}`);
+        lines.push(`Pos (${p.worldX}, ${p.worldZ})${p.level ? ` lvl ${p.level}` : ''}${hpStr}${dead}${skull}${combat}${stale}`);
     } else {
         lines.push(`Not in game (tick ${state.tick})${stale}`);
     }
@@ -167,6 +168,7 @@ export function formatWorldState(
         lines.push('## Player');
         lines.push(`Name: ${p.name} (Combat ${p.combatLevel})`);
         lines.push(`Position: (${p.worldX}, ${p.worldZ}) Level ${p.level}`);
+        if (state.isSkulled) lines.push('Skulled: yes'); // pvp-sdk
         if (p.isDead) {
             lines.push(`Status: DEAD (life ${p.lifeId}, death tick ${p.lastDeathTick ?? 'unknown'})`);
         } else if (p.respawnCount > 0) {
@@ -407,7 +409,8 @@ export function formatWorldState(
         lines.push('');
         lines.push('## Nearby Players');
         for (const pl of state.nearbyPlayers.slice(0, 5)) {
-            lines.push(`- ${pl.name} (Combat ${pl.combatLevel}) - ${pl.distance} tiles`);
+            const skull = pl.isSkulled ? ' [skulled]' : ''; // pvp-sdk
+            lines.push(`- ${pl.name} (Combat ${pl.combatLevel})${skull} - ${pl.distance} tiles`);
         }
         if (state.nearbyPlayers.length > 5) {
             lines.push(`  ... and ${state.nearbyPlayers.length - 5} more`);
