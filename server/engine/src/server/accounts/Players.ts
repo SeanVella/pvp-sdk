@@ -63,25 +63,34 @@ export function inviteHash(code: string, secret: string): string {
 
 export type PlayerRow = { id: number; note: string | null; created: string; firstSignIn: string | null; disabled: boolean; bots: number };
 
-function sessionMac(playerId: number, expires: number, secret: string): string {
-    return createHmac('sha256', secret).update(`session:${playerId}.${expires}`).digest('base64url');
+function sessionMac(playerId: number, expires: number, secret: string, bind: string): string {
+    return createHmac('sha256', secret).update(`session:${playerId}.${expires}.${bind}`).digest('base64url');
 }
 
-/** A stateless session cookie value: the player id and expiry, signed. */
-export function signSession(playerId: number, secret: string, now: number = Date.now()): string {
+/**
+ * A stateless session cookie value: the player id and expiry, signed. `bind` is the player's
+ * current code or number hash (PlayerAccounts.sessionBinding), so a new code ends old sessions.
+ */
+export function signSession(playerId: number, secret: string, now: number = Date.now(), bind: string = ''): string {
     const expires = Math.floor(now / 1000) + SESSION_DAYS * 24 * 60 * 60;
-    return `${playerId}.${expires}.${sessionMac(playerId, expires, secret)}`;
+    return `${playerId}.${expires}.${sessionMac(playerId, expires, secret, bind)}`;
 }
 
-/** The player id from a session cookie, or null if it's forged, mangled or expired. */
-export function readSession(value: string | null | undefined, secret: string, now: number = Date.now()): number | null {
+/** The player a session cookie claims to be, before checking it (to look up its binding). */
+export function sessionPlayerId(value: string | null | undefined): number | null {
+    const playerId = Number(value?.split('.')[0]);
+    return value && Number.isSafeInteger(playerId) ? playerId : null;
+}
+
+/** The player id from a session cookie, or null if it's forged, mangled, expired or rebound. */
+export function readSession(value: string | null | undefined, secret: string, now: number = Date.now(), bind: string = ''): number | null {
     if (!value || !secret) return null;
     const [id, expires, mac] = value.split('.');
     const playerId = Number(id);
     const expiry = Number(expires);
     if (!Number.isSafeInteger(playerId) || !Number.isSafeInteger(expiry) || !mac) return null;
     if (expiry * 1000 <= now) return null;
-    const want = Buffer.from(sessionMac(playerId, expiry, secret));
+    const want = Buffer.from(sessionMac(playerId, expiry, secret, bind));
     const got = Buffer.from(mac);
     return want.length === got.length && timingSafeEqual(want, got) ? playerId : null;
 }
@@ -171,11 +180,25 @@ export default class PlayerAccounts {
         return row.id;
     }
 
-    /** A replacement code for a player who lost theirs; the old one stops working. */
+    /**
+     * A replacement code for a player who lost theirs, or whose code leaked. Whoever had the old
+     * one is locked out completely: the code stops working, sessions signed in with it end (they
+     * are bound to it), and the API key is cancelled, so the player makes a new one.
+     */
     async reissueInvite(playerId: number, secret: string): Promise<string | null> {
         const code = newInviteCode();
-        const result = await this.db.updateTable('player').set({ phone_hash: inviteHash(normalizeInvite(code)!, secret) }).where('id', '=', playerId).executeTakeFirst();
+        const result = await this.db
+            .updateTable('player')
+            .set({ phone_hash: inviteHash(normalizeInvite(code)!, secret), api_key_hash: null })
+            .where('id', '=', playerId)
+            .executeTakeFirst();
         return Number(result.numUpdatedRows) > 0 ? code : null;
+    }
+
+    /** What the player's sessions are bound to (their current code or number hash); null if gone or disabled. */
+    async sessionBinding(playerId: number): Promise<string | null> {
+        const row = await this.db.selectFrom('player').select(['phone_hash', 'disabled']).where('id', '=', playerId).executeTakeFirst();
+        return row && !Number(row.disabled) ? row.phone_hash : null;
     }
 
     /** A disabled player can't sign in, and none of their bots can log in. */

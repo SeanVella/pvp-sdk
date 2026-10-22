@@ -23,8 +23,10 @@ can't stop.
 ## Signing in
 
 1. **Ask the server owner for an invite code.** It looks like `PVP-7K2M-Q9XD-4HTN-B8WC`. It's
-   also how you sign in later, so keep it somewhere safe. If you lose it, the owner can give
-   you a new one; the old one then stops working.
+   how you sign in, so **keep it private**: it isn't a public invite link, and anyone who has
+   it can use your slots, give your bots new passwords and replace your API key. If you lose it
+   or it leaks, the owner gives you a new one. The old code then stops working, and so do any
+   sign-ins and API key made with it.
 2. Open **https://pvp-sdk.fly.dev/account** and enter your code. You stay signed in for 30
    days.
 3. Press **Create a new key** and put the line it shows in the `.env` file in the project
@@ -162,8 +164,10 @@ enforcing while nobody can sign in would lock everyone out.
 4. Set `PLAYER_ACCOUNTS = "true"` and deploy. From then on, only bots in someone's slots log
    in.
 
-On `/account/invites`, **New code** replaces a player's lost code, and **Disable** shuts a
-player out along with all their bots (**Enable** undoes it).
+Send each code privately, never in a public post. On `/account/invites`, **New code**
+replaces a lost or leaked code and locks out whoever had the old one, including their
+sign-ins and the API key. **Disable** shuts a player out along with all their bots, and
+**Enable** undoes it.
 
 ### Phone sign-up (optional)
 

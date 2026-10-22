@@ -498,3 +498,42 @@ describe('invite codes', () => {
         expect(await (await r.call('/account', { headers: { cookie } }))!.text()).toContain('action="/account/invite"');
     });
 });
+
+describe('a leaked invite code', () => {
+    test('a new code locks out whoever had the old one: code, sessions and API key', async () => {
+        const db = freshDb();
+        const accounts = new PlayerAccounts(db, 1, 5);
+        const handle = createAccountRoutes({
+            accounts, signup: 'invite', isOwner: req => req.headers.get('x-test-owner') === 'yes', verifier: null, secret: SECRET, enforced: true,
+            turnstileSiteKey: '', turnstile: async () => false, smsPerIpPerHour: 3, smsPerDay: 100, allowedPrefixes: []
+        });
+        const call = (path: string, init: RequestInit = {}) => handle(new Request(`https://pvp-sdk.fly.dev${path}`, init), new URL(`https://pvp-sdk.fly.dev${path}`), '203.0.113.9');
+        const post = (path: string, fields: Record<string, string>, headers: Record<string, string> = {}) =>
+            call(path, { method: 'POST', body: new URLSearchParams(fields), headers });
+
+        const { id, code } = await accounts.createInvite('leaky', SECRET);
+        // someone else gets hold of the code: they sign in and make an API key
+        const cookie = (await post('/account/invite', { code }))!.headers.get('set-cookie')!.split(';')[0]!;
+        const key = (await (await post('/account/key', {}, { cookie }))!.text()).match(/PVP_SDK_KEY=(pvp_[A-Za-z0-9_-]+)/)![1]!;
+        expect(await (await call('/account', { headers: { cookie } }))!.text()).toContain('slots used');
+        expect((await call('/api/bots', { headers: { authorization: `Bearer ${key}` } }))!.status).toBe(200);
+
+        // the owner issues a new code
+        const fresh = (await (await post('/account/invites/reissue', { id: String(id) }, { 'x-test-owner': 'yes' }))!.text())
+            .match(/PVP-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}/)![0];
+        expect(fresh).not.toBe(code);
+
+        expect(await (await call('/account', { headers: { cookie } }))!.text()).toContain('action="/account/invite"');
+        expect((await call('/api/bots', { headers: { authorization: `Bearer ${key}` } }))!.status).toBe(401);
+        expect(await (await post('/account/invite', { code }))!.text()).toContain('That code didn&#39;t work');
+        const mine = (await post('/account/invite', { code: fresh }))!.headers.get('set-cookie')!.split(';')[0]!;
+        expect(await (await call('/account', { headers: { cookie: mine } }))!.text()).toContain('slots used');
+    });
+
+    test('sessions are bound to what they were signed with', () => {
+        const now = Date.UTC(2026, 9, 22);
+        const cookie = signSession(7, SECRET, now, 'hash-a');
+        expect(readSession(cookie, SECRET, now, 'hash-a')).toBe(7);
+        expect(readSession(cookie, SECRET, now, 'hash-b')).toBeNull();
+    });
+});

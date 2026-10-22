@@ -5,7 +5,7 @@
 // The rules themselves live in server/accounts/Players.ts. The pages are styled like the
 // game's own stone interfaces (design: https://claude.ai/artifact/UXrJX9VdoyDQeatdoC9Qi4).
 import RegistrationLimiter from '#/server/login/RegistrationLimiter.js';
-import PlayerAccounts, { normalizePhone, phoneHash, PLAYER_COOKIE, readSession, sessionMaxAgeSeconds, signSession } from '#/server/accounts/Players.js';
+import PlayerAccounts, { normalizePhone, phoneHash, PLAYER_COOKIE, readSession, sessionMaxAgeSeconds, sessionPlayerId, signSession } from '#/server/accounts/Players.js';
 import type { BotSlot, PlayerRow } from '#/server/accounts/Players.js';
 import type { PhoneVerifier } from '#/server/accounts/PhoneVerify.js';
 
@@ -50,9 +50,12 @@ export function createAccountRoutes(deps: AccountDeps): Handler {
 
     async function signedInPlayer(req: Request): Promise<number | null> {
         const cookie = (req.headers.get('cookie') ?? '').match(new RegExp(`(?:^|;\\s*)${PLAYER_COOKIE}=([^;]+)`));
-        const id = cookie ? readSession(decodeURIComponent(cookie[1]!), deps.secret, now()) : null;
-        // a player the owner disabled is signed out everywhere
-        return id !== null && (await deps.accounts.isActive(id)) ? id : null;
+        const value = cookie ? decodeURIComponent(cookie[1]!) : null;
+        const claimed = sessionPlayerId(value);
+        if (claimed === null) return null;
+        // Bound to the player's current code: a new code, or disabling the player, signs them out everywhere.
+        const binding = await deps.accounts.sessionBinding(claimed);
+        return binding === null ? null : readSession(value, deps.secret, now(), binding);
     }
 
     async function apiPlayer(req: Request): Promise<number | null> {
@@ -98,7 +101,7 @@ ${full ? '' : `
         if (deps.signup === 'invite') {
             return layout('Your bots', `
 <p class="m0">Every player gets <b class="y">${botsPerPlayer} bots</b> a season. To keep that fair, the server owner gives each player one invite code. Ask them for yours.</p>
-<p class="m0 muted">Your code is also how you sign in later, so keep it somewhere safe. <a href="${WHY_URL}">Why?</a></p>
+<p class="m0 muted">Your code is how you sign in, so keep it private and somewhere safe: anyone who has it can use your bots. <a href="${WHY_URL}">Why?</a></p>
 ${error ? `<p class="alert error" role="alert">${esc(error)}</p>` : ''}
 <form method="post" action="/account/invite" class="stack">
 <label>Invite code<input name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="PVP-XXXX-XXXX-XXXX-XXXX" required autofocus class="wide"></label>
@@ -147,7 +150,7 @@ ${hint ? `<p class="m0 small muted">${hint}</p>` : ''}`);
                   '</td></tr>').join('')
             : '<tr><td colspan="6" class="faint">No players yet.</td></tr>';
         return layout('Invites', `
-<p class="m0">Each invite is one player, with ${botsPerPlayer} bots a season. Give one code to one person. Disabling a player stops all their bots from logging in.</p>
+<p class="m0">Each invite is one player, with ${botsPerPlayer} bots a season. Give one code to one person, privately; never post a code publicly. <b class="w">New code</b> locks out whoever had the old one, ending their sign-ins and API key too. <b class="w">Disable</b> stops the player and all their bots.</p>
 ${deps.enforced ? '' : '<p class="alert note">Fair play isn\'t switched on yet (PLAYER_ACCOUNTS): any account can still log in.</p>'}
 <form method="post" action="/account/invites" class="row">
 <label class="grow">Who is it for? (a note only you see)<input name="note" maxlength="100" autocomplete="off" placeholder="e.g. Alex from Discord"></label>
@@ -157,14 +160,15 @@ ${deps.enforced ? '' : '<p class="alert note">Fair play isn\'t switched on yet (
     }
 
     function inviteShown(title: string, code: string, host: string): Response {
-        return shownOnce(title, "Send this to them. Only a hash of the code is kept, so it can't be shown again; make a new code if it's lost.",
-            `You're invited to PvP-SDK.\nSign in at https://${host}/account with this code:\n${code}\nKeep it: it's also how you sign in later.`,
+        return shownOnce(title, "Send this to them privately. Only a hash of the code is kept, so it can't be shown again; make a new code if it's lost or leaked.",
+            `You're invited to PvP-SDK.\nSign in at https://${host}/account with this code:\n${code}\nKeep it private: it's how you sign in, and anyone who has it can take over your bots.`,
             '', ['/account/invites', 'Back to invites']);
     }
 
-    function signIn(playerId: number, req: Request, url: URL): Response {
+    async function signIn(playerId: number, req: Request, url: URL): Promise<Response> {
         const secure = url.protocol === 'https:' || req.headers.get('x-forwarded-proto') === 'https' ? '; Secure' : '';
-        return redirect('/account', `${PLAYER_COOKIE}=${encodeURIComponent(signSession(playerId, deps.secret, now()))}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${sessionMaxAgeSeconds()}${secure}`);
+        const binding = (await deps.accounts.sessionBinding(playerId)) ?? '';
+        return redirect('/account', `${PLAYER_COOKIE}=${encodeURIComponent(signSession(playerId, deps.secret, now(), binding))}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${sessionMaxAgeSeconds()}${secure}`);
     }
 
     function botEnv(username: string, password: string, host: string): string {
