@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 
 // Runs the compiled pvp-sdk world rules (pvp_world.rs2, dmm_bank_keys.rs2, ~pvp_level_check)
 // from the built pack against in-memory players: who can attack whom, where, spawn
-// protection, the Deadman guards, bank keys and the teleport lock.
+// protection, the Deadman guards, bank keys, the teleport lock and the login skull migration.
 const output = process.env.PVP_WORLD_TEST_OUTPUT!;
 const cache = resolve('data/pack');
 
@@ -31,6 +31,8 @@ const { default: ScriptRunner } = await import('../../src/engine/script/ScriptRu
 const { default: ScriptState } = await import('../../src/engine/script/ScriptState.js');
 const { default: ScriptPointer } = await import('../../src/engine/script/ScriptPointer.js');
 const { NetworkPlayer } = await import('../../src/engine/entity/NetworkPlayer.js');
+const { PlayerLoading } = await import('../../src/engine/entity/PlayerLoading.js');
+const { default: Packet } = await import('../../src/io/Packet.js');
 const { default: Obj } = await import('../../src/engine/entity/Obj.js');
 const { PlayerStat } = await import('../../src/engine/entity/PlayerStat.js');
 const { default: NullClientSocket } = await import('../../src/server/NullClientSocket.js');
@@ -182,6 +184,40 @@ test('guards shoot a skulled player in a safe area harder every hit, and only th
     run('[softtimer,dmm_guard_check]', p);
     expect(p.levels[PlayerStat.HITPOINTS]).toBe(22);
     expect(p.vars[varp('dmm_guard_hits')]).toBe(0);
+});
+
+test('a skull from before the safe zones last grew is cleared once at login', () => {
+    const fresh = player('fresh', 10, FIELD.x, FIELD.z);
+    run('[proc,dmm_rules_login]', fresh);
+    const version = fresh.vars[varp('dmm_rules_version')];
+    expect(version).toBeGreaterThan(0);
+    expect(fresh.messages).toEqual([]);
+    const old = player('old', 10, LUMBRIDGE_SPAWN.x, LUMBRIDGE_SPAWN.z);
+    old.vars[varp('pk_skull')] = 1500; // ticks left, as saved at logout
+    run('[proc,dmm_rules_login]', old);
+    expect(old.vars[varp('pk_skull')]).toBe(0);
+    expect(old.vars[varp('dmm_rules_version')]).toBe(version);
+    expect(old.messages).toEqual(['The safe zones have changed since you logged out, so your skull has been removed.']);
+    // Under the current rules the skull stays, and the guards will see it.
+    const current = player('current', 10, LUMBRIDGE_SPAWN.x, LUMBRIDGE_SPAWN.z);
+    current.vars[varp('dmm_rules_version')] = version;
+    current.vars[varp('pk_skull')] = 1500;
+    run('[proc,dmm_rules_login]', current);
+    expect(current.vars[varp('pk_skull')]).toBe(1500);
+    expect(current.messages).toEqual([]);
+});
+
+test('the rules version is saved, so logging out and back in keeps a current skull', () => {
+    const p = player('relog', 10, LUMBRIDGE_SPAWN.x, LUMBRIDGE_SPAWN.z);
+    run('[proc,dmm_rules_login]', p);
+    p.vars[varp('pk_skull')] = 1500;
+    const back = PlayerLoading.load('relog', new Packet(p.save(false)), new NullClientSocket()) as TestPlayer;
+    back.messages = [];
+    back.messageGame = (msg: string) => void back.messages.push(msg);
+    expect(back.vars[varp('dmm_rules_version')]).toBe(p.vars[varp('dmm_rules_version')]);
+    run('[proc,dmm_rules_login]', back);
+    expect(back.vars[varp('pk_skull')]).toBe(1500);
+    expect(back.messages).toEqual([]);
 });
 
 test('a PvP hit teleport-locks both players for 24 ticks', () => {

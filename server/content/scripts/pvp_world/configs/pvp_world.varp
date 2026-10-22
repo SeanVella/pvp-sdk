@@ -10,3 +10,8 @@ protect=no
 // How many times the guards have shot a skulled player in the current safe area visit.
 [dmm_guard_hits]
 protect=no
+
+// The ^dmm_rules_version the player last logged in under (~dmm_rules_login).
+[dmm_rules_version]
+protect=no
+scope=perm

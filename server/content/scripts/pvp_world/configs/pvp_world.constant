@@ -16,3 +16,8 @@
 // Bank keys a player can carry, and the bank stacks a key takes.
 ^dmm_max_keys = 5
 ^dmm_key_stacks = 10
+// Raise this whenever the safe zones grow: skulls players logged out with under an
+// older version are cleared at their next login (~dmm_rules_login).
+// 1 = the Deadman rules, which turned the v1 open ground around the towns into
+// guarded safe zones.
+^dmm_rules_version = 1

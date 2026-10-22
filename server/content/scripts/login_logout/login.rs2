@@ -47,6 +47,8 @@ if (map_random_events = true) {
 queue(macro_event_login, 0, 0);
 // TODO: Find out if these run on login?
 ~macro_cube_login;
+// pvp-sdk: skulls from before the safe zones last grew are cleared (pvp_world.rs2)
+~dmm_rules_login;
 // so pk skulls persist after logging back in
 ~set_pk_skull_login;
 // so the pvp 1hp-respawn mark persists after logging back in

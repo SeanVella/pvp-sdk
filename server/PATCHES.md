@@ -395,13 +395,17 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
 
 - [ ] **`scripts/pvp_world/`** (fork-only):
       - `pvp_world.constant`: `^pvp_combat_range` 15, `^pvp_protection_duration` 100,
-        `^pvp_teleport_lock` 24, `^dmm_guard_interval` 2, `^dmm_max_keys` 5, `^dmm_key_stacks` 10.
+        `^pvp_teleport_lock` 24, `^dmm_guard_interval` 2, `^dmm_max_keys` 5, `^dmm_key_stacks` 10,
+        `^dmm_rules_version` 1.
       - `pvp_safe_zones.dbrow`: the guarded towns (Lumbridge, Varrock, Falador, East Ardougne,
-        Yanille) and the Seers'/Catherby banks.
+        Yanille) and the Seers'/Catherby banks. **When a zone grows, raise `^dmm_rules_version`**,
+        or players who logged out skulled on what is now town ground are killed by the guards
+        the moment they log back in.
       - `pvp_world.varp`: `pvp_protection` (**1001**, transmitted), `pvp_combat_clock` (**1002**),
-        `dmm_guard_hits` (**1003**).
+        `dmm_guard_hits` (**1003**), `dmm_rules_version` (**1004**, perm).
       - `pvp_world.rs2`: `~pvp_in_safe_zone` (that table + Tutorial Island + Duel Arena + Castle
-        Wars), spawn protection, the `dmm_guard_check` softtimer, `~pvp_teleport_locked`.
+        Wars), spawn protection, the `dmm_guard_check` softtimer, `~pvp_teleport_locked`,
+        `~dmm_rules_login` (clears a skull saved under an older `^dmm_rules_version`).
       - `dmm_bank_keys.rs2/.inv/.obj`: bank raids, key transfer, the Bank key's Open/Check/Destroy.
 - [ ] **Reserved ids for the bank keys** (saves store them by id, so never renumber):
       invs `dmm_key_1..5` **1000-1004** and `dmm_raid` **1005** in `inv.pack`; obj
@@ -421,7 +425,9 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       deaths at 1hp via `pvp_death_mark`, now unused there).
 - [ ] **`skill_magic/scripts/spells/teleport.rs2` `~pre_tele_checks`** — the PvP teleport lock.
       Every teleport (spells, jewellery, quest items) goes through this proc.
-- [ ] **`login_logout/login.rs2`** — `~dmm_sync_key_tokens` so Bank key objs match the keys held.
+- [ ] **`login_logout/login.rs2`** — `~dmm_sync_key_tokens` so Bank key objs match the keys held;
+      `~dmm_rules_login` before `~set_pk_skull_login` (it must run first, or the restored skull
+      starts the guards).
 - [ ] **`engine/tools/pack/SourceSnapshot.ts`** — reads the running max mtime *after* awaiting
       each stat. Before, concurrent stats raced and an older file could overwrite a newer one,
       so a new config was sometimes left unregistered ("cannot be resolved to a game variable")

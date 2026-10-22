@@ -23,7 +23,7 @@ every DMM mechanic to what we did with it.
 | **Guards** | A skulled player in a safe area is shot every 2 ticks: a fifth of their base hitpoints, then 2 more each hit, until they leave or die. |
 | **Death** | A death to a player keeps nothing. A death to an NPC keeps the 3 most valuable items, or nothing when skulled. Protect Item adds nothing. Respawn in Lumbridge **at full health** with 100 ticks (30 s) of spawn protection, which attacking ends early. |
 | **Bank keys** | Dying skulled moves the 10 most valuable tradeable bank stacks into a Bank key for the killer, or onto the floor if no player gets the credit. Keys open in a safe area while unskulled; at most 5 carried; killing a holder takes their keys. |
-| **Skulls** | Attack someone who didn't attack you first and you're skulled for 2000 ticks (10 min). |
+| **Skulls** | Attack someone who didn't attack you first and you're skulled for 2000 ticks (10 min). The timer survives logout, except that a skull saved before the safe zones last grew (`^dmm_rules_version`) is cleared at the next login. |
 | **Teleport lock** | No teleports for 24 ticks (7.2 s) after any PvP hit, dealt or taken. |
 | **Multi-combat** | The original multi areas (Falador, Barbarian Village, Al Kharid, much of the Wilderness, ...). Everywhere else is single-combat: one opponent at a time, an 8-tick lock after each hit. |
 | **Wilderness** | Teleport limits (level 20, glory 30) and the ditch warning are unchanged. |
@@ -37,7 +37,7 @@ checks are the real protection.
 
 Tests: `server/engine/test/pvp-world.test.ts` runs the compiled rules against in-memory players
 (level ranges, safe towns, protection, guard damage, teleport lock, bank raids, key theft and
-overflow). `sdk/test/pvp-targeting.test.ts` checks that the SDK reports every refusal as
+overflow, and the login skull migration through a real save round trip). `sdk/test/pvp-targeting.test.ts` checks that the SDK reports every refusal as
 `not_attackable` instead of a silent no-op. End-to-end runs on a local engine with lite-client
 bots covered refusals, a fight to the death, the full-health respawn with protection, and the
 Deadman flow: skull, guards killing the skulled attacker, a key for the killer with the victim's

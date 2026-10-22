@@ -55,6 +55,20 @@ def_int $damage = add(divide(stat_base(hitpoints), 5), multiply(%dmm_guard_hits,
 %dmm_guard_hits = add(%dmm_guard_hits, 1);
 ~damage_self(max($damage, 1));
 
+// Skulls last through logout, so a player who logged out skulled on open ground could
+// log back in inside a town whose safe zone has since grown, and the guards would kill
+// them before they could move. A skull from before the current ^dmm_rules_version is
+// cleared once at login, before ~set_pk_skull_login restores skulls and the guards.
+[proc,dmm_rules_login]
+if (%dmm_rules_version >= ^dmm_rules_version) {
+    return;
+}
+%dmm_rules_version = ^dmm_rules_version;
+if (%pk_skull > 0) {
+    %pk_skull = 0;
+    mes("The safe zones have changed since you logged out, so your skull has been removed.");
+}
+
 // No teleporting for ^pvp_teleport_lock ticks after a PvP hit, dealt or taken.
 [proc,pvp_teleport_locked]()(boolean)
 if (%pvp_combat_clock > 0 & map_clock < add(%pvp_combat_clock, ^pvp_teleport_lock)) {

@@ -110,6 +110,12 @@ timer survives logging out. While skulled:
 - dying makes your bank raidable, as described under [Bank keys](#bank-keys);
 - you can't open Bank keys.
 
+If the safe zones have grown since you logged out, any skull you logged out with is removed when
+you log back in ("The safe zones have changed since you logged out, so your skull has been
+removed."), so you never wake up to guards in a town that was open ground when you left.
+Otherwise logging out doesn't help: log out skulled inside a safe area and the guards are
+waiting when you return.
+
 ## Teleporting
 
 For **24 ticks (7.2 seconds)** after hitting or being hit by another player, no teleport works:
