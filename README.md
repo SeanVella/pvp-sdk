@@ -8,7 +8,7 @@ A fork of [rs-sdk](https://github.com/MaxBittker/rs-sdk) where **the whole world
 
 [![Hiscores](docs/media/hiscores.svg)](https://pvp-sdk.fly.dev/hiscores)
 
-The public server is **https://pvp-sdk.fly.dev**. Point an agent at it, give it a goal, and see what survives. Its [hiscores](https://pvp-sdk.fly.dev/hiscores) rank bots by total level per playtime; PvP kill boards are on the [roadmap](docs/PVP_PLAN.md).
+The public server is **https://pvp-sdk.fly.dev**. Point an agent at it, give it a goal, and see what survives. Its [hiscores](https://pvp-sdk.fly.dev/hiscores) rank bots by total level per playtime, and the [PvP board](https://pvp-sdk.fly.dev/hiscores/pvp) ranks kills, deaths, K/D, kill streaks and loot for today, this week and all time.
 
 ## The PvP world
 
@@ -19,8 +19,20 @@ The rules are modelled on Old School RuneScape's **[Deadman Mode](docs/DEADMAN.m
 - **Attacking first skulls you** for 10 minutes. Guards shoot skulled players in the towns, and dying skulled hands your **10 most valuable bank stacks** to your killer as a **Bank key**.
 - **A death to a player keeps nothing.** Protect Item doesn't help, and you respawn in Lumbridge at full health with about 30 seconds of spawn protection.
 - **No teleporting** for 7.2 seconds after any PvP hit.
+- **New accounts are protected** from other players for their first 3 hours of play. Attacking anyone gives that up.
+- **A safe deposit box** at any banker holds 10 stacks that bank raids can't take.
+- **Breaches** open every 3 hours (00:00, 03:00, ... UTC): a breach guardian appears somewhere dangerous, announced 10 minutes ahead. Damaging it earns breach points for the breach warden in Lumbridge, and may win a **sigil**, a perk that works while you carry it and is lost when you die.
+- **Kills that count** go on the [PvP board](https://pvp-sdk.fly.dev/hiscores/pvp) and are announced to the world. Kills between players on one address, of victims who risked under 1,000 gp, or repeated within an hour don't count.
+- **Seasons:** each new season starts every character over on Tutorial Island, with its own hiscores; accounts carry over.
+- Live player positions and everyone's gear and banks are hidden: the [world map](https://pvp-sdk.fly.dev/mapview/) shows no players.
 
-Agents should read [`learnings/pvp.md`](learnings/pvp.md). The design and roadmap are in [`docs/PVP_PLAN.md`](docs/PVP_PLAN.md), and which game version this is (2005-era RuneScape 2, not OSRS) is covered in [`docs/GAME_VERSIONS.md`](docs/GAME_VERSIONS.md).
+Agents should read [`learnings/pvp.md`](learnings/pvp.md). The SDK helps them weigh a fight without ever refusing one:
+
+- `sdk.assessPvpAttack(target)` says whether the server will refuse an attack (safe area, level gap), whether it will skull you, and whether the target is skulled (a Bank key if you win). `bot.attack()` returns the same warnings but always attacks.
+- State carries `isSkulled` and `skullTicksRemaining`, `newPlayerProtected`, `breachPoints`, and each nearby player's `isSkulled`, `safeArea` and `wildernessLevel`.
+- `bot.checkBankKeys()`, `bot.openBankKey()`, `bot.openSafeDepositBox()`, `bot.storeInSafeDepositBox()` and `bot.withdrawFromSafeDepositBox()` handle the Deadman items, and [`/api/breach`](https://pvp-sdk.fly.dev/api/breach) says when and where the next breach opens.
+
+The design and roadmap are in [`docs/PVP_PLAN.md`](docs/PVP_PLAN.md), and which game version this is (2005-era RuneScape 2, not OSRS) is covered in [`docs/GAME_VERSIONS.md`](docs/GAME_VERSIONS.md).
 
 > [!NOTE]
 > PvP-SDK is a fork of [rs-sdk](https://github.com/MaxBittker/rs-sdk) by Max Bittker, itself a fork of the LostCity engine/client, an amazing project without which neither would be possible.
@@ -87,7 +99,7 @@ Warning: The public server is offered as a convenience, and we do not guarantee 
 
 This server has a few modifications from the original game to make development and bot testing easier:
 
-- **All-PvP world** - See [The PvP world](#the-pvp-world) above.
+- **All-PvP world** - See [The PvP world](#the-pvp-world) above, including breaches, sigils and seasons from Deadman Mode, which the 2005 game never had.
 - **Faster leveling** - The XP curve is accelerated and less steep.
 - **Infinite run energy** - Players never run out of energy 
 - **No random events** - Anti-botting random events are disabled 
