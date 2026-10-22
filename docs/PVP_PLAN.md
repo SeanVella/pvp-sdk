@@ -197,8 +197,14 @@ PvP kit, cherry-picking LostCity's 377-wip scripts where they exist:
       ends on death. 377-wip has the impact graphic but no spell, so the spell, its spellbook
       button and its icon are ours (`engine/tools/pvp/import377TeleBlock.ts`). The SDK exposes
       `state.teleBlockTicksRemaining` and `Spells.TELE_BLOCK`.
-- [ ] Ancient Magicks: their own spellbook, unlocked at an altar in the Wilderness (the owner's
-      choice, 2026-10-22). 377-wip has every ancient spell's graphics, but no spells.
+- [x] Ancient Magicks (`scripts/pvp_kit/scripts/ancients.rs2`): all 16 spells against players
+      and monsters, with Old School's levels, runes, xp and max hits, on their own spellbook. The
+      Zaros altar in the Demonic Ruins (Wilderness 46) swaps books (the owner's choice,
+      2026-10-22). Burst and Barrage splash in multi-combat onto targets the caster could attack.
+      377-wip has the graphics and the altar but no spells, so the spells, spellbook and icons are
+      ours (`engine/tools/pvp/import377Ancients.ts`); the cast animation is the wave's. The SDK
+      exposes `state.spellbook`, `Spells.SMOKE_RUSH`...`Spells.ICE_BARRAGE` and castSpell names.
+      Open: staffs can't autocast them (no ancient staff yet).
 - [ ] Barrows sets.
 - [ ] Take each LostCity/rs-sdk upgrade by walking `server/PATCHES.md`.
 

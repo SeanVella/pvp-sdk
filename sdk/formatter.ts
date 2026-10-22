@@ -55,7 +55,7 @@ export function formatWorldStateSummary(
             const target = state.nearbyNpcs.find(n => n.index === p.combat.targetIndex);
             combat = ` | fighting ${target?.name ?? `idx ${p.combat.targetIndex}`}`;
         }
-        lines.push(`Pos (${p.worldX}, ${p.worldZ})${p.level ? ` lvl ${p.level}` : ''}${hpStr}${dead}${skull}${teleBlocked(state)}${combat}${stale}`);
+        lines.push(`Pos (${p.worldX}, ${p.worldZ})${p.level ? ` lvl ${p.level}` : ''}${hpStr}${dead}${skull}${teleBlocked(state)}${state.spellbook === 'ancient' ? ' | ancient spellbook' : ''}${combat}${stale}`);
     } else {
         lines.push(`Not in game (tick ${state.tick})${stale}`);
     }

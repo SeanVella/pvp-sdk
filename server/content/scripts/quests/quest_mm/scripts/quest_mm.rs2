@@ -10,7 +10,7 @@ if(inv_total(inv, mm_monkey_in_backpack) > 0) {
 if(inzone(0_40_71_0_0, 0_40_71_63_63, coord) = true) {
     if(%mm_main < ^mm_arrived_atoll) {
         p_teleport(0_43_42_49_19);
-        if_settab(magic, ^tab_magic);
+        ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
         %mm_main = ^mm_arrived_atoll;
         %mm_lumdo = ^lumdo_travelled;
     }
@@ -20,7 +20,7 @@ if(inzone(0_40_71_0_0, 0_40_71_63_63, coord) = true) {
 if(inzone(0_41_71_0_0, 0_41_71_63_63, coord) = true) {
     if(%mm_main < ^mm_completed_ch2) {
         p_teleport(%mm_cutscene_coord);
-        if_settab(magic, ^tab_magic);
+        ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
         %mm_main = ^mm_completed_ch2;
         %mm_zooknock = ^zooknock_made_talisman;
     }
@@ -30,7 +30,7 @@ if(inzone(0_41_71_0_0, 0_41_71_63_63, coord) = true) {
 if(inzone(1_41_71_0_0, 1_41_71_63_63, coord) = true) {
     if(%mm_main < ^mm_completed_ch3) {
         p_teleport(%mm_cutscene_coord);
-        if_settab(magic, ^tab_magic);
+        ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
         %mm_main = ^mm_completed_ch3;
         %mm_garkor = ^garkor_learned_plan;
     }
@@ -260,7 +260,7 @@ if(%mm_main >= ^mm_arrived_atoll) {
 }
 if(inzone(0_40_71_0_0, 0_40_71_63_63, coord) = false) {
     cam_reset;
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
     %mm_main = ^mm_arrived_atoll;
     %mm_lumdo = ^lumdo_travelled;
     @mm_ch2;
@@ -279,7 +279,7 @@ if(inzone(0_40_71_0_0, 0_40_71_63_63, coord) = false) {
 [label,mm_ch2_cutscene_dialogue]
 if(npc_findexact(0_40_71_43_38, mm_foreman_cutscene) = false | .npc_findexact(0_40_71_43_36, mm_caranock_cutscene) = false) {
     cam_reset;
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
     p_teleport(%mm_cutscene_coord);
     %mm_main = ^mm_arrived_atoll;
     %mm_lumdo = ^lumdo_travelled;
@@ -346,7 +346,7 @@ if(%mm_cutscene_part > 13) {
     ~fade_out;
     p_delay(4);
     %mm_cutscene_part = 0;
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
     cam_reset;
     p_teleport(0_43_42_49_19);
     %mm_main = ^mm_arrived_atoll;
@@ -363,7 +363,7 @@ if(%mm_main >= ^mm_completed_ch2) {
 }
 if(inzone(0_41_71_0_0, 0_41_71_63_63, coord) = false) {
     cam_reset;
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
     %mm_main = ^mm_completed_ch2;
     %mm_zooknock = ^zooknock_made_talisman;
     @mm_ch3;
@@ -464,7 +464,7 @@ if(npc_findexact(0_41_71_46_15, mm_waydar_cutscene) = true & .npc_findexact(0_41
         ~fade_out;
         p_delay(4);
         %mm_cutscene_part = 0;
-        if_settab(magic, ^tab_magic);
+        ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
         cam_reset;
         p_teleport(%mm_cutscene_coord);
         ~fade_in;
@@ -474,14 +474,14 @@ if(npc_findexact(0_41_71_46_15, mm_waydar_cutscene) = true & .npc_findexact(0_41
     }
 } else {
     cam_reset;
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
     %mm_main = ^mm_completed_ch2;
     %mm_zooknock = ^zooknock_made_talisman;
     @mm_ch3;
 }
 
 [queue,mm_ch3_reset]
-if_settab(magic, ^tab_magic);
+~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
 cam_reset;
 @music_play(%currentsong);
 
@@ -491,7 +491,7 @@ if(%mm_main >= ^mm_completed_ch3) {
 }
 if(inzone(1_41_71_0_0, 1_41_71_63_63, coord) = false) {
     cam_reset;
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
     %mm_main = ^mm_completed_ch3;
     %mm_garkor = ^garkor_learned_plan;
     @mm_ch4;
@@ -618,7 +618,7 @@ if(npc_findexact(1_41_71_53_34, mm_waydar_cutscene) = true & .npc_findexact(1_41
         ~fade_out;
         p_delay(4);
         %mm_cutscene_part = 0;
-        if_settab(magic, ^tab_magic);
+        ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
         cam_reset;
         p_teleport(%mm_cutscene_coord);
         ~fade_in;
@@ -629,7 +629,7 @@ if(npc_findexact(1_41_71_53_34, mm_waydar_cutscene) = true & .npc_findexact(1_41
     }
 } else {
     cam_reset;
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
     %mm_garkor = ^garkor_learned_plan;
     @mm_ch4;
 }

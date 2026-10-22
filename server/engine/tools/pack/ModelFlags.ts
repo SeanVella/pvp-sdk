@@ -8,7 +8,7 @@ import { packIdkConfigs, parseIdkConfig } from '#tools/pack/config/IdkConfig.js'
 import { packLocConfigs, parseLocConfig } from '#tools/pack/config/LocConfig.js';
 import { packNpcConfigs, parseNpcConfig } from '#tools/pack/config/NpcConfig.js';
 import { packObjConfigs, parseObjConfig } from '#tools/pack/config/ObjConfig.js';
-import { readConfigs, readDirTree, shouldBuildConfigOutput } from '#tools/pack/config/PackShared.js';
+import { loadConfigConstants, readConfigs, readDirTree, shouldBuildConfigOutput } from '#tools/pack/config/PackShared.js';
 import { packSpotAnimConfigs, parseSpotAnimConfig } from '#tools/pack/config/SpotAnimConfig.js';
 import { ModelPack, shouldBuildFileAny } from '#tools/pack/PackFile.js';
 import { writeFileIfChanged } from '#tools/pack/FsCache.js';
@@ -112,6 +112,7 @@ function shouldRefreshModelFlagGroup(group: ModelFlagGroup) {
 
 export async function rebuildModelFlags(modelFlags: number[]) {
     clearModelFlags(modelFlags);
+    loadConfigConstants(); // pvp-sdk: packConfigs may have skipped loading them (PackShared.ts)
 
     const dirTree = new Set<string>();
     readDirTree(dirTree, `${Environment.build.srcDir}/scripts`);

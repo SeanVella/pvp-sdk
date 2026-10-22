@@ -472,6 +472,8 @@ export interface BotState {
     /** Ticks (0.3 s each) until a Tele Block stops you teleporting, 0 when not blocked
      * (varp 1009, pvp_tele_block_ticks). */
     teleBlockTicksRemaining: number;
+    /** The spellbook in use: 'ancient' after the Zaros altar (varp 1010, pvp_spellbook). */
+    spellbook: 'normal' | 'ancient';
     /** New-player protection: nobody can attack you, until 3 hours of play or your first attack. */
     newPlayerProtected: boolean;
     /** Breach points earned fighting breach guardians, to spend with the breach warden. */

@@ -331,7 +331,7 @@ hint_coord(^hint_north, 0_48_48_50_30, 125);
 
 [proc,tutorial_open_your_final_menu]
 tut_flash(^tab_magic);
-if_settab(magic, ^tab_magic);
+~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
 ~tutorialstep("Open up your final menu.", "|Open up the Magic menu by clicking on the flashing icon next to the Prayer button you just learned about.");
 
 // https://youtu.be/9NEh8kBrjkk?t=271 full message in 07

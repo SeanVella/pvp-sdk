@@ -103,7 +103,7 @@ if(oc_category($obj) = mm_greegree) {
     p_animprotect(^false);
     spotanim_pl(windwave_impact, 124, 0);
     sound_synth(oc_param($obj, revert_sound), 0, 0);
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
 }
 if($obj = trollromance_toboggon_waxed) {
     %wearing_sled = ^false;

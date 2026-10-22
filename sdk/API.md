@@ -601,6 +601,8 @@ interface BotWorldState {
   skullTicksRemaining?: number | null;
   /** Ticks (0.3 s each) until a Tele Block lets you teleport again, 0 when you aren't blocked. While it lasts no spell, jewellery or Wilderness lever teleports you. Absent on older clients. */
   teleBlockTicksRemaining?: number;
+  /** Your spellbook: 'ancient' after praying at the Zaros altar in the Demonic Ruins (Wilderness level 46, Magic 50), which swaps it back too. Only that book's spells can be cast (Spells.ICE_BARRAGE and the rest are ancient). Absent on older clients. */
+  spellbook?: 'normal' | 'ancient';
   /** New-player protection (accounts made after it was added): nobody can attack you until 3 hours of play, or until you attack someone. Absent on older clients. */
   newPlayerProtected?: boolean;
   /** Breach points, earned by damaging breach guardians and spent with the breach warden in Lumbridge. When the next breach opens: GET /api/breach. Absent on older clients. */
@@ -794,8 +796,8 @@ interface CastSpellResult {
   message: string;
   hit?: boolean;
   xpGained?: number;
-  /** `npc_not_found` also covers players: no target matched. */
-  reason?: 'npc_not_found' | 'out_of_reach' | 'no_runes' | 'not_attackable' | 'timeout' | 'unknown_spell';
+  /** `wrong_spellbook`: an Ancient Magicks spell on the normal spellbook, or the other way round. */
+  reason?: 'npc_not_found' | 'out_of_reach' | 'no_runes' | 'not_attackable' | 'timeout' | 'unknown_spell' | 'wrong_spellbook';
   /** What the resolved target was, when one was found. */
   targetType?: 'npc' | 'player';
 }

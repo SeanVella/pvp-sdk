@@ -48,3 +48,10 @@ scope=perm
 [pvp_tele_block_ticks]
 protect=no
 transmit=yes
+
+// Which spellbook the player uses: 0 normal, 1 Ancient Magicks (the Zaros altar at the Demonic
+// Ruins switches it; pvp_kit/scripts/ancients.rs2). Saved, and transmitted so bots can see it.
+[pvp_spellbook]
+protect=no
+scope=perm
+transmit=yes

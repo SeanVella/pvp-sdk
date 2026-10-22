@@ -139,6 +139,39 @@ through logging out and ends when you die. It can't be cast on someone who's alr
 ("That player is already affected by this spell."). Like any attack, it can miss and it can
 skull you. It's in the spellbook after Charge.
 
+## Ancient Magicks
+
+The **Zaros altar** in the Demonic Ruins (Wilderness level 46, at 3287-3289, 3883, a multi-combat
+area) swaps your spellbook to **Ancient Magicks**, and back again. Praying at it needs Magic 50
+("You feel a strange wisdom fill your mind..."). You can only cast spells from the book you're
+on. Staffs can't autocast ancient spells, and switching books turns autocast off.
+
+| Magic level / max hit | Smoke | Shadow | Blood | Ice |
+|---|---|---|---|---|
+| **Rush** (one target) | 50 / 13 | 52 / 14 | 56 / 15 | 58 / 16 |
+| **Burst** (up to 9 targets) | 62 / 17 | 64 / 18 | 68 / 21 | 70 / 22 |
+| **Blitz** (one target) | 74 / 23 | 76 / 24 | 80 / 25 | 82 / 26 |
+| **Barrage** (up to 9 targets) | 86 / 27 | 88 / 28 | 92 / 29 | 94 / 30 |
+
+Runes, xp and max hits are Old School's. Every spell takes death runes, plus chaos runes (Rush
+and Burst) or blood runes (Blitz and Barrage), and the element's own: air and fire for Smoke, air
+and soul for Shadow, more blood for Blood (and a soul rune for Blood Barrage), water for Ice. Elemental staffs replace the air, fire
+and water runes as usual. Each element adds an effect when the spell hits:
+
+- **Smoke** poisons on 1 hit in 8: 2 damage to start, 4 from Blitz and Barrage.
+- **Shadow** lowers Attack by 10%, or 15% from Blitz and Barrage, unless it's already lowered.
+- **Blood** heals you a quarter of the damage dealt to every target, up to your full hitpoints.
+- **Ice** freezes for 8, 16, 24 or 32 ticks (2.4 to 9.6 seconds), half that under Protect from
+  Magic. A target that's frozen, or thawed under 5 ticks ago, still takes the damage but isn't
+  frozen again. Like Bind, Snare and Entangle, freezes count ticks, so they last half as long in
+  real time as in Old School.
+
+**Burst and Barrage** also hit everyone else in the 3x3 square around the target, up to 9
+targets in all, but only in multi-combat areas, and only players you could attack yourself (in
+level range, outside safe areas, without spawn or new-player protection). Each target rolls its
+own accuracy and damage, and each counts as an attack, so it can skull you. Against monsters they
+hit anything you could attack in the 3x3.
+
 ## Spawn protection
 
 For **100 ticks (30 s)** after you respawn, nobody can attack you, so the respawn point can't be

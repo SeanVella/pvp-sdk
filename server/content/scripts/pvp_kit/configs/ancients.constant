@@ -1,0 +1,14 @@
+// pvp-sdk: Ancient Magicks (pvp_kit/scripts/ancients.rs2). An ancient spell's element and tier
+// come from its id (spells.constant).
+^ancient_smoke = 0
+^ancient_shadow = 1
+^ancient_blood = 2
+^ancient_ice = 3
+^ancient_rush = 0
+^ancient_burst = 1
+^ancient_blitz = 2
+^ancient_barrage = 3
+// Burst and Barrage hit at most this many targets, the one cast on included.
+^ancient_max_targets = 9
+// The Zaros altar teaches the spellbook from this Magic level, the lowest ancient spell's.
+^ancient_altar_level = 50

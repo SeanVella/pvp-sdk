@@ -185,7 +185,7 @@ if(loc_find(0_40_70_16_38, mm_glider) = true) loc_anim(m_glider_unfold);
 if(loc_find(0_40_70_16_46, mm_glider) = true) loc_anim(m_glider_unfold);
 sound_synth(wing_unfold, 0, 0);
 p_delay(7); // 8t
-if_settab(magic, ^tab_magic);
+~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
 cam_reset;
 p_teleport(0_41_70_25_27);
 %mm_hangar_cutscene_flag = ^false;

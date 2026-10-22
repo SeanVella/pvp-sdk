@@ -21,6 +21,10 @@ if_close;
 if (p_finduid(uid) = false) { // cant open autocast interface if delayed
     return;
 }
+if (%pvp_spellbook = 1) { // pvp-sdk: staffs autocast the normal spellbook only (pvp_kit/scripts/ancients.rs2)
+    mes("You can't autocast while using Ancient Magicks.");
+    return;
+}
 %attackstyle_magic = 0;
 if_settab(staff_spells, 0);
 

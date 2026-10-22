@@ -44,8 +44,9 @@ Research done October 2026 from official Jagex news posts and the OSRS Wiki. Ver
 | Risk skulls showing carried wealth (AN26) | Rev 289 has only one skull icon | Publish carried risk to the SDK instead |
 | Bank PINs | Added to RS in Sep 2005 | Not planned |
 
-Some DMM mechanics depend on content added after our revision: Ancient Magicks freezes (the
-P15/SEAS guards Ice Barrage), Tele Block, Vengeance, Barrows (AN26's hit-cap exemption), the
+Some DMM mechanics depend on content added after our revision. Tele Block and Ancient Magicks
+are now in our PvP kit ([RULES.md](../RULES.md#ancient-magicks)), though the guards don't cast
+Ice Barrage (P15/SEAS). Still missing: Vengeance, Barrows (AN26's hit-cap exemption), the
 Grand Exchange's prices (we use store value; Jagex uses alch value for some checks), POHs and
 instances. See [`GAME_VERSIONS.md`](GAME_VERSIONS.md) for how we could get some of them.
 

@@ -324,6 +324,40 @@ export function shouldBuildConfigOutput(ext: string, out: string) {
     return shouldBuild(`${Environment.build.srcDir}/scripts`, '.constant', out) || shouldBuild(`${Environment.build.srcDir}/scripts`, ext, out) || shouldBuildFileList(getConfigDependencyFiles(ext), out);
 }
 
+// pvp-sdk: also called by ModelFlags.ts, which parses .npc/.obj/... configs on an incremental build
+// where packConfigs had nothing to do and returned before loading them (a changed .constant or map
+// then failed on the first ^constant, e.g. heroes_guild.npc's param=damagetype,^slash_style).
+export function loadConfigConstants() {
+    CONSTANTS.clear();
+
+    loadDir(`${Environment.build.srcDir}/scripts`, '.constant', src => {
+        for (let i = 0; i < src.length; i++) {
+            if (!src[i] || src[i].startsWith('//')) {
+                continue;
+            }
+
+            const parts = src[i].split('=');
+
+            if (parts.length !== 2) {
+                throw new Error(`Bad constant declaration on line: ${src[i]}`);
+            }
+
+            let name = parts[0].trim();
+            const value = parts[1].trim();
+
+            if (name.startsWith('^')) {
+                name = name.substring(1);
+            }
+
+            if (CONSTANTS.has(name)) {
+                throw new Error(`Duplicate constant found: ${name}`);
+            }
+
+            CONSTANTS.set(name, value);
+        }
+    });
+}
+
 export async function packConfigs(cache: FileStream, modelFlags: number[]) {
     let rebuildParam = shouldBuildConfigOutput('.param', 'data/pack/server/param.dat');
     const rebuildCategory = shouldBuildFile(`${Environment.build.srcDir}/pack/category.pack`, 'data/pack/server/category.dat') || shouldBuild('tools/pack/config', '.ts', 'data/pack/server/category.dat');
@@ -408,34 +442,7 @@ export async function packConfigs(cache: FileStream, modelFlags: number[]) {
         return;
     }
 
-    CONSTANTS.clear();
-
-    loadDir(`${Environment.build.srcDir}/scripts`, '.constant', src => {
-        for (let i = 0; i < src.length; i++) {
-            if (!src[i] || src[i].startsWith('//')) {
-                continue;
-            }
-
-            const parts = src[i].split('=');
-
-            if (parts.length !== 2) {
-                throw new Error(`Bad constant declaration on line: ${src[i]}`);
-            }
-
-            let name = parts[0].trim();
-            const value = parts[1].trim();
-
-            if (name.startsWith('^')) {
-                name = name.substring(1);
-            }
-
-            if (CONSTANTS.has(name)) {
-                throw new Error(`Duplicate constant found: ${name}`);
-            }
-
-            CONSTANTS.set(name, value);
-        }
-    });
+    loadConfigConstants();
 
     // var domains are global, so we need to check for conflicts
     const names = new Set<string>();

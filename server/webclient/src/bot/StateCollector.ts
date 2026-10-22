@@ -204,6 +204,8 @@ export class BotStateCollector implements ScanProvider {
             isSkulled: BotStateCollector.hasSkullIcon(c.localPlayer),
             skullTicksRemaining: this.collectSkullTicks(currentTick, BotStateCollector.hasSkullIcon(c.localPlayer)),
             teleBlockTicksRemaining: this.collectTeleBlockTicks(currentTick),
+            // pvp-sdk: varp 1010 (pvp_spellbook), 1 on Ancient Magicks
+            spellbook: (c.var?.[1010] ?? 0) === 1 ? 'ancient' : 'normal',
             // pvp-sdk: varp 1006 (pvp_newbie), 1 while new-player protection lasts
             newPlayerProtected: (c.var?.[1006] ?? 0) === 1,
             // pvp-sdk: varp 1007 (breach_points), spent with the breach warden in Lumbridge

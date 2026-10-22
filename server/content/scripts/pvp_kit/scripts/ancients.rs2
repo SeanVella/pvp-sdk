@@ -1,0 +1,329 @@
+// pvp-sdk: Ancient Magicks, the PvP kit's second spellbook. Sixteen combat spells (Smoke, Shadow,
+// Blood and Ice, as Rush, Burst, Blitz and Barrage), cast on players and monsters. The Zaros
+// altar at the Demonic Ruins (Wilderness level 46) switches to the book and back.
+//
+// Levels, runes, xp and max hits are OSRS's (https://oldschool.runescape.wiki/w/Ancient_Magicks):
+//   smoke   poisons on 1 hit in 8 (severity 10, or 20 for Blitz and Barrage)
+//   shadow  lowers Attack by 10% (15% for Blitz and Barrage), unless it's already lowered
+//   blood   heals the caster a quarter of the damage dealt, across every target
+//   ice     freezes for 8/16/24/32 ticks, halved by Protect from Magic; a frozen or just-thawed
+//           target still takes the damage
+// Burst and Barrage also hit everyone else in the 3x3 around the target, up to
+// ^ancient_max_targets in all, but only in multi-combat areas, and in PvP only players the
+// caster could attack anyway. Each target rolls its own accuracy and damage.
+//
+// Graphics are 377-wip's (engine/tools/pvp/import377Ancients.ts; which goes with which spell is in
+// pvp_kit/configs/ancients.dbrow). The casting animation is 289's wave cast. Staffs can't autocast
+// these (skill_combat/scripts/player/auto_cast.rs2), and the altar turns autocast off.
+
+// ---------------------------------------------------------------- the spellbook
+
+// Whichever book the player uses (~pvp_magic_tab replaces every if_settab(magic, ^tab_magic)).
+[proc,pvp_magic_tab]
+if (%pvp_spellbook = 1) {
+    if_settab(ancients, ^tab_magic);
+} else {
+    if_settab(magic, ^tab_magic);
+}
+
+[oploc1,zaros_altar]
+if (stat_base(magic) < ^ancient_altar_level) {
+    mes("You need a Magic level of <tostring(^ancient_altar_level)> to understand this altar.");
+    return;
+}
+anim(human_pray, 0);
+sound_synth(prayer_boost, 1, 0);
+p_delay(2);
+~ancient_altar_switch;
+
+[proc,ancient_altar_switch]
+if (%pvp_spellbook = 1) {
+    %pvp_spellbook = 0;
+    mes("You feel a strange drain upon your memory...");
+} else {
+    %pvp_spellbook = 1;
+    mes("You feel a strange wisdom fill your mind...");
+}
+// autocast is for the normal book's spells only
+~player_autocast_reset;
+~pvp_magic_tab;
+
+// ---------------------------------------------------------------- the spells
+
+[applayert,ancients:smoke_rush] ~pvp_ancient_spell(^smoke_rush);
+[applayert,ancients:shadow_rush] ~pvp_ancient_spell(^shadow_rush);
+[applayert,ancients:blood_rush] ~pvp_ancient_spell(^blood_rush);
+[applayert,ancients:ice_rush] ~pvp_ancient_spell(^ice_rush);
+[applayert,ancients:smoke_burst] ~pvp_ancient_spell(^smoke_burst);
+[applayert,ancients:shadow_burst] ~pvp_ancient_spell(^shadow_burst);
+[applayert,ancients:blood_burst] ~pvp_ancient_spell(^blood_burst);
+[applayert,ancients:ice_burst] ~pvp_ancient_spell(^ice_burst);
+[applayert,ancients:smoke_blitz] ~pvp_ancient_spell(^smoke_blitz);
+[applayert,ancients:shadow_blitz] ~pvp_ancient_spell(^shadow_blitz);
+[applayert,ancients:blood_blitz] ~pvp_ancient_spell(^blood_blitz);
+[applayert,ancients:ice_blitz] ~pvp_ancient_spell(^ice_blitz);
+[applayert,ancients:smoke_barrage] ~pvp_ancient_spell(^smoke_barrage);
+[applayert,ancients:shadow_barrage] ~pvp_ancient_spell(^shadow_barrage);
+[applayert,ancients:blood_barrage] ~pvp_ancient_spell(^blood_barrage);
+[applayert,ancients:ice_barrage] ~pvp_ancient_spell(^ice_barrage);
+
+[apnpct,ancients:smoke_rush] ~pvm_ancient_spell(^smoke_rush);
+[apnpct,ancients:shadow_rush] ~pvm_ancient_spell(^shadow_rush);
+[apnpct,ancients:blood_rush] ~pvm_ancient_spell(^blood_rush);
+[apnpct,ancients:ice_rush] ~pvm_ancient_spell(^ice_rush);
+[apnpct,ancients:smoke_burst] ~pvm_ancient_spell(^smoke_burst);
+[apnpct,ancients:shadow_burst] ~pvm_ancient_spell(^shadow_burst);
+[apnpct,ancients:blood_burst] ~pvm_ancient_spell(^blood_burst);
+[apnpct,ancients:ice_burst] ~pvm_ancient_spell(^ice_burst);
+[apnpct,ancients:smoke_blitz] ~pvm_ancient_spell(^smoke_blitz);
+[apnpct,ancients:shadow_blitz] ~pvm_ancient_spell(^shadow_blitz);
+[apnpct,ancients:blood_blitz] ~pvm_ancient_spell(^blood_blitz);
+[apnpct,ancients:ice_blitz] ~pvm_ancient_spell(^ice_blitz);
+[apnpct,ancients:smoke_barrage] ~pvm_ancient_spell(^smoke_barrage);
+[apnpct,ancients:shadow_barrage] ~pvm_ancient_spell(^shadow_barrage);
+[apnpct,ancients:blood_barrage] ~pvm_ancient_spell(^blood_barrage);
+[apnpct,ancients:ice_barrage] ~pvm_ancient_spell(^ice_barrage);
+
+[proc,ancient_element](int $spell)(int)
+return(modulo(sub($spell, ^smoke_rush), 4));
+
+[proc,ancient_tier](int $spell)(int)
+return(divide(sub($spell, ^smoke_rush), 4));
+
+[proc,ancient_multi](int $spell)(boolean)
+def_int $tier = ~ancient_tier($spell);
+if ($tier = ^ancient_burst | $tier = ^ancient_barrage) {
+    return(true);
+}
+return(false);
+
+// Burst and Barrage (but Ice Barrage) have no projectile: the hit lands when a wave's would.
+[proc,ancient_unthrown_duration](coord $target)(int)
+return(calc(46 + distance(coord, $target) * 10));
+
+// Blood spells heal the caster a quarter of all the damage they dealt.
+[proc,ancient_blood_heal](int $spell, int $dealt)
+if (~ancient_element($spell) = ^ancient_blood & $dealt >= 4) {
+    stat_heal(hitpoints, divide($dealt, 4), 0);
+}
+
+// ---------------------------------------------------------------- on players
+
+[proc,pvp_ancient_spell](int $spell)
+if (%pvp_spellbook ! 1) {
+    return;
+}
+def_dbrow $spell_data = ~get_spell_data($spell);
+if (~pvp_combat_spell_checks($spell_data) = false) {
+    return;
+}
+def_int $duration = ~pvp_spell_cast($spell_data);
+if ($duration = 0) {
+    $duration = ~ancient_unthrown_duration(.coord);
+}
+def_int $dealt = ~pvp_ancient_hit($spell_data, $duration);
+if (~ancient_multi($spell) = true & map_multiway(.coord) = true) {
+    // each extra target is found by a fresh search, so hitting one can't upset the search
+    def_coord $centre = .coord;
+    def_player_uid $primary = .uid;
+    def_int $n = 1;
+    def_player_uid $next = ~pvp_ancient_nth_target($centre, $primary, $n);
+    while ($next ! null & $n < ^ancient_max_targets) {
+        if (.finduid($next) = true) {
+            ~set_pk_vars;
+            $dealt = add($dealt, ~pvp_ancient_hit($spell_data, $duration));
+        }
+        $n = add($n, 1);
+        $next = ~pvp_ancient_nth_target($centre, $primary, $n);
+    }
+}
+~ancient_blood_heal($spell, $dealt);
+
+// The $n-th player (from 1) next to $centre that a Burst or Barrage also hits, or null. Hits only
+// queue damage, so the same search finds the same players in the same order all tick.
+[proc,pvp_ancient_nth_target](coord $centre, player_uid $primary, int $n)(player_uid)
+def_int $left = $n;
+huntall($centre, 1, 0);
+while (.huntnext = true) {
+    if (.uid ! uid & .uid ! $primary & ~pvp_ancient_extra_target = true) {
+        $left = sub($left, 1);
+        if ($left = 0) {
+            return(.uid);
+        }
+    }
+}
+return(null);
+
+// The PvP attack rules for a Burst or Barrage's extra targets, without the messages
+// (~pvp_level_check's, for the one the spell was cast on).
+[proc,pvp_ancient_extra_target]()(boolean)
+if (.%death = ^true | .stat(hitpoints) = 0 | map_multiway(.coord) = false) {
+    return(false);
+}
+// Castle Wars: the other team only, and no level range
+if (~in_castlewars_game(coord) = true) {
+    if (~in_castlewars_game(.coord) = true & .%castlewars_team ! %castlewars_team) {
+        return(true);
+    }
+    return(false);
+}
+if (~in_duel_arena(.coord) = true | ~in_castlewars_game(.coord) = true) {
+    return(false);
+}
+if (.%pvp_protection = ^true | ~.pvp_newbie_protected = true | ~pvp_in_safe_zone(.coord) = true) {
+    return(false);
+}
+def_int $combat_level_diff = abs(sub(~player_combat_level, ~.player_combat_level));
+def_int $wilderness_level = min(~wilderness_level(coord), ~wilderness_level(.coord));
+if (add(^pvp_combat_range, $wilderness_level) < $combat_level_diff) {
+    return(false);
+}
+return(true);
+
+// One target (.): roll, hit, effect. ~pvp_spell_success's damage, but returned (blood heals on it).
+[proc,pvp_ancient_hit](dbrow $spell_data, int $duration)(int)
+if (~pvp_hit_roll(^magic_style) = false) {
+    ~pvp_spell_fail($spell_data, $duration);
+    return(0);
+}
+def_int $damagestyle = ^style_magic_normal;
+if (%damagestyle = ^style_melee_defensive) {
+    $damagestyle = ^style_magic_defensive;
+}
+def_synth $sound = db_getfield($spell_data, magic_spell_table:sound_success, 0);
+sound_synth($sound, 1, 0);
+.sound_synth($sound, 1, 0);
+def_int $maxhit = ~magic_spell_maxhit($spell_data);
+if (~.check_protect_prayer(^magic_style) = true) {
+    $maxhit = scale(6, 10, $maxhit);
+}
+def_int $damage = min(randominc($maxhit), .stat(hitpoints));
+~.pvp_damage(calc($duration / 30 + 1), $damage);
+~give_combat_experience_pvp($damagestyle, $damage, ~pvp_xp_multiplier(~.player_combat_level));
+both_heropoints($damage);
+.spotanim_pl(db_getfield($spell_data, magic_spell_table:spotanim_target, 0), $duration);
+.queue*(pvp_retaliate, calc($duration / 30 + 1))(uid);
+~pvp_ancient_effect($spell_data);
+return($damage);
+
+[proc,pvp_ancient_effect](dbrow $spell_data)
+def_int $spell = db_getfield($spell_data, magic_spell_table:spell, 0);
+def_int $element = ~ancient_element($spell);
+def_int $tier = ~ancient_tier($spell);
+def_int $severity = 10;
+def_int $percent = 10;
+if ($tier >= ^ancient_blitz) {
+    $severity = 20;
+    $percent = 15;
+}
+if ($element = ^ancient_smoke) {
+    if (random(8) = 0) {
+        .queue(poison_player, 0, $severity);
+    }
+} else if ($element = ^ancient_shadow) {
+    if (.stat(attack) >= .stat_base(attack)) {
+        .stat_drain(attack, 0, $percent);
+    }
+} else if ($element = ^ancient_ice) {
+    // still held, or immune for 5 ticks after (~pvp_freeze_allowed's rule)
+    if (calc(.%frozen + 5) <= map_clock) {
+        ~pvp_freeze_effect($spell_data);
+    }
+}
+
+// ---------------------------------------------------------------- on monsters
+
+[proc,pvm_ancient_spell](int $spell)
+if (%pvp_spellbook ! 1) {
+    return;
+}
+def_dbrow $spell_data = ~get_spell_data($spell);
+if (~pvm_combat_spell_checks($spell_data) = false) {
+    return;
+}
+def_int $duration = ~pvm_spell_cast($spell_data);
+if ($duration = 0) {
+    $duration = ~ancient_unthrown_duration(npc_coord);
+}
+def_int $dealt = ~pvm_ancient_hit($spell_data, $duration);
+if (~ancient_multi($spell) = true & map_multiway(npc_coord) = true) {
+    def_coord $centre = npc_coord;
+    def_npc_uid $primary = npc_uid;
+    def_int $n = 1;
+    def_npc_uid $next = ~pvm_ancient_nth_target($centre, $primary, $n);
+    while ($next ! null & $n < ^ancient_max_targets) {
+        if (npc_finduid($next) = true) {
+            if (npc_stat(hitpoints) > 0) {
+                $dealt = add($dealt, ~pvm_ancient_hit($spell_data, $duration));
+            }
+        }
+        $n = add($n, 1);
+        $next = ~pvm_ancient_nth_target($centre, $primary, $n);
+    }
+}
+~ancient_blood_heal($spell, $dealt);
+
+// The $n-th monster (from 1) next to $centre that a Burst or Barrage also hits, or null: the attack
+// rules without their messages, so anything with Attack in multi-combat.
+[proc,pvm_ancient_nth_target](coord $centre, npc_uid $primary, int $n)(npc_uid)
+def_int $left = $n;
+npc_huntall($centre, 1, 0);
+while (.npc_findnext = true) {
+    if (.npc_uid ! $primary & .npc_hasop(2) = true & map_multiway(.npc_coord) = true) {
+        $left = sub($left, 1);
+        if ($left = 0) {
+            return(.npc_uid);
+        }
+    }
+}
+return(null);
+
+// One monster (the active npc): ~pvm_spell_success's hit, with the damage returned.
+[proc,pvm_ancient_hit](dbrow $spell_data, int $duration)(int)
+if (~player_npc_hit_roll(^magic_style) = false) {
+    ~pvm_spell_fail($spell_data, $duration);
+    return(0);
+}
+def_int $damagestyle = ^style_magic_normal;
+if (%damagestyle = ^style_melee_defensive) {
+    $damagestyle = ^style_magic_defensive;
+}
+sound_synth(db_getfield($spell_data, magic_spell_table:sound_success, 0), 0, 0);
+def_int $spell = db_getfield($spell_data, magic_spell_table:spell, 0);
+def_int $damage = randominc(~npc_max_dealt(~magic_spell_maxhit($spell_data), $spell));
+~npc_retaliate(calc($duration / 30 + 1));
+npc_queue(2, $damage, calc($duration / 30 + 1));
+if (npc_param(defend_sound) ! null) {
+    sound_synth(npc_param(defend_sound), 1, $duration);
+}
+def_int $damage_capped = min($damage, npc_stat(hitpoints));
+~give_combat_experience($damagestyle, $damage_capped, %npc_combat_xp_multiplier);
+npc_heropoints($damage_capped);
+spotanim_npc(db_getfield($spell_data, magic_spell_table:spotanim_target, 0), $duration);
+~pvm_ancient_effect($spell_data);
+return($damage_capped);
+
+[proc,pvm_ancient_effect](dbrow $spell_data)
+def_int $spell = db_getfield($spell_data, magic_spell_table:spell, 0);
+def_int $element = ~ancient_element($spell);
+def_int $tier = ~ancient_tier($spell);
+def_int $severity = 10;
+def_int $percent = 10;
+if ($tier >= ^ancient_blitz) {
+    $severity = 20;
+    $percent = 15;
+}
+def_npc_stat $attack = ~convert_stat_to_npc_stat(attack);
+if ($element = ^ancient_smoke) {
+    if (random(8) = 0) {
+        ~npc_poison_start($severity);
+    }
+} else if ($element = ^ancient_shadow) {
+    if (npc_stat($attack) >= npc_basestat($attack)) {
+        npc_statsub($attack, 0, $percent);
+    }
+} else if ($element = ^ancient_ice) {
+    if (npc_category ! castlewars_barricade & calc(%npc_stunned + 5) <= map_clock) {
+        ~pvm_freeze_effect($spell_data);
+    }
+}

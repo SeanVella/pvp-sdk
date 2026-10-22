@@ -64,3 +64,21 @@
 ^saradomin_strike_npc = 104
 // pvp-sdk: PvP kit (pvp_kit/scripts/tele_block.rs2)
 ^tele_block = 105
+// pvp-sdk: Ancient Magicks (pvp_kit/scripts/ancients.rs2), by tier then element, so
+// element = (spell - smoke_rush) % 4 and tier = (spell - smoke_rush) / 4
+^smoke_rush = 106
+^shadow_rush = 107
+^blood_rush = 108
+^ice_rush = 109
+^smoke_burst = 110
+^shadow_burst = 111
+^blood_burst = 112
+^ice_burst = 113
+^smoke_blitz = 114
+^shadow_blitz = 115
+^blood_blitz = 116
+^ice_blitz = 117
+^smoke_barrage = 118
+^shadow_barrage = 119
+^blood_barrage = 120
+^ice_barrage = 121

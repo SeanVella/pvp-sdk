@@ -3397,9 +3397,30 @@ export class BotActions {
         return null;
     }
 
+    // pvp-sdk: the ancients interface's components (server/content/pack/interface.pack)
+    private static readonly ANCIENT_SPELLS_FIRST = 40603;
+    private static readonly ANCIENT_SPELLS_LAST = 40777;
+
     private static readonly SPELL_COMPONENTS: Record<string, number> = {
         'wind strike': 1152,
         'tele block': 40593, // pvp-sdk: PvP kit, players only
+        // pvp-sdk: Ancient Magicks (the ancient spellbook only)
+        'smoke rush': 40604,
+        'shadow rush': 40616,
+        'blood rush': 40628,
+        'ice rush': 40638,
+        'smoke burst': 40648,
+        'shadow burst': 40660,
+        'blood burst': 40672,
+        'ice burst': 40682,
+        'smoke blitz': 40692,
+        'shadow blitz': 40704,
+        'blood blitz': 40716,
+        'ice blitz': 40724,
+        'smoke barrage': 40734,
+        'shadow barrage': 40746,
+        'blood barrage': 40758,
+        'ice barrage': 40768,
         'confuse': 1153,
         'water strike': 1154,
         'earth strike': 1156,
@@ -3431,6 +3452,19 @@ export class BotActions {
         const startState = this.sdk.getState();
         if (!startState) {
             return { success: false, message: 'No game state available', targetType };
+        }
+        // pvp-sdk: a spell from the other spellbook isn't on screen, so the server drops it silently
+        const book = startState.spellbook;
+        const ancient = spellComponent >= BotActions.ANCIENT_SPELLS_FIRST && spellComponent <= BotActions.ANCIENT_SPELLS_LAST;
+        if (book && ancient !== (book === 'ancient')) {
+            return {
+                success: false,
+                message: ancient
+                    ? 'That is an Ancient Magicks spell, and you are on the normal spellbook. Pray at the Zaros altar in the Demonic Ruins (Wilderness level 46) to switch.'
+                    : 'You are on the Ancient Magicks spellbook. Pray at the Zaros altar in the Demonic Ruins (Wilderness level 46) to switch back.',
+                reason: 'wrong_spellbook',
+                targetType
+            };
         }
         const msgBaseline = this.helpers.getMessageTick();
         const startMagicXp = startState.skills.find(s => s.name === 'Magic')?.experience ?? 0;

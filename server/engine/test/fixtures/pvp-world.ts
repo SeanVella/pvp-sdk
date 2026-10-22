@@ -683,3 +683,133 @@ test('a Tele Block lasts through logging out, is capped after a restart, and end
     run('[proc,pvp_tele_block_login]', target);
     expect(target.vars[varp('pvp_tele_block')]).toBe(0);
 });
+
+// PvP kit: Ancient Magicks (scripts/pvp_kit/scripts/ancients.rs2).
+function spellColumn(spell: string, name: string) {
+    const table = DbTableType.getByName('magic_spell_table')!;
+    return DbRowType.getByName(`magic_spell_${spell}`)!.columnValues[table.columnNames.indexOf(name)];
+}
+function queuedArgs(p: TestPlayer, script: string): number[] {
+    const out: number[] = [];
+    for (const q of [p.queue, p.weakQueue]) {
+        for (let r = q.head(); r; r = q.next()) {
+            if (r.script.name === script) out.push(r.args[0] as number);
+        }
+    }
+    return out;
+}
+async function withRolls<T>(roll: number, fn: () => T): Promise<T> {
+    const { default: JavaRandom } = await import('../../src/util/JavaRandom.js');
+    const original = JavaRandom.nextDouble;
+    JavaRandom.nextDouble = () => roll;
+    try {
+        return fn();
+    } finally {
+        JavaRandom.nextDouble = original;
+    }
+}
+
+test('the 16 ancient spells have OSRS levels and max hits, death runes as their fourth rune', () => {
+    const spells: Record<string, [number, number]> = {
+        smoke_rush: [50, 13], shadow_rush: [52, 14], blood_rush: [56, 15], ice_rush: [58, 16],
+        smoke_burst: [62, 17], shadow_burst: [64, 18], blood_burst: [68, 21], ice_burst: [70, 22],
+        smoke_blitz: [74, 23], shadow_blitz: [76, 24], blood_blitz: [80, 25], ice_blitz: [82, 26],
+        smoke_barrage: [86, 27], shadow_barrage: [88, 28], blood_barrage: [92, 29], ice_barrage: [94, 30]
+    };
+    for (const [spell, [level, maxhit]] of Object.entries(spells)) {
+        expect(spellColumn(spell, 'levelrequired')).toEqual([level]);
+        expect(spellColumn(spell, 'maxhit')).toEqual([maxhit]);
+        expect(spellColumn(spell, 'extrarune')![0]).toBe(obj('deathrune'));
+    }
+    expect(spellColumn('smoke_barrage', 'runesrequired')).toEqual([obj('bloodrune'), 2, obj('firerune'), 4, obj('airrune'), 4]);
+    expect(spellColumn('smoke_barrage', 'extrarune')).toEqual([obj('deathrune'), 4]);
+    expect(spellColumn('smoke_barrage', 'experience')).toEqual([480]);
+    expect(['ice_rush', 'ice_burst', 'ice_blitz', 'ice_barrage'].map(s => spellColumn(s, 'freeze_time'))).toEqual([[8], [16], [24], [32]]);
+});
+
+test('the Zaros altar swaps spellbooks and turns autocast off; staffs only autocast the normal book', () => {
+    const MAGIC_TAB = 6; // ^tab_magic; interface.pack: magic 1151, ancients 40603
+    const p = player('zarosian', 60, FIELD.x, FIELD.z);
+    p.vars[varp('autocast_spell')] = 5;
+    p.vars[varp('attackstyle_magic')] = 3;
+    run('[proc,ancient_altar_switch]', p);
+    expect(p.vars[varp('pvp_spellbook')]).toBe(1);
+    expect(p.tabs[MAGIC_TAB]).toBe(40603);
+    expect(p.vars[varp('autocast_spell')]).toBe(-1);
+    expect(p.messages).toContain('You feel a strange wisdom fill your mind...');
+
+    run('[label,open_autocast_interface]', p);
+    expect(p.messages).toContain("You can't autocast while using Ancient Magicks.");
+
+    run('[proc,pvp_magic_tab]', p); // what login and every tab reset call
+    expect(p.tabs[MAGIC_TAB]).toBe(40603);
+    run('[proc,ancient_altar_switch]', p);
+    expect(p.vars[varp('pvp_spellbook')]).toBe(0);
+    expect(p.tabs[MAGIC_TAB]).toBe(1151);
+    expect(p.messages).toContain('You feel a strange drain upon your memory...');
+});
+
+test('Ice Barrage hits up to 30 and freezes for 32 ticks; Protect from Magic cuts both, and a frozen target only takes the hit', async () => {
+    World.currentTick = 11000;
+    const caster = player('icer', 99, FIELD.x, FIELD.z);
+    caster.vars[varp('com_magicattack')] = 5000;
+    const barrage = DbRowType.getId('magic_spell_ice_barrage');
+    const hit = (target: TestPlayer) => withRolls(0.999, () => run('[proc,pvp_ancient_hit]', caster, target, [barrage, 0]).popInt());
+
+    const target = player('iced', 99, FIELD.x + 1, FIELD.z);
+    expect(await hit(target)).toBe(30);
+    expect(queuedDamage(target)).toEqual([30]);
+    expect(queuedArgs(target, '[queue,pvp_freeze_player]')).toEqual([32]);
+
+    const praying = player('iced_praying', 99, FIELD.x + 2, FIELD.z);
+    praying.vars[varp('prayer12')] = 1; // Protect from Magic
+    expect(await hit(praying)).toBe(18);
+    expect(queuedArgs(praying, '[queue,pvp_freeze_player]')).toEqual([16]);
+
+    const frozen = player('iced_already', 99, FIELD.x + 3, FIELD.z);
+    frozen.vars[varp('frozen')] = 11010;
+    expect(await hit(frozen)).toBe(30);
+    expect(queuedArgs(frozen, '[queue,pvp_freeze_player]')).toEqual([]);
+});
+
+test('smoke poisons, shadow lowers Attack once, and blood heals the caster a quarter of the damage', async () => {
+    const caster = player('ancient_effects', 99, FIELD.x, FIELD.z);
+    const target = player('ancient_victim', 70, FIELD.x + 1, FIELD.z);
+    const effect = (spell: string) => withRolls(0, () => run('[proc,pvp_ancient_effect]', caster, target, [DbRowType.getId(`magic_spell_${spell}`)]));
+
+    await effect('smoke_barrage'); // the 1 in 8 roll (random(8) = 0)
+    expect(queuedArgs(target, '[queue,poison_player]')).toEqual([20]);
+
+    await effect('shadow_barrage');
+    expect(target.levels[PlayerStat.ATTACK]).toBe(60); // 70 less 15%
+    await effect('shadow_rush');
+    expect(target.levels[PlayerStat.ATTACK]).toBe(60); // already lowered
+
+    caster.levels[PlayerStat.HITPOINTS] = 50;
+    run('[proc,ancient_blood_heal]', caster, null, [120, 29]); // ^blood_barrage
+    expect(caster.levels[PlayerStat.HITPOINTS]).toBe(57);
+    run('[proc,ancient_blood_heal]', caster, null, [121, 29]); // ^ice_barrage: no heal
+    expect(caster.levels[PlayerStat.HITPOINTS]).toBe(57);
+});
+
+test('Burst and Barrage splash only onto players the caster could attack, and only in multi-combat', () => {
+    const isMulti = World.gameMap.isMulti;
+    World.gameMap.isMulti = () => true;
+    try {
+        const caster = player('burster', 70, FIELD.x, FIELD.z);
+        const splash = (target: TestPlayer) => run('[proc,pvp_ancient_extra_target]', caster, target).popInt() === 1;
+        const fair = player('splash_fair', 70, FIELD.x + 1, FIELD.z);
+        expect(splash(fair)).toBe(true);
+        const respawned = player('splash_respawned', 70, FIELD.x + 1, FIELD.z + 1);
+        respawned.vars[varp('pvp_protection')] = 1;
+        expect(splash(respawned)).toBe(false);
+        expect(splash(player('splash_low', 3, FIELD.x, FIELD.z + 1))).toBe(false); // 15+ levels apart
+        expect(splash(player('splash_town', 70, VARROCK_SQUARE.x, VARROCK_SQUARE.z))).toBe(false);
+        expect(caster.messages).toEqual([]); // silent, unlike the attack checks
+
+        World.gameMap.isMulti = () => false;
+        expect(splash(fair)).toBe(false);
+    } finally {
+        World.gameMap.isMulti = isMulti;
+    }
+});

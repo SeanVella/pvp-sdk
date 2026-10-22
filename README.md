@@ -25,6 +25,7 @@ The rules are modelled on Old School RuneScape's **[Deadman Mode](docs/DEADMAN.m
 - **Attacking first skulls you** for 10 minutes. Guards shoot skulled players in the towns, and dying skulled hands your **10 most valuable bank stacks** to your killer as a **Bank key**.
 - **A death to a player keeps nothing.** Protect Item doesn't help, and you respawn in Lumbridge at full health with about 30 seconds of spawn protection.
 - **No teleporting** for 7.2 seconds after any PvP hit, and **Tele Block** (Magic 85) stops a player teleporting for 5 minutes.
+- **Ancient Magicks** from Magic 50: pray at the Zaros altar in the Demonic Ruins (Wilderness level 46) for the ancient spellbook. Smoke poisons, Shadow weakens, Blood heals you and Ice freezes, and Burst and Barrage hit up to 9 targets in multi-combat.
 - **New accounts are protected** from other players for their first 3 hours of play. Attacking anyone gives that up.
 - **A safe deposit box** at any banker holds 10 stacks that bank raids can't take.
 - **Breaches** open every 3 hours (00:00, 03:00, ... UTC): a breach guardian appears somewhere dangerous, announced 10 minutes ahead. Damaging it earns breach points for the breach warden in Lumbridge, and may win a **sigil**, a perk that works while you carry it and is lost when you die, or rarely an **abyssal whip** or **granite maul**.
@@ -36,7 +37,7 @@ The rules are modelled on Old School RuneScape's **[Deadman Mode](docs/DEADMAN.m
 Agents should read [`learnings/pvp.md`](learnings/pvp.md). The SDK helps them weigh a fight without ever refusing one:
 
 - `sdk.assessPvpAttack(target)` says whether the server will refuse an attack (safe area, level gap), whether it will skull you, and whether the target is skulled (a Bank key if you win). `bot.attack()` returns the same warnings but always attacks.
-- State carries `isSkulled` and `skullTicksRemaining`, `newPlayerProtected`, `breachPoints`, and each nearby player's `isSkulled`, `safeArea` and `wildernessLevel`.
+- State carries `isSkulled` and `skullTicksRemaining`, `teleBlockTicksRemaining`, `spellbook`, `newPlayerProtected`, `breachPoints`, and each nearby player's `isSkulled`, `safeArea` and `wildernessLevel`.
 - `bot.checkBankKeys()`, `bot.openBankKey()`, `bot.openSafeDepositBox()`, `bot.storeInSafeDepositBox()` and `bot.withdrawFromSafeDepositBox()` handle the Deadman items, and [`/api/breach`](https://pvp-sdk.fly.dev/api/breach) says when and where the next breach opens.
 
 The design and roadmap are in [`docs/PVP_PLAN.md`](docs/PVP_PLAN.md), and which game version this is (2005-era RuneScape 2, not OSRS) is covered in [`docs/GAME_VERSIONS.md`](docs/GAME_VERSIONS.md).

@@ -9,6 +9,27 @@ export const Spells = {
     // pvp-sdk: PvP kit. Level 85, a law, death and chaos rune; players only. A hit stops the
     // target teleporting for 5 minutes (2.5 under Protect from Magic).
     TELE_BLOCK: 40593,
+    // pvp-sdk: Ancient Magicks, castable only on the ancient spellbook (state.spellbook), which the
+    // Zaros altar at the Demonic Ruins (Wilderness level 46) switches to from Magic 50. Death runes
+    // plus chaos or blood (and air/fire/water/soul); Burst and Barrage also hit up to 8 more targets
+    // next to the first in multi-combat. Smoke poisons, Shadow lowers Attack, Blood heals you a
+    // quarter of the damage and Ice freezes. Staffs can't autocast them.
+    SMOKE_RUSH: 40604,
+    SHADOW_RUSH: 40616,
+    BLOOD_RUSH: 40628,
+    ICE_RUSH: 40638,
+    SMOKE_BURST: 40648,
+    SHADOW_BURST: 40660,
+    BLOOD_BURST: 40672,
+    ICE_BURST: 40682,
+    SMOKE_BLITZ: 40692,
+    SHADOW_BLITZ: 40704,
+    BLOOD_BLITZ: 40716,
+    ICE_BLITZ: 40724,
+    SMOKE_BARRAGE: 40734,
+    SHADOW_BARRAGE: 40746,
+    BLOOD_BARRAGE: 40758,
+    ICE_BARRAGE: 40768,
     CONFUSE: 1153,
     WATER_STRIKE: 1154,
     ENCHANT_LVL1: 1155, // Sapphire

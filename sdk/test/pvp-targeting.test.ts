@@ -42,10 +42,12 @@ interface StateOptions {
     magicXp?: number;
     /** A damage_dealt event on the rival after the attack started. */
     hitRival?: boolean;
+    spellbook?: 'normal' | 'ancient';
 }
 
-function state({ engaged, message, magicXp = 0, hitRival = false }: StateOptions) {
+function state({ engaged, message, magicXp = 0, hitRival = false, spellbook }: StateOptions) {
     return {
+        spellbook,
         tick: message ? 2 : 1,
         revision: message ? 2 : 1,
         player: {
@@ -77,9 +79,9 @@ function state({ engaged, message, magicXp = 0, hitRival = false }: StateOptions
 }
 
 /** A bot whose state flips to `final` as soon as an action has been dispatched. */
-function createBot(final: ReturnType<typeof state>) {
+function createBot(final: ReturnType<typeof state>, start = state({})) {
     const dispatched: Array<{ call: string; args: unknown[] }> = [];
-    let current = state({});
+    let current = start;
     const record = (call: string) => async (...args: unknown[]) => {
         dispatched.push({ call, args });
         return { success: true, message: 'dispatched', phase: 'dispatch' };
@@ -205,6 +207,22 @@ describe('BotActions.castSpell target dispatch', () => {
 
         expect(result).toMatchObject({ success: true, hit: false, xpGained: 0, targetType: 'npc' });
         expect(harness.dispatched).toEqual([{ call: 'sendSpellOnTarget', args: [goblin, 1152] }]);
+    });
+
+    test('casts an ancient spell by name on the ancient spellbook', async () => {
+        const harness = createBot(state({ magicXp: 52, spellbook: 'ancient' }), state({ spellbook: 'ancient' }));
+        const result = await harness.bot.castSpell(rival, 'ice barrage');
+
+        expect(result).toMatchObject({ success: true, hit: true, targetType: 'player' });
+        expect(harness.dispatched).toEqual([{ call: 'sendSpellOnTarget', args: [rival, 40768] }]);
+    });
+
+    test("refuses a spell from the other spellbook instead of sending what the server would drop", async () => {
+        const normal = createBot(state({}), state({ spellbook: 'normal' }));
+        expect(await normal.bot.castSpell(rival, 'blood blitz')).toMatchObject({ success: false, reason: 'wrong_spellbook' });
+        const ancient = createBot(state({}), state({ spellbook: 'ancient' }));
+        expect(await ancient.bot.castSpell(goblin, 'fire wave')).toMatchObject({ success: false, reason: 'wrong_spellbook' });
+        expect([...normal.dispatched, ...ancient.dispatched]).toEqual([]);
     });
 });
 

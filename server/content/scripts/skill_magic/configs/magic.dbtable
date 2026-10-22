@@ -9,6 +9,8 @@ column=name,string
 column=members,boolean
 column=levelrequired,int
 column=runesrequired,namedobj,int,namedobj,int,namedobj,int
+// pvp-sdk: a fourth rune, never one a staff provides (Ancient Magicks' smoke and shadow spells)
+column=extrarune,namedobj,int
 column=wornrequired,namedobj
 column=worn_reqmessage,string
 column=experience,int

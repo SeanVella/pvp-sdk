@@ -114,7 +114,7 @@ if (%tutorial > ^brother_noob_open_friends_tab) {
 }
 
 if (%tutorial > ^tutorial_open_magic_tab) {
-    if_settab(magic, ^tab_magic);
+    ~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
 }
 
 [proc,tutorial_set_npc_hints]

@@ -1,0 +1,10 @@
+// pvp-sdk: the Zaros altar from Desert Treasure, which switches spellbooks here, from LostCity's Content repository, branch 377-wip (scripts/_unpack/377),
+// MIT licence as server/content/LICENSE, at 377's ids (loc.pack 6552, model 6264), by
+// engine/tools/pvp/import377Ancients.ts. The spells themselves are content/scripts/pvp_kit/.
+
+[zaros_altar]
+name=Altar
+desc=A mysterious ancient altar to some forgotten god...
+model=dt_zaros_altar
+width=3
+op1=Pray-at

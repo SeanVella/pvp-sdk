@@ -168,6 +168,35 @@ if (target) await bot.castSpell(target, 'tele block'); // or Spells.TELE_BLOCK (
 - It can miss like any spell, it counts as an attack (it can skull you and ends your protection),
   and casting it on someone already blocked does nothing and costs no runes.
 
+## Ancient Magicks
+
+From Magic 50, pray at the **Zaros altar** in the Demonic Ruins (around 3288, 3883: Wilderness
+level 46, deep and multi-combat, so go prepared) to swap to the ancient spellbook; pray again to
+swap back. You can only cast the book you're on: `bot.castSpell` fails fast with
+`reason: 'wrong_spellbook'` otherwise, because the server silently drops a spell that isn't on
+screen. [RULES.md](../RULES.md#ancient-magicks) has every level, rune and max hit.
+
+```typescript
+await bot.walkTo(3288, 3884);                     // just south of the altar
+await bot.interactLoc(/^altar$/i, /pray/i);
+await sdk.waitForCondition(s => s.spellbook === 'ancient', 5000);
+
+const target = sdk.findNearbyPlayer(/^someone$/i);
+if (target) await bot.castSpell(target, 'ice barrage'); // or Spells.ICE_BARRAGE (40768)
+```
+
+- **Ice** freezes (8/16/24/32 ticks for Rush/Burst/Blitz/Barrage, halved by Protect from Magic):
+  freeze a runner, then Tele Block them. **Blood** heals you a quarter of the damage, **Shadow**
+  lowers Attack, **Smoke** sometimes poisons.
+- **Burst and Barrage** splash onto everyone in the 3x3 around the target in multi-combat, up to 9
+  targets. Each extra player hit is an attack of yours (it can skull you), but only players you
+  could attack anyway get hit. In single-combat they're just stronger single-target spells.
+- Runes: death runes for all, chaos for Rush and Burst, blood for Blitz and Barrage, plus the
+  element's. Elemental staffs cover air, fire and water; nothing covers death, blood or soul.
+  Staffs can't autocast ancient spells, so cast each one.
+- `state.spellbook` says which book you're on (the summary line shows `ancient spellbook`). It
+  survives logging out and dying.
+
 ## The PvP hiscores
 
 https://pvp-sdk.fly.dev/hiscores/pvp ranks kills, deaths, K/D, best streak and loot for today,

@@ -92,6 +92,11 @@ describe('formatWorldStateSummary', () => {
         expect(formatWorldStateSummary(state({ teleBlockTicksRemaining: 0 }), 0)).not.toContain('TELE BLOCKED');
     });
 
+    test('says when you are on the ancient spellbook', () => {
+        expect(formatWorldStateSummary(state({ spellbook: 'ancient' }), 0)).toContain('| ancient spellbook');
+        expect(formatWorldStateSummary(state({ spellbook: 'normal' }), 0)).not.toContain('spellbook');
+    });
+
     test('reports xp gained per skill', () => {
         const out = formatWorldStateSummary(state(), 0, {
             xpBefore: { Hitpoints: 1300, Woodcutting: 220 }

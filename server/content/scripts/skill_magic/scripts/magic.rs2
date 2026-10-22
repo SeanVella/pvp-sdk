@@ -43,6 +43,14 @@ if (inv_total(inv, $rune3) < $rune_count3 & $rune3 ! null) {
     mes("You do not have enough <~string_removeright(oc_name($rune3), 5)> Runes to cast this spell.");
     return (false);
 }
+// pvp-sdk: a fourth rune (Ancient Magicks); no staff provides it
+if (db_getfieldcount($spell_data, magic_spell_table:extrarune) > 0) {
+    $rune1, $rune_count1 = db_getfield($spell_data, magic_spell_table:extrarune, 0);
+    if (inv_total(inv, $rune1) < $rune_count1) {
+        mes("You do not have enough <~string_removeright(oc_name($rune1), 5)> Runes to cast this spell.");
+        return (false);
+    }
+}
 // check if worn is correct
 if (db_getfieldcount($spell_data, magic_spell_table:wornrequired) > 0 & inv_total(worn, db_getfield($spell_data, magic_spell_table:wornrequired, 0)) < 1) {
     mes(db_getfield($spell_data, magic_spell_table:worn_reqmessage, 0));
@@ -103,6 +111,11 @@ if ($rune_count2 > 0) {
 }
 if ($rune_count3 > 0) {
     inv_del(inv, $rune3, $rune_count3);
+}
+// pvp-sdk: a fourth rune (Ancient Magicks)
+if (db_getfieldcount($spell_data, magic_spell_table:extrarune) > 0) {
+    $rune1, $rune_count1 = db_getfield($spell_data, magic_spell_table:extrarune, 0);
+    inv_del(inv, $rune1, $rune_count1);
 }
 
 [proc,give_spell_xp](dbrow $spell_data)

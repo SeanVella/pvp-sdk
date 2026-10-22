@@ -111,7 +111,7 @@ inv_transmit(worn, wornitems:wear);
 if_settab(wornitems, ^tab_wornitems);
 
 if_settab(prayer, ^tab_prayer);
-if_settab(magic, ^tab_magic);
+~pvp_magic_tab; // pvp-sdk: the normal or the ancient spellbook (pvp_kit/scripts/ancients.rs2)
 if_settab(friends, ^tab_friends);
 if_settab(ignore, ^tab_ignore);
 if_settab(logout, ^tab_logout);

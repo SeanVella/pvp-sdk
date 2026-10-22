@@ -554,6 +554,29 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `king_black_dragon.rs2`), `login.rs2` and `death.rs2`. Varps 1008/1009 in
       `pvp_world.varp`. SDK: `teleBlockTicksRemaining` (StateCollector, both types files,
       formatter), `Spells.TELE_BLOCK`. Verify: `bun test server/engine/test/pvp-world.test.ts`.
+- [ ] **PvP kit: Ancient Magicks** — fork-only `content/scripts/pvp_kit/scripts/ancients.rs2`,
+      `pvp_kit/configs/ancients.{constant,dbrow,loc,seq,spotanim}` and
+      `pvp_kit/interfaces/ancients.if` (the spellbook, ids 40603-40777 in `interface.pack` and
+      `interface.order`). `engine/tools/pvp/import377Ancients.ts` brings 377-wip's graphics
+      (animsets 514-530, models 6375-6404, seqs 1958-1987, spotanims 360-391), the Zaros altar
+      (loc 6552, model 6264 `dt_zaros_altar`, without 377's `_8` suffix) and the icons in tiles
+      6-21 of `magicon2.png`/`magicoff2.png`. The altar is placed in `maps/m51_60.jm2`
+      (`0 23 43: 6552 10`). Upstream files touched: `magic.dbtable` (an `extrarune` column),
+      `magic.rs2` (`check_spell_requirements` and `delete_spell_runes` read it),
+      `spells.constant` (`^smoke_rush` 106 to `^ice_barrage` 121), `auto_cast.rs2` (no autocast
+      on the ancient book), and every `if_settab(magic, ^tab_magic)` becomes
+      `~pvp_magic_tab` (`login.rs2`, `equip.rs2`, `quest_mm.rs2` 13 times, `mm_puzzle.rs2`,
+      `tutorial.rs2`, `tut_chatbox_steps.rs2`): grep for new ones at each upgrade. Varp 1010
+      `pvp_spellbook` in `pvp_world.varp`. SDK: `spellbook` (StateCollector, both types files,
+      formatter), `Spells.SMOKE_RUSH`...`ICE_BARRAGE`, castSpell names and its `wrong_spellbook`
+      refusal. Verify: `bun test server/engine/test/pvp-world.test.ts` and
+      `bun test sdk/test/pvp-targeting.test.ts`.
+- [ ] **`engine/tools/pack/ModelFlags.ts` loads config constants** (`loadConfigConstants`, split
+      out of `packConfigs` in `tools/pack/config/PackShared.ts`). On an incremental build where
+      no config needed repacking, `packConfigs` returned before loading the `.constant` files,
+      and the model-flag pass then failed on the first `^constant` in an `.npc` file
+      (`heroes_guild.npc`: `param=damagetype,^slash_style`) after a map or constant change.
+      Upstream bug too; drop once fixed there.
 - [ ] **PvP kit: abyssal whip and granite maul** (`docs/PVP_PLAN.md` item 6), ported from
       LostCity's Content repository, branch `377-wip` (MIT). Fork-only: `content/scripts/pvp_kit/`
       (objs, seqs, spotanims, the whip's style table and combat tab, wield requirements),
