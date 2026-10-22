@@ -79,7 +79,7 @@ stock16=black_dagger,4,1000
 stock17=mithril_dagger,3,3000
 stock18=adamant_dagger,2,12000
 // pvp-sdk: the PvP kit's 377 weapons (pvp_kit/configs/slayer_weapons.obj). In 2005 they dropped
-// from Slayer monsters, which this revision doesn't have; one of each restocks every 10 minutes.
+// from Slayer monsters, which this revision doesn't have; one of each restocks every 1000 ticks (5 minutes at 300 ms).
 stock19=abyssal_whip,2,1000
 stock20=granite_maul,2,1000
 

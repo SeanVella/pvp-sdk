@@ -33,4 +33,4 @@
 | [Granite maul](../items/granite-maul.md) | 2 | 50000 gp | 30000 gp |
 
 The abyssal whip and granite maul are this server's additions (2005 weapons, ported from a later
-game revision); one of each comes back every 10 minutes.
+game revision); one of each comes back every 5 minutes.
