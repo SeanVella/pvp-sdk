@@ -1,5 +1,5 @@
 // pvp-sdk: the Ancient Magicks graphics, from LostCity's Content repository, branch 377-wip (scripts/_unpack/377),
-// MIT licence as server/content/LICENSE, at 377's ids (spotanim.pack 360-391), by
+// MIT licence as server/content/LICENSE, at 377's ids (spotanim.pack 360-392), by
 // engine/tools/pvp/import377Ancients.ts. The spells themselves are content/scripts/pvp_kit/.
 
 [ice_rush_travel]
@@ -153,3 +153,7 @@ model=spot_smoke_barrage_impact
 anim=smoke_barrage_impact
 ambient=100
 contrast=100
+
+[zaros_teleport]
+model=spot_zaros_teleport
+anim=zaros_teleport

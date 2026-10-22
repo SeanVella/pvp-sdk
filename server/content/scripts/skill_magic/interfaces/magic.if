@@ -7431,7 +7431,7 @@ colour=0xC00000
 activecolour=0x00C000
 
 // pvp-sdk: Tele Block (pvp_kit/scripts/tele_block.rs2), in the free slot after Charge. Its icon is
-// tile 5 of magicon2/magicoff2 (engine/tools/pvp/import377TeleBlock.ts).
+// 377's own, tile 33 of magicon2/magicoff2 (engine/tools/pvp/import377Ancients.ts copies the sheets).
 [tele_block]
 type=graphic
 x=97
@@ -7448,8 +7448,8 @@ script1=gt,0
 script2=gt,0
 script3=gt,0
 script4=gt,84
-graphic=magicoff2,5
-activegraphic=magicon2,5
+graphic=magicoff2,33
+activegraphic=magicon2,33
 actionverb=Cast on
 actiontarget=player
 action=Tele Block

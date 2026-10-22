@@ -1,6 +1,7 @@
 // pvp-sdk: Ancient Magicks, the PvP kit's second spellbook. Sixteen combat spells (Smoke, Shadow,
-// Blood and Ice, as Rush, Burst, Blitz and Barrage), cast on players and monsters. The Zaros
-// altar at the Demonic Ruins (Wilderness level 46) switches to the book and back.
+// Blood and Ice, as Rush, Burst, Blitz and Barrage), cast on players and monsters, and the eight
+// teleports (Paddewwa to Ghorrock). The Zaros altar at the Demonic Ruins (Wilderness level 46)
+// switches to the book and back.
 //
 // Levels, runes, xp and max hits are OSRS's (https://oldschool.runescape.wiki/w/Ancient_Magicks):
 //   smoke   poisons on 1 hit in 8 (severity 10, or 20 for Blitz and Barrage)
@@ -83,6 +84,30 @@ if (%pvp_spellbook = 1) {
 [apnpct,ancients:shadow_barrage] ~pvm_ancient_spell(^shadow_barrage);
 [apnpct,ancients:blood_barrage] ~pvm_ancient_spell(^blood_barrage);
 [apnpct,ancients:ice_barrage] ~pvm_ancient_spell(^ice_barrage);
+
+// ---------------------------------------------------------------- the teleports
+
+// magic_teleport's runes, Wilderness level 20 limit, Tele Block and PvP teleport lock, then
+// ~pvp_ancient_teleport for the look (skill_magic/scripts/spells/teleport.rs2).
+[if_button,ancients:paddewwa_teleport] @magic_teleport(^paddewwa_teleport);
+[if_button,ancients:senntisten_teleport] @magic_teleport(^senntisten_teleport);
+[if_button,ancients:kharyrll_teleport] @magic_teleport(^kharyrll_teleport);
+[if_button,ancients:lassar_teleport] @magic_teleport(^lassar_teleport);
+[if_button,ancients:dareeyak_teleport] @magic_teleport(^dareeyak_teleport);
+[if_button,ancients:carrallanger_teleport] @magic_teleport(^carrallanger_teleport);
+[if_button,ancients:annakarl_teleport] @magic_teleport(^annakarl_teleport);
+[if_button,ancients:ghorrock_teleport] @magic_teleport(^ghorrock_teleport);
+
+// ~player_teleport_normal with 377's dark Zaros swirl instead of the normal teleport's sparkles
+[proc,pvp_ancient_teleport](coord $coord)
+if_close;
+p_stopaction;
+~tele_checks;
+sound_synth(teleport_all, 1, 0);
+anim(human_castteleport, 0);
+spotanim_pl(zaros_teleport, 0, 0);
+p_delay(2);
+~p_telejump_safe($coord);
 
 [proc,ancient_element](int $spell)(int)
 return(modulo(sub($spell, ^smoke_rush), 4));

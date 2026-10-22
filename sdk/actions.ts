@@ -3399,7 +3399,7 @@ export class BotActions {
 
     // pvp-sdk: the ancients interface's components (server/content/pack/interface.pack)
     private static readonly ANCIENT_SPELLS_FIRST = 40603;
-    private static readonly ANCIENT_SPELLS_LAST = 40777;
+    private static readonly ANCIENT_SPELLS_LAST = 40845;
 
     private static readonly SPELL_COMPONENTS: Record<string, number> = {
         'wind strike': 1152,

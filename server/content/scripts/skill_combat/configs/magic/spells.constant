@@ -82,3 +82,12 @@
 ^shadow_barrage = 119
 ^blood_barrage = 120
 ^ice_barrage = 121
+// pvp-sdk: the Ancient Magicks teleports (pvp_kit/scripts/ancients.rs2), by level
+^paddewwa_teleport = 122
+^senntisten_teleport = 123
+^kharyrll_teleport = 124
+^lassar_teleport = 125
+^dareeyak_teleport = 126
+^carrallanger_teleport = 127
+^annakarl_teleport = 128
+^ghorrock_teleport = 129

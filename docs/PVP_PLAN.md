@@ -197,8 +197,9 @@ PvP kit, cherry-picking LostCity's 377-wip scripts where they exist:
       ends on death. 377-wip has the impact graphic but no spell, so the spell, its spellbook
       button and its icon are ours (`engine/tools/pvp/import377TeleBlock.ts`). The SDK exposes
       `state.teleBlockTicksRemaining` and `Spells.TELE_BLOCK`.
-- [x] Ancient Magicks (`scripts/pvp_kit/scripts/ancients.rs2`): all 16 spells against players
-      and monsters, with Old School's levels, runes, xp and max hits, on their own spellbook. The
+- [x] Ancient Magicks (`scripts/pvp_kit/scripts/ancients.rs2`): all 16 combat spells against
+      players and monsters, and the 8 teleports, with Old School's levels, runes, xp and max hits,
+      on their own spellbook laid out as the real one with 377's icons. The
       Zaros altar in the Demonic Ruins (Wilderness 46) swaps books (the owner's choice,
       2026-10-22). Burst and Barrage splash in multi-combat onto targets the caster could attack.
       377-wip has the graphics and the altar but no spells, so the spells, spellbook and icons are

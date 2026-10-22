@@ -725,6 +725,18 @@ test('the 16 ancient spells have OSRS levels and max hits, death runes as their 
     expect(spellColumn('smoke_barrage', 'extrarune')).toEqual([obj('deathrune'), 4]);
     expect(spellColumn('smoke_barrage', 'experience')).toEqual([480]);
     expect(['ice_rush', 'ice_burst', 'ice_blitz', 'ice_barrage'].map(s => spellColumn(s, 'freeze_time'))).toEqual([[8], [16], [24], [32]]);
+
+    // the eight teleports: OSRS's levels, and where they land
+    const coord = (x: number, z: number) => (z & 0x3fff) | ((x & 0x3fff) << 14);
+    const teleports: Record<string, [number, number, number]> = {
+        paddewwa: [54, 3098, 9882], senntisten: [60, 3322, 3336], kharyrll: [66, 3492, 3471], lassar: [72, 3006, 3471],
+        dareeyak: [78, 2990, 3696], carrallanger: [84, 3217, 3677], annakarl: [90, 3288, 3886], ghorrock: [96, 2977, 3873]
+    };
+    for (const [name, [level, x, z]] of Object.entries(teleports)) {
+        expect(spellColumn(`${name}_teleport`, 'levelrequired')).toEqual([level]);
+        expect(spellColumn(`${name}_teleport`, 'tele_coord')).toEqual([coord(x, z)]);
+    }
+    expect(spellColumn('annakarl_teleport', 'runesrequired')).toEqual([obj('lawrune'), 2, obj('bloodrune'), 2, -1, -1]);
 });
 
 test('the Zaros altar swaps spellbooks and turns autocast off; staffs only autocast the normal book', () => {

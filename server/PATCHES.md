@@ -546,8 +546,8 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
 - [ ] **PvP kit: Tele Block** — fork-only `content/scripts/pvp_kit/scripts/tele_block.rs2`,
       `pvp_kit/configs/tele_block.{dbrow,seq,spotanim}` and the impact graphic in
       `content/models/pvp_kit/` (377-wip's animset 461, model 5799, seq 1822, spotanim 345), by
-      `engine/tools/pvp/import377TeleBlock.ts`, which also draws the icon into tile 5 of
-      `sprites/magicon2.png` and `magicoff2.png`. Upstream files touched: `magic.if` (the button
+      `engine/tools/pvp/import377TeleBlock.ts`. Its icon is 377's own, tile 33 of
+      `sprites/magicon2.png` and `magicoff2.png` (copied by `import377Ancients.ts`). Upstream files touched: `magic.if` (the button
       and its hover panel at the end, components 40593-40602 in `interface.pack` and
       `interface.order`), `spells.constant` (`^tele_block = 105`), `teleport.rs2`
       (`~pre_tele_checks`), the four Wilderness levers (`wilderness_lever.rs2`,
@@ -556,13 +556,19 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       formatter), `Spells.TELE_BLOCK`. Verify: `bun test server/engine/test/pvp-world.test.ts`.
 - [ ] **PvP kit: Ancient Magicks** — fork-only `content/scripts/pvp_kit/scripts/ancients.rs2`,
       `pvp_kit/configs/ancients.{constant,dbrow,loc,seq,spotanim}` and
-      `pvp_kit/interfaces/ancients.if` (the spellbook, ids 40603-40777 in `interface.pack` and
-      `interface.order`). `engine/tools/pvp/import377Ancients.ts` brings 377-wip's graphics
-      (animsets 514-530, models 6375-6404, seqs 1958-1987, spotanims 360-391), the Zaros altar
-      (loc 6552, model 6264 `dt_zaros_altar`, without 377's `_8` suffix) and the icons in tiles
-      6-21 of `magicon2.png`/`magicoff2.png`. The altar is placed in `maps/m51_60.jm2`
+      `pvp_kit/interfaces/ancients.if` (the spellbook laid out as the real one: 24 spells by level,
+      4 to a row, ids 40603-40845 in `interface.pack` and `interface.order`). The eight teleports
+      (`^paddewwa_teleport` 122 to `^ghorrock_teleport` 129) go through `magic_teleport` in
+      `teleport.rs2`, which hands them to `~pvp_ancient_teleport` for 377's Zaros swirl.
+      `engine/tools/pvp/import377Ancients.ts` brings 377-wip's graphics (animsets 514-531, models
+      6375-6405, seqs 1958-1988, spotanims 360-392 with `zaros_teleport`), the Zaros altar (loc
+      6552, model 6264 `dt_zaros_altar`, without 377's `_8` suffix), 20 of its ancient sounds
+      (`content/synth/pvp_kit/ancients/`, synths 979-998: the 289 client holds ids 0-999 only, so
+      999 is the last free one) and 377's own icon sheets `magicon2.png`/`magicoff2.png` (tiles
+      6-21 the combat spells, 22-29 the teleports, 33 Tele Block; tiles 0-4 kept as 289's). The altar is placed in `maps/m51_60.jm2`
       (`0 23 43: 6552 10`). Upstream files touched: `magic.dbtable` (an `extrarune` column),
-      `magic.rs2` (`check_spell_requirements` and `delete_spell_runes` read it),
+      `magic.rs2` (`check_spell_requirements` and `delete_spell_runes` read it), `teleport.rs2`
+      (`magic_teleport`'s ancient branch), `magic.if` (Tele Block's icon is 377's tile 33),
       `spells.constant` (`^smoke_rush` 106 to `^ice_barrage` 121), `auto_cast.rs2` (no autocast
       on the ancient book), and every `if_settab(magic, ^tab_magic)` becomes
       `~pvp_magic_tab` (`login.rs2`, `equip.rs2`, `quest_mm.rs2` 13 times, `mm_puzzle.rs2`,

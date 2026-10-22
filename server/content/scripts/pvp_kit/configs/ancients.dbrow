@@ -4,8 +4,8 @@
 // Graphics are 377-wip's (ancients.spotanim). 377 names spotanims 362-367 the other way round from
 // OSRS: Ice Burst is 363 (377's ice_blitz_impact), and Ice Blitz is 366 on the caster then 367 on
 // the target (377's ice_burst_travel and ice_burst_impact), as RuneLite's GraphicID has them. Smoke
-// impacts float at chest height, the rest sit on the ground. Sounds are the waves' (289 has no
-// ancient ones): smoke fire, shadow earth, blood wind, ice water.
+// impacts float at chest height, the rest sit on the ground. Sounds are 377's own impacts
+// (content/synth/pvp_kit/ancients/), and a splash is the usual spellfail.
 
 [magic_spell_smoke_rush]
 table=magic_spell_table
@@ -22,8 +22,8 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_proj,smoke_rush_travel,43,31,51,16,-5,64,10
 data=spotanim_target,smoke_rush_impact,100
-data=sound_success,fire_wave_all
-data=sound_fail,fire_wave_fail
+data=sound_success,smoke_rush_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_shadow_rush]
@@ -41,8 +41,8 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_proj,shadow_rush_travel,43,31,51,16,-5,64,10
 data=spotanim_target,shadow_rush_impact,0
-data=sound_success,earth_wave_all
-data=sound_fail,earth_wave_fail
+data=sound_success,shadow_rush_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_blood_rush]
@@ -60,8 +60,8 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_proj,blood_rush_travel,43,31,51,16,-5,64,10
 data=spotanim_target,blood_rush_impact,0
-data=sound_success,wind_wave_all
-data=sound_fail,wind_wave_fail
+data=sound_success,blood_rush_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_ice_rush]
@@ -79,8 +79,8 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_proj,ice_rush_travel,43,31,51,16,-5,64,10
 data=spotanim_target,ice_rush_impact,0
-data=sound_success,water_wave_all
-data=sound_fail,water_wave_fail
+data=sound_success,ice_rush_impact
+data=sound_fail,spellfail
 data=freeze_time,8
 data=continue_by_autocast,false
 
@@ -98,8 +98,8 @@ data=maxhit,17
 data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_target,smoke_burst_impact,100
-data=sound_success,fire_wave_all
-data=sound_fail,fire_wave_fail
+data=sound_success,smoke_burst_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_shadow_burst]
@@ -116,8 +116,8 @@ data=maxhit,18
 data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_target,shadow_burst_impact,0
-data=sound_success,earth_wave_all
-data=sound_fail,earth_wave_fail
+data=sound_success,shadow_burst_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_blood_burst]
@@ -134,8 +134,8 @@ data=maxhit,21
 data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_target,spell_blood_burst_impact,0
-data=sound_success,wind_wave_all
-data=sound_fail,wind_wave_fail
+data=sound_success,blood_burst_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_ice_burst]
@@ -152,8 +152,8 @@ data=maxhit,22
 data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_target,ice_blitz_impact,0
-data=sound_success,water_wave_all
-data=sound_fail,water_wave_fail
+data=sound_success,ice_burst_impact
+data=sound_fail,spellfail
 data=freeze_time,16
 data=continue_by_autocast,false
 
@@ -172,8 +172,8 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_proj,smoke_blitz_travel,43,31,51,16,-5,64,10
 data=spotanim_target,smoke_blitz_impact,100
-data=sound_success,fire_wave_all
-data=sound_fail,fire_wave_fail
+data=sound_success,smoke_blitz_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_shadow_blitz]
@@ -191,8 +191,8 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_proj,shadow_blitz_travel,43,31,51,16,-5,64,10
 data=spotanim_target,shadow_blitz_impact,0
-data=sound_success,earth_wave_all
-data=sound_fail,earth_wave_fail
+data=sound_success,shadow_blitz_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_blood_blitz]
@@ -210,8 +210,8 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_proj,blood_blitz_travel,43,31,51,16,-5,64,10
 data=spotanim_target,blood_blitz_impact,0
-data=sound_success,wind_wave_all
-data=sound_fail,wind_wave_fail
+data=sound_success,blood_blitz_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_ice_blitz]
@@ -229,8 +229,8 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_origin,ice_burst_travel
 data=spotanim_target,ice_burst_impact,0
-data=sound_success,water_wave_all
-data=sound_fail,water_wave_fail
+data=sound_success,ice_blitz_impact
+data=sound_fail,spellfail
 data=freeze_time,24
 data=continue_by_autocast,false
 
@@ -248,8 +248,8 @@ data=maxhit,27
 data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_target,smoke_barrage_impact,100
-data=sound_success,fire_wave_all
-data=sound_fail,fire_wave_fail
+data=sound_success,smoke_barrage_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_shadow_barrage]
@@ -266,8 +266,8 @@ data=maxhit,28
 data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_target,shadow_barrage_impact,0
-data=sound_success,earth_wave_all
-data=sound_fail,earth_wave_fail
+data=sound_success,shadow_barrage_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_blood_barrage]
@@ -284,8 +284,8 @@ data=maxhit,29
 data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_target,spell_blood_barrage_impact,0
-data=sound_success,wind_wave_all
-data=sound_fail,wind_wave_fail
+data=sound_success,blood_barrage_impact
+data=sound_fail,spellfail
 data=continue_by_autocast,false
 
 [magic_spell_ice_barrage]
@@ -303,7 +303,103 @@ data=anim,human_castwave
 data=staffanim,human_castwave_staff
 data=spotanim_proj,ice_barrage_travel,43,31,51,16,-5,64,10
 data=spotanim_target,ice_barrage_impact,0
-data=sound_success,water_wave_all
-data=sound_fail,water_wave_fail
+data=sound_success,ice_barrage_impact
+data=sound_fail,spellfail
 data=freeze_time,32
 data=continue_by_autocast,false
+
+// Edgeville Dungeon
+[magic_spell_paddewwa_teleport]
+table=magic_spell_table
+data=spell,^paddewwa_teleport
+data=spellcom,ancients:paddewwa_teleport
+data=name,Paddewwa Teleport
+data=members,true
+data=levelrequired,54
+data=runesrequired,lawrune,2,firerune,1,airrune,1
+data=experience,640
+data=tele_coord,0_48_154_26_26
+
+// the Digsite
+[magic_spell_senntisten_teleport]
+table=magic_spell_table
+data=spell,^senntisten_teleport
+data=spellcom,ancients:senntisten_teleport
+data=name,Senntisten Teleport
+data=members,true
+data=levelrequired,60
+data=runesrequired,lawrune,2,soulrune,1,null,null
+data=experience,700
+data=tele_coord,0_51_52_58_8
+
+// Canifis
+[magic_spell_kharyrll_teleport]
+table=magic_spell_table
+data=spell,^kharyrll_teleport
+data=spellcom,ancients:kharyrll_teleport
+data=name,Kharyrll Teleport
+data=members,true
+data=levelrequired,66
+data=runesrequired,lawrune,2,bloodrune,1,null,null
+data=experience,760
+data=tele_coord,0_54_54_36_15
+
+// Ice Mountain
+[magic_spell_lassar_teleport]
+table=magic_spell_table
+data=spell,^lassar_teleport
+data=spellcom,ancients:lassar_teleport
+data=name,Lassar Teleport
+data=members,true
+data=levelrequired,72
+data=runesrequired,lawrune,2,waterrune,4,null,null
+data=experience,820
+data=tele_coord,0_46_54_62_15
+
+// the ruins in Wilderness level 23
+[magic_spell_dareeyak_teleport]
+table=magic_spell_table
+data=spell,^dareeyak_teleport
+data=spellcom,ancients:dareeyak_teleport
+data=name,Dareeyak Teleport
+data=members,true
+data=levelrequired,78
+data=runesrequired,lawrune,2,firerune,3,airrune,2
+data=experience,880
+data=tele_coord,0_46_57_46_48
+
+// the Graveyard of Shadows, Wilderness level 20
+[magic_spell_carrallanger_teleport]
+table=magic_spell_table
+data=spell,^carrallanger_teleport
+data=spellcom,ancients:carrallanger_teleport
+data=name,Carrallanger Teleport
+data=members,true
+data=levelrequired,84
+data=runesrequired,lawrune,2,soulrune,2,null,null
+data=experience,940
+data=tele_coord,0_50_57_17_29
+
+// the Demonic Ruins, Wilderness level 46
+[magic_spell_annakarl_teleport]
+table=magic_spell_table
+data=spell,^annakarl_teleport
+data=spellcom,ancients:annakarl_teleport
+data=name,Annakarl Teleport
+data=members,true
+data=levelrequired,90
+data=runesrequired,lawrune,2,bloodrune,2,null,null
+data=experience,1000
+data=tele_coord,0_51_60_24_46
+
+// the Frozen Waste Plateau, Wilderness level 45
+[magic_spell_ghorrock_teleport]
+table=magic_spell_table
+data=spell,^ghorrock_teleport
+data=spellcom,ancients:ghorrock_teleport
+data=name,Ghorrock Teleport
+data=members,true
+data=levelrequired,96
+data=runesrequired,lawrune,2,waterrune,8,null,null
+data=experience,1060
+data=tele_coord,0_46_60_33_33

@@ -1,34 +1,39 @@
-// pvp-sdk: imports the Ancient Magicks graphics from LostCity's Content repository, branch 377-wip
-// (https://github.com/LostCityRS/Content, MIT licence, as server/content/LICENSE), pinned to one
-// commit, plus the Zaros altar, and draws the 16 spell icons. Usage, from server/engine:
+// pvp-sdk: imports the Ancient Magicks graphics, icons and sounds from LostCity's Content repository,
+// branch 377-wip (https://github.com/LostCityRS/Content, MIT licence, as server/content/LICENSE),
+// pinned to one commit, plus the Zaros altar. Usage, from server/engine:
 //
 //   bun tools/pvp/import377Ancients.ts
 //
-// 377-wip has every ancient spell's travel/impact graphic but no spell, spellbook or icon, so the
+// 377-wip has every ancient spell's graphics, icons and sounds but no spell or spellbook, so the
 // spells themselves are ours (content/scripts/pvp_kit/). What comes over, all at 377's ids, which
 // 289 doesn't use, except where noted:
-//   - 32 spotanims (377 spotanim.pack 360-391): the ice/blood/shadow/smoke rush, burst, blitz and
-//     barrage travel and impact graphics, with ice_blitz_impact2/3 and ice_barrage_impact2/3.
-//     Blood burst and barrage are spell_blood_*_impact and have no travel; shadow burst and
-//     barrage have no travel either.
-//   - their 27 seqs (377 seq.pack 1958-1987), verbatim from 377's all.seq;
-//   - the 17 animsets holding those seqs' frames, 514-530 (frames 14677-14995), copied unchanged:
+//   - 33 spotanims (377 spotanim.pack 360-392): the ice/blood/shadow/smoke rush, burst, blitz and
+//     barrage travel and impact graphics, with ice_blitz_impact2/3 and ice_barrage_impact2/3, and
+//     zaros_teleport, the ancient teleports' graphic. Blood burst and barrage are
+//     spell_blood_*_impact and have no travel; shadow burst and barrage have no travel either.
+//   - their 28 seqs (377 seq.pack 1958-1988), verbatim from 377's all.seq;
+//   - the 18 animsets holding those seqs' frames, 514-531 (frames 14677-15082), copied unchanged:
 //     spotanims have their own small skeletons, never the player's;
-//   - 28 spot models (377 model.pack 6375-6403), except spot_ice_burst_travel, which is 1204 in
-//     377 and 1204 is furniture_candlestick here, so it's 6386; and spot_ice_barrage_travel, 14215
-//     in 377, renumbered to 6404 so the model table stays dense instead of growing to 14215;
+//   - 29 spot models (377 model.pack 6375-6404), except spot_ice_burst_travel, which is 1204 in
+//     377 and 1204 is furniture_candlestick here, so it's 6386; spot_ice_barrage_travel, 14215
+//     in 377, renumbered to 6404 so the model table stays dense instead of growing to 14215; and
+//     so spot_zaros_teleport, 6404 in 377, is 6405;
 //   - the Zaros altar from Desert Treasure: model dt_zaros_altar (377's dt_zaros_altar_8, model 6264) and a loc
 //     zaros_altar at 377's loc id 6552 (377's dt_zaros_altar: "Altar", 3 wide, "Pray-at"). Its
 //     prayer_altar category is left off, so the altar's own script decides what praying does.
-// Configs: content/scripts/pvp_kit/configs/ancients.{seq,spotanim,loc}; pack entries are added
-// here, in id order, refusing any clash.
-//
-// The icons are drawn, not copied: neither revision has them. They go in tiles 6-21 of
-// magicon2 (enabled) and magicoff2 (greyed), after Tele Block's tile 5:
-//   6 smoke rush    7 shadow rush    8 blood rush    9 ice rush
-//  10 smoke burst  11 shadow burst  12 blood burst  13 ice burst
-//  14 smoke blitz  15 shadow blitz  16 blood blitz  17 ice blitz
-//  18 smoke barrage 19 shadow barrage 20 blood barrage 21 ice barrage
+//   - the spell icons: 377's magicon2 and magicoff2 sheets, keeping our tiles 0-4 (the same five
+//     icons 289 has, which 377 re-encoded a shade apart); 377 adds 5 Magic Dart, 6-9 ice, 10-13 smoke, 14-17 blood, 18-21 shadow (each
+//     Rush, Burst, Blitz, Barrage), 22-29 the teleports Paddewwa, Senntisten, Kharyrll, Lassar,
+//     Dareeyak, Carrallanger, Annakarl, Ghorrock, 30-32 Teleother Lumbridge/Falador/Camelot, 33 Tele
+//     Block, 34 Enchant Lvl-6 and 35 Bones to Peaches.
+//   - 20 of the spells' sounds, under content/synth/pvp_kit/ancients/: each element's cast and its
+//     four impacts. The 289 client keeps 1000 synths (webclient sound/JagFX.ts), so ids stop at
+//     999: 377's ids where they fit (blood_rush_impact 984, blood_blitz_impact 985, blood_cast 986),
+//     the rest renumbered into the free ids below 1000 (see SYNTHS). 377's other blood sounds
+//     (rush_work, rush_all, rush_fail, blitz_all, travel, travel_2) and smoke_cast2 don't fit and
+//     stay behind; ice_magic_all and spellfail are 289's already.
+// Configs: content/scripts/pvp_kit/configs/ancients.{seq,spotanim,loc}; pack entries (and
+// synth.order) are added here, in id order, refusing any clash.
 
 import fs from 'fs';
 import path from 'path';
@@ -39,21 +44,42 @@ const COMMIT = '44eab09081ef0f6c5f3eaabd1897a588ad7d9e50'; // 377-wip, 2026-10-1
 const RAW = `https://raw.githubusercontent.com/LostCityRS/Content/${COMMIT}`;
 const CONTENT = path.resolve(import.meta.dirname, '../../../content');
 const OUT = `${CONTENT}/models/pvp_kit/ancients`;
+const SYNTH_OUT = `${CONTENT}/synth/pvp_kit/ancients`;
 const TILE = 20;
 
-const ANIMSETS = Array.from({ length: 17 }, (_, i) => 514 + i);
-const FRAMES = { first: 14677, last: 14995 };
+const ANIMSETS = Array.from({ length: 18 }, (_, i) => 514 + i);
+const FRAMES = { first: 14677, last: 15082 };
 // 377 model ids moved here, and why (see the header).
-const MODEL_RENUMBER: Record<string, number> = { spot_ice_burst_travel: 6386, spot_ice_barrage_travel: 6404 };
+const MODEL_RENUMBER: Record<string, number> = { spot_ice_burst_travel: 6386, spot_ice_barrage_travel: 6404, spot_zaros_teleport: 6405 };
 // 377 names the altar's model with its shape suffix (_8, centrepiece); this packer wants it without,
 // so it's dt_zaros_altar here (LocConfig.ts tries the bare name as the centrepiece first).
 const ALTAR = { loc: 6552, name: 'zaros_altar', model: 'dt_zaros_altar_8', ourModel: 'dt_zaros_altar', modelId: 6264 };
+// The icon tiles 289's sheets already have, kept as they are.
+const OUR_ICON_TILES = 5;
 
-const SPELLS = ['rush', 'burst', 'blitz', 'barrage'] as const;
-const ELEMENTS = ['smoke', 'shadow', 'blood', 'ice'] as const;
-type Tier = (typeof SPELLS)[number];
-type Element = (typeof ELEMENTS)[number];
-const FIRST_ICON_TILE = 6;
+// [377 folder under synth/magic, name, id here]: under 1000 for the client (see the header)
+const SYNTHS: [string, string, number][] = [
+    ['ice', 'ice_rush_impact', 979],
+    ['ice', 'ice_burst_impact', 980],
+    ['ice', 'ice_blitz_impact', 981],
+    ['ice', 'ice_barrage_impact', 982],
+    ['ice', 'ice_cast', 983],
+    ['blood', 'blood_rush_impact', 984],
+    ['blood', 'blood_blitz_impact', 985],
+    ['blood', 'blood_cast', 986],
+    ['blood', 'blood_burst_impact', 987],
+    ['blood', 'blood_barrage_impact', 988],
+    ['shadow', 'shadow_rush_impact', 989],
+    ['shadow', 'shadow_burst_impact', 990],
+    ['shadow', 'shadow_blitz_impact', 991],
+    ['shadow', 'shadow_barrage_impact', 992],
+    ['shadow', 'shadow_cast', 993],
+    ['smoke', 'smoke_rush_impact', 994],
+    ['smoke', 'smoke_burst_impact', 995],
+    ['smoke', 'smoke_blitz_impact', 996],
+    ['smoke', 'smoke_barrage_impact', 997],
+    ['smoke', 'smoke_cast', 998]
+];
 
 async function fetchBytes(src: string): Promise<Uint8Array> {
     const res = await fetch(`${RAW}/${src}`);
@@ -113,6 +139,16 @@ function addToPack(pack: string, entries: Map<number, string>): void {
     console.log(`${pack}.pack: ${entries.size} entries`);
 }
 
+// Appends ids an .order file doesn't list yet (the packer only packs what it lists).
+function addToOrder(order: string, ids: number[]): void {
+    const file = `${CONTENT}/pack/${order}.order`;
+    const lines = fs.readFileSync(file, 'utf8').split('\n').map(l => l.trim()).filter(Boolean);
+    const have = new Set(lines.map(Number));
+    const added = ids.filter(id => !have.has(id));
+    fs.writeFileSync(file, [...lines, ...added.map(String)].join('\n') + '\n');
+    console.log(`${order}.order: ${added.length} added`);
+}
+
 function header(what: string, ids: string): string {
     return `// pvp-sdk: ${what}, from LostCity's Content repository, branch 377-wip (scripts/_unpack/377),\n` +
         `// MIT licence as server/content/LICENSE, at 377's ids (${ids}), by\n// engine/tools/pvp/import377Ancients.ts. The spells themselves are content/scripts/pvp_kit/.\n\n`;
@@ -120,87 +156,36 @@ function header(what: string, ids: string): string {
 
 // --------------------------------------------------------------- icons
 
-type RGB = [number, number, number];
-type Palette = { dark: RGB; base: RGB; light: RGB };
-const PALETTES: Record<Element, Palette> = {
-    smoke: { dark: [52, 60, 48], base: [118, 132, 104], light: [196, 210, 176] },
-    shadow: { dark: [22, 12, 32], base: [74, 40, 98], light: [160, 118, 196] },
-    blood: { dark: [74, 4, 10], base: [168, 18, 26], light: [236, 96, 92] },
-    ice: { dark: [56, 104, 156], base: [146, 198, 234], light: [236, 248, 255] }
-};
-
-function grey(c: RGB): RGB {
-    const l = Math.round((0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]) * 0.7);
-    return [l, l, l];
-}
-
-function segDist(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
-    const dx = bx - ax;
-    const dy = by - ay;
-    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
-    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
-}
-
-const BOLT: [number, number][] = [[14, 2], [8, 9], [12, 10], [6, 18]];
-
-function onRay(x: number, y: number, rays: number, r0: number, r1: number, offset = 0): boolean {
-    const dx = x - 9.5;
-    const dy = y - 9.5;
-    const r = Math.hypot(dx, dy);
-    if (r < r0 || r > r1) return false;
-    const step = (Math.PI * 2) / rays;
-    const a = Math.atan2(dy, dx) - offset;
-    const nearest = Math.round(a / step) * step;
-    return Math.abs(a - nearest) * r <= 0.75;
-}
-
-function iconPixel(x: number, y: number, tier: Tier, p: Palette): RGB | null {
-    const r = Math.hypot(x - 9.5, y - 9.5);
-    const orb = { rush: 4.6, burst: 4.6, blitz: 5.6, barrage: 6.2 }[tier];
-    if (tier === 'blitz' && BOLT.slice(1).some(([bx, by], i) => segDist(x, y, BOLT[i]![0], BOLT[i]![1], bx, by) <= 0.85)) {
-        return p.light;
-    }
-    if (r <= orb) {
-        if (r > orb - 1.1) return p.dark;
-        if (Math.hypot(x - 8, y - 8) <= 1.3) return p.light; // highlight
-        return p.base;
-    }
-    if (tier === 'burst' && onRay(x, y, 8, orb + 1, 9.3)) return p.light;
-    if (tier === 'barrage') {
-        if (onRay(x, y, 8, orb + 0.5, 9.6)) return p.light;
-        if (onRay(x, y, 8, orb + 0.5, 8.0, Math.PI / 8)) return p.base;
-    }
-    return null;
-}
-
-async function drawIcons(sheet: string, colour: (c: RGB) => RGB): Promise<void> {
+// 377's sheet, but with our own tiles 0-4: they're the same icons, re-encoded (a blue channel 1
+// apart, 377's greyed set a shade lighter), and 289's spells keep exactly what they had.
+async function mergeSheet(sheet: string): Promise<void> {
     const file = `${CONTENT}/sprites/${sheet}.png`;
-    const img = await Jimp.read(file);
-    const cols = img.bitmap.width / TILE;
-    SPELLS.forEach((tier, t) => ELEMENTS.forEach((element, e) => {
-        const tile = FIRST_ICON_TILE + t * 4 + e;
+    const ours = await Jimp.read(file);
+    const sheet377 = await Jimp.read(Buffer.from(await fetchBytes(`sprites/${sheet}.png`)));
+    const { width, height } = ours.bitmap;
+    if (sheet377.bitmap.width !== width || sheet377.bitmap.height !== height) {
+        throw new Error(`${sheet}: ours is ${width}x${height}, 377's ${sheet377.bitmap.width}x${sheet377.bitmap.height}`);
+    }
+    if (new TextDecoder().decode(await fetchBytes(`sprites/meta/${sheet}.opt`)).trim() !== fs.readFileSync(`${CONTENT}/sprites/meta/${sheet}.opt`, 'utf8').trim()) {
+        throw new Error(`${sheet}: 377's tile size differs`);
+    }
+    const cols = width / TILE;
+    for (let tile = 0; tile < OUR_ICON_TILES; tile++) {
         const ox = (tile % cols) * TILE;
         const oy = Math.floor(tile / cols) * TILE;
-        const palette = PALETTES[element];
         for (let y = 0; y < TILE; y++) {
-            for (let x = 0; x < TILE; x++) {
-                const c = iconPixel(x, y, tier, palette);
-                const rgb = c ? colour(c) : ([255, 0, 255] as RGB);
-                const p = ((oy + y) * img.bitmap.width + (ox + x)) * 4;
-                img.bitmap.data[p] = rgb[0];
-                img.bitmap.data[p + 1] = rgb[1];
-                img.bitmap.data[p + 2] = rgb[2];
-                img.bitmap.data[p + 3] = 255;
-            }
+            const p = ((oy + y) * width + ox) * 4;
+            sheet377.bitmap.data.set(ours.bitmap.data.subarray(p, p + TILE * 4), p);
         }
-    }));
-    await img.write(file as `${string}.png`);
+    }
+    await sheet377.write(file as `${string}.png`);
 }
 
 // --------------------------------------------------------------- main
 
 async function main(): Promise<void> {
     fs.mkdirSync(OUT, { recursive: true });
+    fs.mkdirSync(SYNTH_OUT, { recursive: true });
 
     // configs
     const allSpot = blocks(await fetchText('scripts/_unpack/377/all.spotanim'));
@@ -212,13 +197,13 @@ async function main(): Promise<void> {
     const locIds = packIds(await fetchText('pack/loc.pack'));
 
     const spotNames = [...allSpot.keys()].filter(n =>
-        /^(smoke|shadow|blood|ice)_(rush|burst|blitz|barrage)_(travel|impact\d?)$/.test(n) || /^spell_blood_(burst|barrage)_impact$/.test(n));
-    if (spotNames.length !== 32) throw new Error(`expected 32 ancient spotanims, found ${spotNames.length}: ${spotNames.join(',')}`);
+        /^(smoke|shadow|blood|ice)_(rush|burst|blitz|barrage)_(travel|impact\d?)$/.test(n) || /^spell_blood_(burst|barrage)_impact$/.test(n) || n === 'zaros_teleport');
+    if (spotNames.length !== 33) throw new Error(`expected 33 ancient spotanims, found ${spotNames.length}: ${spotNames.join(',')}`);
     const prop = (block: string, key: string) => block.match(new RegExp(`^${key}=(.*)$`, 'm'))?.[1]?.trim();
     const seqNames = [...new Set(spotNames.map(n => prop(allSpot.get(n)!, 'anim')!))];
     const modelNames = [...new Set(spotNames.map(n => prop(allSpot.get(n)!, 'model')!))];
 
-    // animsets: every frame the seqs use must be in 514-530, and nowhere in ours
+    // animsets: every frame the seqs use must be in 514-531, and nowhere in ours
     const wanted = new Set<number>();
     for (const s of seqNames) {
         for (const m of allSeq.get(s)!.matchAll(/^i?frame\d+=anim_(\d+)$/gm)) wanted.add(Number(m[1]));
@@ -233,9 +218,9 @@ async function main(): Promise<void> {
         }
     }
     const missing = [...wanted].filter(f => !frames.has(f));
-    if (missing.length) throw new Error(`frames not in animsets 514-530: ${missing.join(',')}`);
-    if ([...frames.keys()].some(f => f < FRAMES.first || f > FRAMES.last)) throw new Error('animsets 514-530 hold frames outside 14677-14995');
-    console.log(`animsets 514-530: ${frames.size} frames, ${wanted.size} used by ${seqNames.length} seqs`);
+    if (missing.length) throw new Error(`frames not in animsets 514-531: ${missing.join(',')}`);
+    if ([...frames.keys()].some(f => f < FRAMES.first || f > FRAMES.last)) throw new Error('animsets 514-531 hold frames outside 14677-15082');
+    console.log(`animsets 514-531: ${frames.size} frames, ${wanted.size} used by ${seqNames.length} seqs`);
 
     // models
     for (const name of modelNames) {
@@ -247,6 +232,13 @@ async function main(): Promise<void> {
     }
     console.log(`models: ${modelNames.length} spot models and ${ALTAR.ourModel}`);
 
+    // sounds
+    for (const [folder, name] of SYNTHS) {
+        fs.writeFileSync(`${SYNTH_OUT}/${name}.synth`, await fetchBytes(`synth/magic/${folder}/${name}.synth`));
+    }
+    if (SYNTHS.some(([, , id]) => id >= 1000)) throw new Error('the 289 client keeps synth ids 0-999');
+    console.log(`synths: ${SYNTHS.length}`);
+
     // pack entries
     addToPack('animset', new Map(ANIMSETS.map(s => [s, `pvpkit_ancients_${s}`])));
     addToPack('anim', new Map([...frames.keys()].map(f => [f, `anim_${f}`])));
@@ -257,21 +249,23 @@ async function main(): Promise<void> {
     addToPack('seq', new Map(seqNames.map(n => [seqIds.get(n)!, n])));
     addToPack('spotanim', new Map(spotNames.map(n => [spotIds.get(n)!, n])));
     addToPack('loc', new Map([[ALTAR.loc, ALTAR.name]]));
+    addToPack('synth', new Map(SYNTHS.map(([, name, id]) => [id, name])));
+    addToOrder('synth', SYNTHS.map(([, , id]) => id));
 
     const byId = (names: string[], ids: Map<string, number>) => [...names].sort((a, b) => ids.get(a)! - ids.get(b)!);
     fs.writeFileSync(`${CONTENT}/scripts/pvp_kit/configs/ancients.seq`,
-        header('the Ancient Magicks graphics\' seqs', 'seq.pack 1958-1987') + byId(seqNames, seqIds).map(n => allSeq.get(n)!).join('\n\n') + '\n');
+        header('the Ancient Magicks graphics\' seqs', 'seq.pack 1958-1988') + byId(seqNames, seqIds).map(n => allSeq.get(n)!).join('\n\n') + '\n');
     fs.writeFileSync(`${CONTENT}/scripts/pvp_kit/configs/ancients.spotanim`,
-        header('the Ancient Magicks graphics', 'spotanim.pack 360-391') + byId(spotNames, spotIds).map(n => allSpot.get(n)!).join('\n\n') + '\n');
+        header('the Ancient Magicks graphics', 'spotanim.pack 360-392') + byId(spotNames, spotIds).map(n => allSpot.get(n)!).join('\n\n') + '\n');
     const altar = allLoc.get('dt_zaros_altar')!;
     fs.writeFileSync(`${CONTENT}/scripts/pvp_kit/configs/ancients.loc`,
         header('the Zaros altar from Desert Treasure, which switches spellbooks here', 'loc.pack 6552, model 6264') +
         `[${ALTAR.name}]\nname=${prop(altar, 'name')}\ndesc=${prop(altar, 'desc')}\nmodel=${prop(altar, 'model')}\nwidth=${prop(altar, 'width')}\nop1=${prop(altar, 'op1')}\n`);
     console.log('configs: ancients.seq, ancients.spotanim, ancients.loc');
 
-    await drawIcons('magicon2', c => c);
-    await drawIcons('magicoff2', grey);
-    console.log(`icons: magicon2/magicoff2 tiles ${FIRST_ICON_TILE}-${FIRST_ICON_TILE + 15}`);
+    await mergeSheet('magicon2');
+    await mergeSheet('magicoff2');
+    console.log(`icons: 377's magicon2/magicoff2, with our tiles 0-${OUR_ICON_TILES - 1}`);
 }
 
 if (import.meta.main) {

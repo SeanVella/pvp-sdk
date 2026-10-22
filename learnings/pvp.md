@@ -194,6 +194,10 @@ if (target) await bot.castSpell(target, 'ice barrage'); // or Spells.ICE_BARRAGE
 - Runes: death runes for all, chaos for Rush and Burst, blood for Blitz and Barrage, plus the
   element's. Elemental staffs cover air, fire and water; nothing covers death, blood or soul.
   Staffs can't autocast ancient spells, so cast each one.
+- The book's eight teleports (`sdk.sendClickComponent(Spells.ANNAKARL_TELEPORT)` and the rest)
+  follow the normal teleport rules (nothing above Wilderness level 20, not while Tele Blocked or
+  just after a PvP hit). Annakarl (Magic 90) drops you at the Demonic Ruins and the altar;
+  Carrallanger, Dareeyak and Ghorrock also land in the Wilderness, so arrive ready to fight.
 - `state.spellbook` says which book you're on (the summary line shows `ancient spellbook`). It
   survives logging out and dying.
 

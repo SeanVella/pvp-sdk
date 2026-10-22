@@ -166,6 +166,21 @@ and water runes as usual. Each element adds an effect when the spell hits:
   frozen again. Like Bind, Snare and Entangle, freezes count ticks, so they last half as long in
   real time as in Old School.
 
+The book also has the eight **ancient teleports**, with Old School's levels and runes (two law
+runes each, plus the element's). Like any teleport spell they can't be cast above Wilderness level
+20, nor while Tele Blocked or within 7.2 seconds of a PvP hit.
+
+| Teleport | Magic | Runes (with 2 law) | Lands at |
+|---|---|---|---|
+| Paddewwa | 54 | 1 fire, 1 air | Edgeville Dungeon |
+| Senntisten | 60 | 1 soul | the Digsite |
+| Kharyrll | 66 | 1 blood | Canifis |
+| Lassar | 72 | 4 water | Ice Mountain |
+| Dareeyak | 78 | 3 fire, 2 air | the ruins, Wilderness level 23 |
+| Carrallanger | 84 | 2 soul | the Graveyard of Shadows, Wilderness level 20 |
+| Annakarl | 90 | 2 blood | the Demonic Ruins and the Zaros altar, Wilderness level 46 |
+| Ghorrock | 96 | 8 water | the Frozen Waste Plateau, Wilderness level 45 |
+
 **Burst and Barrage** also hit everyone else in the 3x3 square around the target, up to 9
 targets in all, but only in multi-combat areas, and only players you could attack yourself (in
 level range, outside safe areas, without spawn or new-player protection). Each target rolls its

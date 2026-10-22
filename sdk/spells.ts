@@ -30,6 +30,18 @@ export const Spells = {
     SHADOW_BARRAGE: 40746,
     BLOOD_BARRAGE: 40758,
     ICE_BARRAGE: 40768,
+    // pvp-sdk: the Ancient Magicks teleports, by level: click with sdk.sendClickComponent (ancient
+    // spellbook only). Lassar is Ice Mountain, Kharyrll Canifis, Senntisten the Digsite, Paddewwa
+    // Edgeville Dungeon; Dareeyak (level 23), Carrallanger (20), Annakarl (46, the Demonic Ruins and
+    // the Zaros altar) and Ghorrock (45) land in the Wilderness.
+    PADDEWWA_TELEPORT: 40778,
+    SENNTISTEN_TELEPORT: 40788,
+    KHARYRLL_TELEPORT: 40796,
+    LASSAR_TELEPORT: 40804,
+    DAREEYAK_TELEPORT: 40812,
+    CARRALLANGER_TELEPORT: 40822,
+    ANNAKARL_TELEPORT: 40830,
+    GHORROCK_TELEPORT: 40838,
     CONFUSE: 1153,
     WATER_STRIKE: 1154,
     ENCHANT_LVL1: 1155, // Sapphire
