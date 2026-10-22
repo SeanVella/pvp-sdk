@@ -30,6 +30,9 @@ WEB_PORT = "8080"
 # pvp-sdk: the spectator feed for the rs-world 3D viewer. It shows every player's position and
 # gear, so it's the owner's: WORLD_FEED_TOKEN is a Fly secret, required as ?token= on connect.
 WORLD_FEED = "true"
+# Our own viewer (https://seanvella.github.io/rs-world/) is built from this server's cache, so
+# it renders this fork's npcs; no base-game look-alikes needed.
+WORLD_FEED_STAND_INS = "false"
 # The spectator viewer sends a small heartbeat; inactive sockets are closed after two minutes.
 WORLD_FEED_MAX_CLIENTS = "128"
 WORLD_FEED_IDLE_TIMEOUT_MS = "120000"

@@ -128,11 +128,13 @@ function sameToken(candidate: string, token: string): boolean {
     return a.length === b.length && timingSafeEqual(a, b);
 }
 
-// pvp-sdk: hosted viewers (rs-world) render with their own copy of the base game's cache,
-// which has none of this fork's npcs; send each as a base npc that looks like it.
+// pvp-sdk: a viewer built with the base game's cache (the upstream-hosted rs-world) has none
+// of this fork's npcs; WORLD_FEED_STAND_INS sends each as a base npc that looks like it. Our
+// own rs-world (SeanVella/rs-world) is built from this server's cache, so it turns them off.
 const FEED_STAND_INS: Record<string, string> = { breach_guardian: 'black_demon', breach_warden: 'white_knight' };
 let standIns: Map<number, number> | null = null;
 export function feedNpcType(type: number): number {
+    if (!Environment.WORLD_FEED_STAND_INS) return type;
     if (!standIns) {
         standIns = new Map();
         for (const [fork, base] of Object.entries(FEED_STAND_INS)) {

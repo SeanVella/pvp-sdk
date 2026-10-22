@@ -228,12 +228,18 @@ To undo, set `SEASON` back and deploy: the previous season's characters come bac
 ### Watching the world in 3D
 
 The rs-world viewer renders the live world from the spectator feed (`/worldfeed`, owner-only
-behind the `WORLD_FEED_TOKEN` secret). Open
-`https://maxbittker.github.io/rs-world/?live=<feed>` with `<feed>` the URL-encoded
-`wss://pvp-sdk.fly.dev/worldfeed?token=<WORLD_FEED_TOKEN>`; add `&follow=<player>` to follow
-someone. The hosted viewer renders with the base game's cache, so the feed sends this fork's
-npcs as look-alikes (`FEED_STAND_INS` in `web/worldfeed.ts`): the breach guardian as a black
-demon, the breach warden as a white knight.
+behind the `WORLD_FEED_TOKEN` secret). Ours is the fork
+[SeanVella/rs-world](https://github.com/SeanVella/rs-world), published by its Pages workflow
+to https://seanvella.github.io/rs-world/ and built from this server's own cache (repository
+variables `RS_SDK_SERVER` and `WORLD_FEED_URL`). Open it with `?live=<feed>`, `<feed>` being
+the URL-encoded `wss://pvp-sdk.fly.dev/worldfeed?token=<WORLD_FEED_TOKEN>`; add
+`&follow=<player>` to follow someone. The token is never part of the build, so the site can be
+public. After content changes (new npcs, items, maps) re-run its workflow
+(`gh workflow run pages.yml -R SeanVella/rs-world`) so it renders them.
+
+The upstream-hosted viewer (maxbittker.github.io/rs-world) only has the base game's cache. To
+use it, set `WORLD_FEED_STAND_INS=true` so the feed sends this fork's npcs as look-alikes
+(`FEED_STAND_INS` in `web/worldfeed.ts`).
 
 Make a moderator (then relog): `fly ssh console -a pvp-sdk -C "sqlite3 /opt/server/data/db.sqlite \"UPDATE account SET staffmodlevel=2 WHERE username='name'\""`.
 

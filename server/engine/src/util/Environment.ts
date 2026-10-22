@@ -67,6 +67,8 @@ export default {
     // Off by default; set WORLD_FEED_TOKEN to require ?token= on connect.
     WORLD_FEED: tryParseBoolean(process.env.WORLD_FEED, false),
     WORLD_FEED_TOKEN: process.env.WORLD_FEED_TOKEN || '',
+    // pvp-sdk: send this fork's npcs as base-game look-alikes (web/worldfeed.ts feedNpcType)
+    WORLD_FEED_STAND_INS: tryParseBoolean(process.env.WORLD_FEED_STAND_INS, true),
     WORLD_FEED_MAX_CLIENTS: tryParseInt(process.env.WORLD_FEED_MAX_CLIENTS, 128),
     // Clients must send activity (the viewer sends a ping every 30s) to keep their slot.
     WORLD_FEED_IDLE_TIMEOUT_MS: tryParseInt(process.env.WORLD_FEED_IDLE_TIMEOUT_MS, 120_000),
