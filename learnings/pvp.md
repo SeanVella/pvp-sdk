@@ -72,10 +72,8 @@ if (key) {
 }
 ```
 
-A new key and its "You take a bank key from your victim." message wait until you have no
-dialog open, so a level-up dialog left up after the fight holds them back. Any `bot.*` action
-dismisses it. The key is safe meanwhile: it's saved with your character, and the inventory item
-is restored when you log in.
+A new key arrives the moment your victim dies, with the message "You take a bank key from your
+victim." It's saved with your character, and the inventory item is restored when you log in.
 
 ## Surviving
 

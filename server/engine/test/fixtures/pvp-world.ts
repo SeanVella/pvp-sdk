@@ -255,8 +255,8 @@ test('dying skulled raids your 10 most valuable tradeable bank stacks into a key
     for (const id of raided) expect(left.has(id)).toBe(false);
     for (const name of ['coal', 'iron_ore', 'logs', 'thgoodminekey']) expect(left.has(obj(name))).toBe(true);
 
-    // The killer's queue hands them the key token.
-    run('[queue,dmm_key_received]', killer, null, [1]);
+    // The killer gets the key token and its message at once, not through a queue that
+    // waits for them to close a dialog.
     expect(stacks(killer, INV).get(KEY)).toBe(1);
     expect(killer.messages).toContain('You take a bank key from your victim.');
 
@@ -284,6 +284,9 @@ test('an unskulled victim keeps their bank but loses carried keys to the killer'
     holder.invAdd(BANK, obj('dragon_longsword'), 1);
     run('[proc,dmm_death_to_player]', holder, killer, [0]);
     expect(stacks(killer, inv('dmm_key_1')).get(obj('rune_platebody'))).toBe(1);
+    expect(stacks(killer, INV).get(KEY)).toBe(1);
+    expect(killer.messages).toContain('You take a bank key from your victim.');
+    expect(stacks(holder, INV).get(KEY) ?? 0).toBe(0);
     expect(stacks(holder, inv('dmm_key_3')).size).toBe(0);
     expect(stacks(holder, BANK).get(obj('dragon_longsword'))).toBe(1);
 });

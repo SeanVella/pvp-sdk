@@ -138,7 +138,7 @@ if ($skulled = true) {
     }
 }
 if ($given > 0) {
-    .queue(dmm_key_received, 0, $given);
+    ~.dmm_key_received($given);
 }
 
 // The active player died with no player to credit: their keys are destroyed, and
@@ -155,17 +155,48 @@ if ($skulled = true) {
     }
 }
 
-[queue,dmm_key_received](int $keys)
-~dmm_sync_key_tokens;
+// Hands the killer (.active_player) their new keys' objs and tells them, straight
+// away: a queue would wait until the killer closed any open dialog, such as a
+// level-up from the fight.
+[proc,.dmm_key_received](int $keys)
+~.dmm_sync_key_tokens;
 if ($keys = 1) {
-    mes("You take a bank key from your victim.");
+    .mes("You take a bank key from your victim.");
 } else {
-    mes("You take <tostring($keys)> bank keys from your victim.");
+    .mes("You take <tostring($keys)> bank keys from your victim.");
 }
-if (%pk_skull > 0) {
-    mes("Keys open in a safe area once your skull wears off.");
+if (.%pk_skull > 0) {
+    .mes("Keys open in a safe area once your skull wears off.");
 } else {
-    mes("Keys open in a safe area.");
+    .mes("Keys open in a safe area.");
+}
+
+// ~dmm_key_count and ~dmm_sync_key_tokens for .active_player.
+[proc,.dmm_key_count]()(int)
+def_int $count = 0;
+def_int $slot = 1;
+while ($slot <= ^dmm_max_keys) {
+    if (.inv_freespace(~dmm_key_inv($slot)) < inv_size(~dmm_key_inv($slot))) {
+        $count = add($count, 1);
+    }
+    $slot = add($slot, 1);
+}
+return($count);
+
+[proc,.dmm_sync_key_tokens]
+def_int $keys = ~.dmm_key_count;
+def_int $tokens = .inv_total(inv, dmm_bank_key);
+if ($tokens > $keys) {
+    .inv_del(inv, dmm_bank_key, sub($tokens, $keys));
+    return;
+}
+while ($tokens < $keys) {
+    if (.inv_freespace(inv) > 0) {
+        .inv_add(inv, dmm_bank_key, 1);
+    } else {
+        .obj_add(.coord, dmm_bank_key, 1, ^lootdrop_duration);
+    }
+    $tokens = add($tokens, 1);
 }
 
 // Makes the "Bank key" objs in the inventory match the keys held. Keys that don't
