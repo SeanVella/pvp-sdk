@@ -23,7 +23,8 @@ Attack styles: Flick (accurate), Lash (controlled), Deflect (defensive), all sla
 ## Special attack
 
 Energy Drain, half the special bar: 25% more accurate, and against a player a hit moves a tenth
-of their run energy to you.
+of their run energy to you. Run energy refills every tick on this server, so the drain has no
+lasting effect for now.
 
 ## Sources
 

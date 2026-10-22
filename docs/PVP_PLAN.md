@@ -176,7 +176,11 @@ This server is RuneScape 2 as of January 2005, not OSRS; [`GAME_VERSIONS.md`](GA
 compares the options. The recommendation is to stay on revision 289 and add a clearly labelled
 PvP kit, cherry-picking LostCity's 377-wip scripts where they exist:
 
-- [ ] Abyssal whip and granite maul (scripts in 377-wip).
+- [x] Abyssal whip and granite maul, with their specials, from 377-wip (`scripts/pvp_kit/`,
+      `server/PATCHES.md` "PvP kit"); sold in the Varrock Swordshop. 377 re-rigged the player,
+      so `engine/tools/pvp/import377Weapons.ts` converts the animations and worn models; the
+      whip's lash swings rigidly. Open: the whip's run energy drain does nothing while
+      `NODE_INFINITE_RUN` (default true) refills everyone's energy every tick.
 - [ ] Tele Block and Ancient Magicks freezes.
 - [ ] Barrows sets.
 - [ ] Take each LostCity/rs-sdk upgrade by walking `server/PATCHES.md`.

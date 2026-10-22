@@ -142,6 +142,9 @@ Swordshop (two of each; one comes back every 1,000 ticks, 5 minutes), and Varroc
 | Speed | 4 ticks | 7 ticks |
 | Special (half the bar) | 25% more accurate; a hit moves a tenth of the target's run energy to you | Lands on the next tick, even mid-swing: a full bar is two smashes in a row |
 
+Run energy never runs out on this server (it refills every tick), so for now the whip's drain
+changes nothing that lasts; its special is simply a more accurate hit.
+
 There's no special-attack action in the SDK yet. Click the bar on the combat tab instead:
 `sdk.sendClickComponent(12311)` with the whip, `sdk.sendClickComponent(7462)` with the maul. The
 maul's bar only arms while you're fighting ("You're not fighting anything.").

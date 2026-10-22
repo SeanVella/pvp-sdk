@@ -30,7 +30,7 @@ it. Don't move the public server to OSRS.
 |---|---|---|---|
 | Protection prayers, multi-combat, skulls | 2004 | ≤ 289 | yes |
 | Special attack bar | Jun 2004 | 244 | yes |
-| Slayer, abyssal whip, granite maul | Jan 2005 | 291-295 | no |
+| Slayer, abyssal whip, granite maul | Jan 2005 | 291-295 | whip and maul only (PvP kit) |
 | Tele Block | Mar 2005 | 304 | no |
 | Ancient Magicks (Desert Treasure) | Apr 2005 | 308 | no |
 | Barrows | May 2005 | 316 | no |
