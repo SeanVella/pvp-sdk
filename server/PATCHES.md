@@ -440,6 +440,11 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `game_castlewars` `castlewars_mapzoneexit` and `game_duelarena` `toggle_duel_challenge_off`
       restore it (the latter only outside the fight zones, so a duel keeps its "Fight" option).
       After a sync, grep for new `set_player_op(null, 2` callers.
+- [ ] **World feed for rs-world** — `fly.toml` sets `WORLD_FEED=true`; `WORLD_FEED_TOKEN` is a
+      Fly secret. `web/worldfeed.ts`: constant-time token check, and `feedNpcType` sends fork
+      npcs (ids >= 1597) as base-game look-alikes, because the hosted viewer has only the base
+      cache; add any new fork npc (or wearable obj) to `FEED_STAND_INS`. `web/index.ts`: the
+      slow-request log masks `token=`/`password=` values.
 - [ ] **Owner-only routes** (`docs/PVP_PLAN.md` "Owner access"). `OWNER_TOKEN` (a Fly secret;
       `Environment.ts`) unlocks them, as `Authorization: Bearer` or the cookie `POST /owner` sets.
       - `engine/src/web/owner.ts` (fork-only): the path list, the constant-time check, `/owner`.

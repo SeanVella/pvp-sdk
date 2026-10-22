@@ -1,4 +1,7 @@
 import type { ServerWebSocket } from 'bun';
+import { timingSafeEqual } from 'node:crypto';
+
+import NpcType from '#/cache/config/NpcType.js';
 
 import Npc from '#/engine/entity/Npc.js';
 import Player from '#/engine/entity/Player.js';
@@ -109,13 +112,36 @@ export function checkWorldFeedUpgrade(url: URL): Response | undefined {
         return new Response('World feed disabled', { status: 404 });
     }
     const token = Environment.WORLD_FEED_TOKEN;
-    if (token && url.searchParams.get('token') !== token) {
+    if (token && !sameToken(url.searchParams.get('token') ?? '', token)) {
         return new Response('Forbidden', { status: 403 });
     }
     if (subscribers.size >= Environment.WORLD_FEED_MAX_CLIENTS) {
         return new Response('Too many world feed clients', { status: 503 });
     }
     return undefined;
+}
+
+// pvp-sdk: constant-time, so the token can't be guessed a character at a time
+function sameToken(candidate: string, token: string): boolean {
+    const a = Buffer.from(candidate);
+    const b = Buffer.from(token);
+    return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// pvp-sdk: hosted viewers (rs-world) render with their own copy of the base game's cache,
+// which has none of this fork's npcs; send each as a base npc that looks like it.
+const FEED_STAND_INS: Record<string, string> = { breach_guardian: 'black_demon', breach_warden: 'white_knight' };
+let standIns: Map<number, number> | null = null;
+export function feedNpcType(type: number): number {
+    if (!standIns) {
+        standIns = new Map();
+        for (const [fork, base] of Object.entries(FEED_STAND_INS)) {
+            const from = NpcType.getId(fork);
+            const to = NpcType.getId(base);
+            if (from !== -1 && to !== -1) standIns.set(from, to);
+        }
+    }
+    return standIns.get(type) ?? type;
 }
 
 export function onWorldFeedOpen(ws: ServerWebSocket<WebSocketData>): void {
@@ -472,7 +498,7 @@ function npcRecord(npc: Npc, known: Position | null): FeedRecord | null {
 
     if (!known) {
         record.f = 1;
-        record.t = npc.type;
+        record.t = feedNpcType(npc.type);
         record.x = npc.x;
         record.z = npc.z;
         record.l = npc.level;
@@ -486,7 +512,7 @@ function npcRecord(npc: Npc, known: Position | null): FeedRecord | null {
     } else {
         changed = addMovement(record, npc.x, npc.z, npc.level, npc.walkDir, npc.runDir, npc.tele, npc.jump, known);
         if (masks & NpcInfoProt.CHANGE_TYPE) {
-            record.t = npc.type;
+            record.t = feedNpcType(npc.type);
             changed = true;
         }
         if (masks & NpcInfoProt.FACE_ENTITY) {

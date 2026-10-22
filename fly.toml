@@ -27,6 +27,9 @@ NODE_TICKRATE = "300"
 NODE_XPRATE = "25"
 WEBSITE_REGISTRATION = "false"
 WEB_PORT = "8080"
+# pvp-sdk: the spectator feed for the rs-world 3D viewer. It shows every player's position and
+# gear, so it's the owner's: WORLD_FEED_TOKEN is a Fly secret, required as ?token= on connect.
+WORLD_FEED = "true"
 # The spectator viewer sends a small heartbeat; inactive sockets are closed after two minutes.
 WORLD_FEED_MAX_CLIENTS = "128"
 WORLD_FEED_IDLE_TIMEOUT_MS = "120000"

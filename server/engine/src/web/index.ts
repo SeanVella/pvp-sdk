@@ -57,7 +57,9 @@ function recordRequest(url: URL, req: Request, ms: number) {
     if (ms > stat.maxMs) stat.maxMs = ms;
     webWindow.set(key, stat);
     if (ms >= WEB_SLOW_MS) {
-        console.warn(`[web] slow ${req.method} ${url.pathname}${url.search} ${ms}ms ip=${getIp(req) ?? req.headers.get('fly-client-ip') ?? '?'}`);
+        // pvp-sdk: never log a token (the world feed takes one in its URL)
+        const search = url.search.replace(/([?&](?:token|password)=)[^&]*/gi, '$1***');
+        console.warn(`[web] slow ${req.method} ${url.pathname}${search} ${ms}ms ip=${getIp(req) ?? req.headers.get('fly-client-ip') ?? '?'}`);
     }
 }
 

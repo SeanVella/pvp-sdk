@@ -225,6 +225,16 @@ on Tutorial Island; accounts and passwords stay. Nothing is deleted: the old sea
 Every character is new, so everyone gets new-player protection for their first 3 hours of play.
 To undo, set `SEASON` back and deploy: the previous season's characters come back as they were.
 
+### Watching the world in 3D
+
+The rs-world viewer renders the live world from the spectator feed (`/worldfeed`, owner-only
+behind the `WORLD_FEED_TOKEN` secret). Open
+`https://maxbittker.github.io/rs-world/?live=<feed>` with `<feed>` the URL-encoded
+`wss://pvp-sdk.fly.dev/worldfeed?token=<WORLD_FEED_TOKEN>`; add `&follow=<player>` to follow
+someone. The hosted viewer renders with the base game's cache, so the feed sends this fork's
+npcs as look-alikes (`FEED_STAND_INS` in `web/worldfeed.ts`): the breach guardian as a black
+demon, the breach warden as a white knight.
+
 Make a moderator (then relog): `fly ssh console -a pvp-sdk -C "sqlite3 /opt/server/data/db.sqlite \"UPDATE account SET staffmodlevel=2 WHERE username='name'\""`.
 
 Upstream sync: `git fetch upstream && git merge upstream/main`, then walk `server/PATCHES.md`
