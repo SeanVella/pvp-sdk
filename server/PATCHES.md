@@ -498,13 +498,15 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `player_melee.rs2` and `pvp_melee.rs2` (fury), `pvp_combat.rs2` `[queue,pvp_damage]`
       (stone), `consume_effects.rs2` stat heal (feast); `pvp_world.rs2` (escape). Verify: `bun
       test server/engine/test/breaches.test.ts` and the fixture tests.
-- [ ] **Seasons** — `util/Environment.ts`: `SEASON` (default 1) sets `node.profile` to
-      `season-N` from season 2 on, unless `NODE_PROFILE` is set. `engine/market/MarketStore.ts`
-      `marketDatabasePath()`: `market.season-N.sqlite` beside `GE_DATABASE` from season 2 on
-      (the exchange checkpoints override saves, so they must start empty too).
-      `web/pages/hiscores.ts`: pages default to the running profile instead of `'main'`; the PvP
-      board names the season and links the earlier ones. Verify: `bun test
-      server/engine/test/seasons.test.ts`.
+- [ ] **Seasons** — `util/Environment.ts`: `SEASON` (default 0, the open beta on `'main'`) sets
+      `node.profile` to `season-N` from season 1 on, unless `NODE_PROFILE` is set.
+      `engine/market/MarketStore.ts` `marketDatabasePath()`: `market.season-N.sqlite` beside
+      `GE_DATABASE` from season 1 on (the exchange checkpoints override saves, so they must start
+      empty too). `web/pages/hiscores.ts`: pages default to the running profile instead of
+      `'main'`; once seasons start, the PvP board names its season ("Beta" for `'main'`) and links
+      the others. `LoginServer.ts`'s unslotted-bot message names the season. Migration
+      `20261022180000_beta_is_season_0` (both schemas) moved the beta's bot slots from season 1
+      to 0. Verify: `bun test server/engine/test/seasons.test.ts`.
 - [ ] **PvP kills** (`docs/PVP_PLAN.md` item 3). Opcode **10012** `PVP_KILL` (`ScriptOpcode.ts`,
       `ScriptOpcodePointers.ts`, handler in `handlers/DebugOps.ts`), declared in
       `content/scripts/engine.rs2` and called in `player/scripts/death.rs2` before

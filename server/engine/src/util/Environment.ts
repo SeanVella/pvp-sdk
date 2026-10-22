@@ -8,12 +8,12 @@ import { loadWorldConfig, migrateFromLegacyEnv } from '#/util/WorldConfig.js';
 // defaults. Locally (no such vars set) this is a no-op.
 const config = migrateFromLegacyEnv(loadWorldConfig(), process.env as Record<string, string>);
 
-// pvp-sdk: seasons (docs/PVP_PLAN.md "Seasons"). Season 1 is the original world, on profile
-// 'main'. Each later season starts every character over on its own profile, season-N
-// (saves, hiscores, PvP kills are all keyed by profile), with its own exchange database
-// (marketDatabasePath). Earlier seasons stay on disk, viewable on the hiscores with
-// ?profile=; setting SEASON back brings one back. An explicit NODE_PROFILE wins.
-const SEASON = Math.max(1, tryParseInt(process.env.SEASON, 1));
+// pvp-sdk: seasons (docs/PVP_PLAN.md "Seasons"). Season 0 is the open beta, the original
+// world on profile 'main'. Each season from 1 on starts every character over on its own
+// profile, season-N (saves, hiscores, PvP kills are all keyed by profile), with its own
+// exchange database (marketDatabasePath). Earlier seasons stay on disk, viewable on the
+// hiscores with ?profile=; setting SEASON back brings one back. An explicit NODE_PROFILE wins.
+const SEASON = Math.max(0, tryParseInt(process.env.SEASON, 0));
 
 // pvp-sdk: fair play can only be enforced once players can sign up (docs/FAIR_PLAY.md):
 // with invite codes the owner must be able to make them (OWNER_TOKEN); by phone, the
@@ -27,7 +27,7 @@ function accountsReady(): boolean {
     return Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_VERIFY_SERVICE_SID &&
         process.env.TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY);
 }
-if (SEASON >= 2 && !process.env.NODE_PROFILE) {
+if (SEASON >= 1 && !process.env.NODE_PROFILE) {
     config.node.profile = `season-${SEASON}`;
 }
 

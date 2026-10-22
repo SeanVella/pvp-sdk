@@ -971,7 +971,7 @@ export default class LoginServer {
                             s.send(JSON.stringify({
                                 replyTo,
                                 success: false,
-                                error: `This bot isn't in any player's slots for season ${Environment.SEASON}. Claim it on the server's /account page (docs/FAIR_PLAY.md)`
+                                error: `This bot isn't in any player's slots for ${Environment.SEASON ? `season ${Environment.SEASON}` : 'the beta'}. Claim it on the server's /account page (docs/FAIR_PLAY.md)`
                             }));
                             return;
                         }

@@ -283,10 +283,10 @@ export class MarketStore {
     }
 }
 let store: MarketStore | undefined;
-/** pvp-sdk: GE_DATABASE, or beside it market.season-N.sqlite from season 2 on, so the
- * checkpoints that override saves (PlayerLoading) start empty with the season too. */
+/** pvp-sdk: GE_DATABASE in the beta (season 0), or beside it market.season-N.sqlite from season
+ * 1 on, so the checkpoints that override saves (PlayerLoading) start empty with the season too. */
 export function marketDatabasePath(base: string = process.env.GE_DATABASE ?? 'data/market.sqlite', season: number = Environment.SEASON): string {
-    return season >= 2 ? base.replace(/(\.sqlite)?$/, `.season-${season}$1`) : base;
+    return season >= 1 ? base.replace(/(\.sqlite)?$/, `.season-${season}$1`) : base;
 }
 export function marketStore(): MarketStore {
     if (!Environment.GE_ENABLED) throw new Error('Grand Exchange is not available on this server.');

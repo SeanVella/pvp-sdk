@@ -1037,15 +1037,16 @@ export async function handleHiscoresPvpPage(url: URL): Promise<Response | null> 
     const tabs = Object.entries(PVP_WINDOWS)
         .map(([key, w]) => (key === windowKey ? `<b>${w.label}</b>` : `<a href="/hiscores/pvp?window=${key}&profile=${profile}" class="c">${w.label}</a>`))
         .join(' | ');
-    // Seasons (Environment.SEASON): season 1 is profile 'main', season N is 'season-N'.
-    const seasonOf = (p: string) => (p === 'main' ? 1 : Number(/^season-(\d+)$/.exec(p)?.[1] ?? 0));
+    // Seasons (Environment.SEASON): the beta, season 0, is profile 'main'; season N is 'season-N'.
+    const seasonOf = (p: string) => (p === 'main' ? 0 : Number(/^season-(\d+)$/.exec(p)?.[1] ?? -1));
+    const seasonName = (n: number) => (n === 0 ? 'Beta' : `Season ${n}`);
     const season = seasonOf(profile);
-    const seasonLinks = Array.from({ length: Environment.SEASON }, (_, i) => i + 1)
+    const seasonLinks = Array.from({ length: Environment.SEASON + 1 }, (_, n) => n)
         .map(n => {
-            const p = n === 1 ? 'main' : `season-${n}`;
-            return n === season ? `<b>${n}</b>` : `<a href="/hiscores/pvp?window=all&profile=${p}" class="c">${n}</a>`;
+            const p = n === 0 ? 'main' : `season-${n}`;
+            return n === season ? `<b>${seasonName(n)}</b>` : `<a href="/hiscores/pvp?window=all&profile=${p}" class="c">${seasonName(n)}</a>`;
         })
-        .join(' ');
+        .join(' | ');
     const rows = results
         .map(
             (r, i) => `
@@ -1091,7 +1092,7 @@ export async function handleHiscoresPvpPage(url: URL): Promise<Response | null> 
                     <tr>
                         <td class="e">
                             <center>
-                                <b>PvP${season > 0 && Environment.SEASON > 1 ? ` - Season ${season}` : ''}</b><br>
+                                <b>PvP${season >= 0 && Environment.SEASON >= 1 ? ` - ${seasonName(season)}` : ''}</b><br>
                                 <a href="/" class="c">Main menu</a> | <a href="/hiscores?profile=${profile}" class="c">All Hiscores</a>
                             </center>
                         </td>
@@ -1105,7 +1106,7 @@ export async function handleHiscoresPvpPage(url: URL): Promise<Response | null> 
                             <center>
                                 A kill counts when the victim risked at least ${MIN_RISK_GP.toLocaleString()} gp, came from another address,
                                 and the same two players haven't had a counted kill in the last hour. Loot is what the victims risked.<br><br>
-                                ${tabs}${Environment.SEASON > 1 ? `<br>Seasons: ${seasonLinks}` : ''}
+                                ${tabs}${Environment.SEASON >= 1 ? `<br>${seasonLinks}` : ''}
                             </center>
                         </td>
                     </tr>
