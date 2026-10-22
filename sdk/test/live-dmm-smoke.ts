@@ -17,7 +17,10 @@
  *    respawns unskulled.
  * 4. bravo receives a bank key raided from alpha's bank, checks it and opens it in town.
  *
- * alpha dies and loses its top 10 bank stacks to bravo: use test accounts only.
+ * alpha dies and loses its top 10 bank stacks to bravo: use test accounts only. Brand-new
+ * accounts get 3 hours of new-player protection, which refuses step 2: use bots that
+ * have played longer, or that first logged in before the protection was deployed.
+ * Both bots run from one machine, so their kill is stored but not counted (same_ip).
  * `walkTo` may log PATHFINDING FAILED for the field tiles; the bots stop a tile or two
  * away, which is fine.
  */
