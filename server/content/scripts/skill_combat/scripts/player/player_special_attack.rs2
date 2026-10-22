@@ -6,6 +6,14 @@ if (~npc_is_attackable() = false) {
 if (~sa_enough_energy = false) {
     return;
 }
+// pvp-sdk: granite maul from LostCity 377-wip (pvp_kit/scripts/pvm_granite_maul.rs2):
+// maul was rewritten in late 2006 (sept?) to queue the hits to make them "instant"
+// here they just run on the next tick in interactions and bypass action delay
+// shown a lot here: https://www.youtube.com/watch?v=rx_jEFVtrHs
+// and https://youtu.be/XOE4NWuQR5c?si=YPM0yKaTGHaVm9B8
+if (inv_getobj(worn, ^wearpos_rhand) = granite_maul) {
+    @pvm_granite_maul_sa;
+}
 if (%action_delay > map_clock) {
     p_opnpc(2);
     return;
@@ -27,4 +35,5 @@ switch_obj($weapon) {
     case dragon_spear, dragon_spear_p, tbwt_dragon_spear_kp : @pvm_dragon_spear_sa;
     case rune_claws : @pvm_rune_claws_sa;
     case dragon_halberd : @pvm_dragon_halberd_sa;
+    case abyssal_whip : @pvm_abyssal_whip_sa; // pvp-sdk: from LostCity 377-wip (pvp_kit)
 }

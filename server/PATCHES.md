@@ -550,6 +550,14 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `sprites/combaticons3.png` (377's two whip icons pasted into 289's empty tiles 13-14; 289's
       tiles 0-12 stay, since 377's versions differ slightly). At a 377 upgrade, delete
       `pvp_kit/` and these pack lines: 377 brings the originals.
+      Special attacks: `pvp_kit/scripts/{pvm,pvp}_{abyssal_whip,granite_maul}.rs2` (the PvM pair
+      adapted to 289's `~npc_max_dealt` and sound loop count). Upstream files:
+      `player/player_special_attack.rs2` and `pvp/pvp_special_attack.rs2` jump to the maul's
+      special before their attack-delay check (377's next-tick "instant" smash) and gain an
+      `abyssal_whip` case (377's PvP dispatcher lacks it, so its whip PvP special never ran);
+      `player/specwep.rs2` adds `[if_button,combat_whip:specbar]` and 377's "You're not fighting
+      anything." guard on the blunt bar for the maul. Specials only run from
+      `[opplayer2,_]`/`[applayer2,_]` after `~pvp_is_attackable`, so the PvP gate covers them.
 - [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`
       from the repo root (needs built content). Server refusal wording is mirrored in
       `sdk/actions-helpers.ts` `PVP_REFUSALS` and in `RULES.md` — change them together.

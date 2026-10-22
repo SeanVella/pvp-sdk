@@ -492,3 +492,102 @@ test('the abyssal whip and granite maul load at their 377 ids, with their 377 an
     expect(SpotanimType.get(340).anim).toBe(SeqType.getId('slayer_maul_sp_attack'));
     expect(SpotanimType.get(341).anim).toBe(SeqType.getId('slayer_whip_sp_attack'));
 });
+
+const WORN = inv('worn');
+const wield = (p: TestPlayer, id: number) => p.invSet(WORN, id, 1, 3); // ^wearpos_rhand
+function armSpecial(p: TestPlayer) {
+    p.vars[varp('sa_energy')] = 1000;
+    p.vars[varp('sa_attack')] = 1;
+}
+// Damage reaches the target through its queue (~.pvp_damage).
+function queuedDamage(p: TestPlayer): number[] {
+    const out: number[] = [];
+    for (const q of [p.queue, p.weakQueue]) {
+        for (let r = q.head(); r; r = q.next()) {
+            if (r.script.name === '[queue,pvp_damage]') out.push(r.args[0] as number);
+        }
+    }
+    return out;
+}
+
+test("the whip's special moves a tenth of the target's run energy to the attacker", async () => {
+    const { default: JavaRandom } = await import('../../src/util/JavaRandom.js');
+    World.currentTick = 2000;
+    const attacker = player('whipper', 70, FIELD.x, FIELD.z);
+    const target = player('drained', 70, FIELD.x + 1, FIELD.z);
+    wield(attacker, WHIP);
+    armSpecial(attacker);
+    // the rolls and max hit are worked out on equip (player_combat_stat.rs2); set them directly
+    for (const roll of ['com_stabattack', 'com_slashattack', 'com_crushattack']) attacker.vars[varp(roll)] = 5000;
+    target.vars[varp('com_slashdef')] = 100;
+    attacker.vars[varp('com_maxhit')] = 20;
+    attacker.runenergy = 5000;
+    target.runenergy = 10000;
+    // pin randominc high: the attack roll then beats the defence roll and hits for the max
+    const roll = JavaRandom.nextDouble;
+    JavaRandom.nextDouble = () => 0.999;
+    try {
+        run('[label,pvp_special_attack]', attacker, target);
+    } finally {
+        JavaRandom.nextDouble = roll;
+    }
+    expect(attacker.vars[varp('sa_energy')]).toBe(500);
+    expect(attacker.vars[varp('sa_attack')]).toBe(0);
+    expect(target.runenergy).toBe(9000);
+    expect(attacker.runenergy).toBe(6000);
+    expect(target.messages).toContain('You feel drained!');
+    expect(queuedDamage(target)).toEqual([20]);
+    // a PvP hit like any other: it teleport-locks both players
+    expect(attacker.vars[varp('pvp_combat_clock')]).toBe(2000);
+    expect(target.vars[varp('pvp_combat_clock')]).toBe(2000);
+});
+
+test('the granite maul special lands through the attack delay; other specials wait for it', () => {
+    World.currentTick = 3000;
+    const attacker = player('mauler', 70, FIELD.x, FIELD.z);
+    const target = player('smashed', 70, FIELD.x + 1, FIELD.z);
+
+    // the maul's bar only arms mid-fight
+    wield(attacker, MAUL);
+    attacker.vars[varp('sa_energy')] = 1000;
+    run('[if_button,combat_blunt:specbar]', attacker);
+    expect(attacker.messages).toContain("You're not fighting anything.");
+    expect(attacker.vars[varp('sa_attack')]).toBe(0);
+
+    // mid-fight: the last swing still has 5 ticks of attack delay left
+    attacker.vars[varp('action_delay')] = 3005;
+    wield(attacker, obj('dragon_mace'));
+    armSpecial(attacker);
+    run('[label,pvp_special_attack]', attacker, target);
+    expect(attacker.vars[varp('sa_energy')]).toBe(1000);
+    expect(attacker.vars[varp('sa_attack')]).toBe(1);
+    expect(queuedDamage(target)).toEqual([]);
+
+    wield(attacker, MAUL);
+    run('[label,pvp_special_attack]', attacker, target);
+    expect(attacker.vars[varp('sa_energy')]).toBe(500);
+    expect(attacker.vars[varp('sa_attack')]).toBe(0);
+    expect(attacker.vars[varp('action_delay')]).toBe(3007);
+    expect(queuedDamage(target).length).toBe(1);
+
+    // and again at once with the energy left: the double smash
+    run('[if_button,combat_blunt:specbar]', attacker);
+    expect(attacker.vars[varp('sa_attack')]).toBe(1);
+    run('[label,pvp_special_attack]', attacker, target);
+    expect(attacker.vars[varp('sa_energy')]).toBe(0);
+    expect(queuedDamage(target).length).toBe(2);
+});
+
+test('an armed special attack still stops at the PvP gate', () => {
+    const attacker = player('specced', 70, FIELD.x, FIELD.z);
+    const townsfolk = player('townsfolk', 70, VARROCK_SQUARE.x, VARROCK_SQUARE.z);
+    for (const weapon of [WHIP, MAUL]) {
+        attacker.messages = [];
+        wield(attacker, weapon);
+        armSpecial(attacker);
+        run('[opplayer2,_]', attacker, townsfolk);
+        expect(attacker.messages).toEqual(['That player is in a safe area.']);
+        expect(attacker.vars[varp('sa_energy')]).toBe(1000);
+        expect(queuedDamage(townsfolk)).toEqual([]);
+    }
+});

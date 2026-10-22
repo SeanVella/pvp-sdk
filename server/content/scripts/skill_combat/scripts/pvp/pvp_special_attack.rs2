@@ -6,6 +6,15 @@ if (.%death = ^true) {
 if (stat(hitpoints) = 0) {
     return;
 }
+// pvp-sdk: granite maul from LostCity 377-wip (pvp_kit/scripts/pvp_granite_maul.rs2), which
+// does its own energy and Duel Arena checks:
+// maul was rewritten in late 2006 (sept?) to queue the hits to make them "instant"
+// here they just run on the next tick in interactions and bypass action delay
+// shown a lot here: https://www.youtube.com/watch?v=rx_jEFVtrHs
+// and https://youtu.be/XOE4NWuQR5c?si=YPM0yKaTGHaVm9B8
+if (inv_getobj(worn, ^wearpos_rhand) = granite_maul) {
+    @pvp_granite_maul_sa;
+}
 if (%action_delay > map_clock) {
     p_opplayer(2);
     return;
@@ -45,4 +54,6 @@ switch_obj($weapon) {
     case dragon_spear, dragon_spear_p, tbwt_dragon_spear_kp : @pvp_dragon_spear_sa;
     case rune_claws : @pvp_rune_claws_sa;
     case dragon_halberd : @pvp_dragon_halberd_sa;
+    // pvp-sdk: from LostCity 377-wip (pvp_kit), whose own dispatcher never reaches this label
+    case abyssal_whip : @pvp_abyssal_whip_sa;
 }
