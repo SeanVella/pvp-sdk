@@ -23,6 +23,9 @@ export const MAX_POINTS = 50;
 /** Contributors who dealt this share of the guardian's hitpoints may win a sigil. */
 export const SIGIL_MIN_SHARE = 0.05;
 export const SIGIL_CHANCE = 0.2;
+/** Every damager's chance of the PvP kit's 377 weapons (pvp_kit), the only way to get them. */
+export const WHIP_CHANCE = 0.01;
+export const MAUL_CHANCE = 0.02;
 
 export type BreachEvent =
     | { kind: 'warn'; site: BreachSite; opensAt: number }
@@ -93,13 +96,14 @@ export class BreachSchedule {
 }
 
 export type Contributor = { username: string; damage: number; fortune: boolean };
-export type Payout = { username: string; points: number; sigil: boolean };
+export type Payout = { username: string; points: number; sigil: boolean; weapon: 'abyssal_whip' | 'granite_maul' | null };
 
 /**
  * What each contributor gets: a point per DAMAGE_PER_POINT damage (at least 1, at most
  * MAX_POINTS, half as many again with a sigil of fortune); the top damage dealer always
  * wins a sigil, and anyone else who dealt SIGIL_MIN_SHARE of its hitpoints wins one with
- * SIGIL_CHANCE.
+ * SIGIL_CHANCE. Everyone who dealt any damage also rolls once for a weapon: an abyssal whip
+ * with WHIP_CHANCE, else a granite maul with MAUL_CHANCE.
  */
 export function breachPayouts(contributors: Contributor[], guardianHp: number, random: () => number): Payout[] {
     const sorted = [...contributors].filter(c => c.damage > 0).sort((a, b) => b.damage - a.damage);
@@ -107,6 +111,8 @@ export function breachPayouts(contributors: Contributor[], guardianHp: number, r
         let points = Math.min(MAX_POINTS, Math.max(1, Math.floor(c.damage / DAMAGE_PER_POINT)));
         if (c.fortune) points = Math.floor((points * 3) / 2);
         const sigil = i === 0 || (c.damage >= guardianHp * SIGIL_MIN_SHARE && random() < SIGIL_CHANCE);
-        return { username: c.username, points, sigil };
+        const roll = random();
+        const weapon = roll < WHIP_CHANCE ? 'abyssal_whip' : roll < WHIP_CHANCE + MAUL_CHANCE ? 'granite_maul' : null;
+        return { username: c.username, points, sigil, weapon };
     });
 }

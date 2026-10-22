@@ -28,4 +28,4 @@ lasting effect for now.
 
 ## Sources
 
-- Sold by: [Varrock Swordshop](../shops/varrock-swordshop.md) for 100001 gp
+- Dropped by: breach guardians, a 1% chance for everyone who damaged one (see `RULES.md`, "Breaches and sigils"). No shop sells it.

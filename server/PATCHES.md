@@ -560,8 +560,9 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `[opplayer2,_]`/`[applayer2,_]` after `~pvp_is_attackable`, so the PvP gate covers them.
       The whip's run energy drain is inert while `NODE_INFINITE_RUN` (`Environment.ts`, default
       true, not set in `fly.toml`) refills everyone's run energy every tick.
-      Source: `areas/area_varrock/configs/varrock.inv` `[swordshop]` stocks both (2 each, one back
-      per 1000 ticks), the only way to get them since 289 has no Slayer monsters to drop them.
+      Source: breach guardians only (owner, 2026-10-22): every damager rolls `WHIP_CHANCE` 1%,
+      else `MAUL_CHANCE` 2% (`engine/pvp/Breaches.ts`, handed out in `World.onBreachGuardianKilled`).
+      289 has no Slayer monsters, and no shop sells them.
       Bots: `webclient/src/bot/StateCollector.ts` `COMBAT_STYLE_TABLES[12290]` describes the whip
       tab's styles (keyed by interface id, so it must follow `combat_whip` if it ever moves).
 - [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`

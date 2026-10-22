@@ -21,7 +21,7 @@ The rules are modelled on Old School RuneScape's **[Deadman Mode](docs/DEADMAN.m
 - **No teleporting** for 7.2 seconds after any PvP hit.
 - **New accounts are protected** from other players for their first 3 hours of play. Attacking anyone gives that up.
 - **A safe deposit box** at any banker holds 10 stacks that bank raids can't take.
-- **Breaches** open every 3 hours (00:00, 03:00, ... UTC): a breach guardian appears somewhere dangerous, announced 10 minutes ahead. Damaging it earns breach points for the breach warden in Lumbridge, and may win a **sigil**, a perk that works while you carry it and is lost when you die.
+- **Breaches** open every 3 hours (00:00, 03:00, ... UTC): a breach guardian appears somewhere dangerous, announced 10 minutes ahead. Damaging it earns breach points for the breach warden in Lumbridge, and may win a **sigil**, a perk that works while you carry it and is lost when you die, or rarely an **abyssal whip** or **granite maul**.
 - **Kills that count** go on the [PvP board](https://pvp-sdk.fly.dev/hiscores/pvp) and are announced to the world. Kills between players on one address, of victims who risked under 1,000 gp, or repeated within an hour don't count.
 - **Seasons:** each new season starts every character over on Tutorial Island, with its own hiscores; accounts carry over.
 - Live player positions and everyone's gear and banks are hidden: the [world map](https://pvp-sdk.fly.dev/mapview/) shows no players.

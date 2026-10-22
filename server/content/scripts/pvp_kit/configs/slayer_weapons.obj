@@ -2,7 +2,7 @@
 // 377-wip (scripts/_unpack/377/all.obj), MIT licence as server/content/LICENSE. They are 377's
 // configs at 377's ids (obj.pack 4151-4154, the noted forms are generated from cert_*); only the
 // models are converted, see engine/tools/pvp/import377Weapons.ts. Revision 289 predates both
-// (they arrived with Slayer in 291-295), so here they are sold in the Varrock Swordshop.
+// (they arrived with Slayer in 291-295), so here they drop from breach guardians (engine/pvp/Breaches.ts).
 
 [abyssal_whip]
 name=Abyssal whip

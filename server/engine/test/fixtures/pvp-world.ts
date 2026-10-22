@@ -578,14 +578,24 @@ test('the granite maul special lands through the attack delay; other specials wa
     expect(queuedDamage(target).length).toBe(2);
 });
 
-test('the Varrock Swordshop stocks the whip and the maul', () => {
+test('the whip and the maul come only from breaches, not the Varrock Swordshop', () => {
     const shop = InvType.get(inv('swordshop'));
-    for (const weapon of [WHIP, MAUL]) {
-        const slot = [...shop.stockobj!].indexOf(weapon);
-        expect(slot).toBeGreaterThanOrEqual(0);
-        expect(shop.stockcount![slot]).toBe(2);
-        expect(shop.stockrate![slot]).toBe(1000); // one back every 10 minutes
+    expect([...shop.stockobj!]).not.toContain(WHIP);
+    expect([...shop.stockobj!]).not.toContain(MAUL);
+
+    // A lucky roll (under 1%) gives a fighter the whip when a breach guardian dies.
+    const lucky = player('lucky_hitter', 40, FIELD.x, FIELD.z);
+    const original = { random: Math.random, byHash: World.getPlayerByHash64 };
+    Math.random = () => 0.005;
+    World.getPlayerByHash64 = (hash64: bigint) => (hash64 === lucky.hash64 ? lucky : null);
+    try {
+        World.onBreachGuardianKilled({ baseLevels: [0, 0, 0, 750, 0, 0] } as any, [{ hash64: lucky.hash64, points: 50 }]);
+    } finally {
+        Math.random = original.random;
+        World.getPlayerByHash64 = original.byHash;
     }
+    expect(stacks(lucky, INV).get(WHIP)).toBe(1);
+    expect(lucky.messages).toContain('You find an abyssal whip in the breach!');
 });
 
 test('an armed special attack still stops at the PvP gate', () => {

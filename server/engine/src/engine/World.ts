@@ -2879,6 +2879,18 @@ class World {
                 }
                 player.messageGame(`You find a ${(ObjType.get(sigil).name ?? "sigil").toLowerCase()} in the breach!`);
             }
+            // The whip and the maul (pvp_kit) come only from breaches.
+            if (payout.weapon) {
+                const weapon = ObjType.getId(payout.weapon);
+                if (player.invFreeSpace(InvType.INV) > 0) {
+                    player.invAdd(InvType.INV, weapon, 1);
+                } else {
+                    this.addObj(new Obj(player.level, player.x, player.z, EntityLifeCycle.DESPAWN, weapon, 1), player.hash64, 200);
+                }
+                const name = (ObjType.get(weapon).name ?? payout.weapon).toLowerCase();
+                player.messageGame(`You find ${name.startsWith('a') ? 'an' : 'a'} ${name} in the breach!`);
+                this.broadcastMes(`${player.displayName} found ${name.startsWith('a') ? 'an' : 'a'} ${name} in the breach!`);
+            }
         }
         const top = payouts[0] ? fighters.find(f => f.player.username === payouts[0]!.username)!.player.displayName : null;
         this.broadcastMes(`The breach guardian${site ? ` near ${site.name}` : ''} has fallen!${top ? ` ${top} dealt the most damage.` : ''}`);

@@ -132,13 +132,14 @@ die, so carrying one is a bet. See RULES.md for what each does.
 
 ## The abyssal whip and the granite maul
 
-Two 2005 PvP weapons were added to this January-2005 world. Both are sold in the Varrock
-Swordshop (two of each; one comes back every 1,000 ticks, 5 minutes), and Varrock is a safe town.
+Two 2005 PvP weapons were added to this January-2005 world. No shop sells them: they drop only
+from breach guardians. Everyone who damages a guardian rolls once when it dies: a 1% chance of a
+whip, otherwise a 2% chance of a maul. The world is told who found one.
 
 | | Abyssal whip | Granite maul |
 |---|---|---|
 | Wield | 70 Attack | 50 Attack and 50 Strength; two-handed |
-| Price | 100,001 gp | 50,000 gp |
+| Store value | 100,001 gp | 50,000 gp |
 | Speed | 4 ticks | 7 ticks |
 | Special (half the bar) | 25% more accurate; a hit moves a tenth of the target's run energy to you | Lands on the next tick, even mid-swing: a full bar is two smashes in a row |
 

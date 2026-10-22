@@ -25,4 +25,4 @@ so a full bar gives two smashes in a row. The bar only arms while you're fightin
 
 ## Sources
 
-- Sold by: [Varrock Swordshop](../shops/varrock-swordshop.md) for 50000 gp
+- Dropped by: breach guardians, a 2% chance (when no whip drops) for everyone who damaged one (see `RULES.md`, "Breaches and sigils"). No shop sells it.

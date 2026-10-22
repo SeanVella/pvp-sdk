@@ -185,6 +185,10 @@ least 5% of its hitpoints has a 1 in 5 chance of one. The **breach warden** in L
 courtyard trades points for 10 sharks (8 points), 3 prayer potions (10) or a random sigil (60).
 [`/api/breach`](https://pvp-sdk.fly.dev/api/breach) says when the next one opens and where.
 
+Everyone who damaged the guardian also has a small chance of a 2005 PvP weapon, which no shop
+sells: **1%** for an **abyssal whip**, otherwise **2%** for a **granite maul**. The world is told
+who found one.
+
 A sigil works while it's in your inventory, and two of a kind don't add up. Sigils can't be
 traded, and **dying destroys them**.
 

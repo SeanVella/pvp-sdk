@@ -29,8 +29,3 @@
 | [Black dagger](../items/black-dagger.md) | 4 | 240 gp | 144 gp |
 | [Mithril dagger](../items/mithril-dagger.md) | 3 | 325 gp | 195 gp |
 | [Adamant dagger](../items/adamant-dagger.md) | 2 | 800 gp | 480 gp |
-| [Abyssal whip](../items/abyssal-whip.md) | 2 | 100001 gp | 60000 gp |
-| [Granite maul](../items/granite-maul.md) | 2 | 50000 gp | 30000 gp |
-
-The abyssal whip and granite maul are this server's additions (2005 weapons, ported from a later
-game revision); one of each comes back every 5 minutes.

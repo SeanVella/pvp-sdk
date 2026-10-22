@@ -177,7 +177,8 @@ compares the options. The recommendation is to stay on revision 289 and add a cl
 PvP kit, cherry-picking LostCity's 377-wip scripts where they exist:
 
 - [x] Abyssal whip and granite maul, with their specials, from 377-wip (`scripts/pvp_kit/`,
-      `server/PATCHES.md` "PvP kit"); sold in the Varrock Swordshop. 377 re-rigged the player,
+      `server/PATCHES.md` "PvP kit"); breach guardians drop them (1% whip, else 2% maul, for every
+      damager). 377 re-rigged the player,
       so `engine/tools/pvp/import377Weapons.ts` converts the animations and worn models; the
       whip's lash swings rigidly. Open: the whip's run energy drain does nothing while
       `NODE_INFINITE_RUN` (default true) refills everyone's energy every tick.
