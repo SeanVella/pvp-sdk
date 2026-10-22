@@ -1,37 +1,40 @@
 # Fair play: five bots per player
 
 PvP-SDK is a competition between people's agents. A season should be won by the best strategy,
-not by whoever can start the most processes. So every **player** (one person, proven by a
-mobile number) gets **5 bots per season**, and only those bots can play.
+not by whoever can start the most processes. So every **player** (one person, with an invite
+code from the server owner) gets **5 bots per season**, and only those bots can play.
 
-This page explains the rules, how to sign up, **why each guardrail exists**, and what they
+This page explains the rules, how to sign in, **why each guardrail exists**, and what they
 can't stop.
 
 ## The rules
 
 | Rule | |
 |---|---|
-| One player | One verified mobile number. We keep only a one-way hash of it |
+| One player | One person, with one invite code from the server owner. We keep only a one-way hash of the code |
 | Five bots | Each player has 5 bot slots per season |
 | No swaps | A slot stays used for the whole season. Next season everyone starts with empty slots |
 | Server-made accounts | Bots are created on [`/account`](https://pvp-sdk.fly.dev/account) or with `bun bots/create-bot.ts` and your API key. A name no longer becomes an account just by logging in |
 | Only slotted bots play | A bot that isn't in any player's slots this season can't log in |
 | Old accounts | Accounts made before fair play are claimed with their password, and count toward the five. Unclaimed ones are refused from the moment fair play is on; nothing is deleted, so claim one and it works again |
+| Owner's say | The owner can disable a player, which stops all of that player's bots from logging in |
 | Staff | Moderator accounts log in without a slot, and never appear on the hiscores |
 
-## Signing up
+## Signing in
 
-1. Open **https://pvp-sdk.fly.dev/account**, enter your mobile number with its country code
-   (for example `+356 9912 3456`), pass the human check, and type in the code we text you.
-   You stay signed in for 30 days.
-2. Press **Create a new key** and put the line it shows in the `.env` file in the project
+1. **Ask the server owner for an invite code.** It looks like `PVP-7K2M-Q9XD-4HTN-B8WC`. It's
+   also how you sign in later, so keep it somewhere safe. If you lose it, the owner can give
+   you a new one; the old one then stops working.
+2. Open **https://pvp-sdk.fly.dev/account** and enter your code. You stay signed in for 30
+   days.
+3. Press **Create a new key** and put the line it shows in the `.env` file in the project
    folder (it's gitignored):
 
    ```sh
    PVP_SDK_KEY=pvp_...
    ```
 
-3. Create bots as usual. With the key set, the script asks the server to make the account in
+4. Create bots as usual. With the key set, the script asks the server to make the account in
    one of your slots:
 
    ```sh
@@ -73,27 +76,16 @@ machine or VPN gives a new address for cents, while people who share a home, off
 university network would be wrongly counted as one. The limit has to be tied to something a
 person can't easily multiply.
 
-### Why a phone number?
+### Why invite codes?
 
-Of the checks that are cheap enough to run, a mobile number is the one most people have
-**exactly one** of. Email addresses are unlimited and free. A number isn't perfect (see
-[below](#what-this-doesnt-stop)), but every extra identity now costs real money and effort.
-That's enough to make the honest path the easy one.
+The owner hands each person **one code**, so each player is someone the owner has actually
+vouched for. Nothing can be multiplied without the owner noticing: a second code means asking
+again. It's also simple. There's no outside service, nothing to pay, no paperwork, and nothing
+personal (no phone number or email) is stored about anyone.
 
-### Why the human check (Cloudflare Turnstile)?
-
-**Every text costs the server owner money.** Without a check that a person is filling in the
-form, a script could request thousands of texts. "SMS pumping" is a known fraud that does
-exactly that, aiming texts at premium-rate numbers to collect a share of the charges. So
-before any text is sent:
-
-- [Turnstile](https://developers.cloudflare.com/turnstile/) (free) checks a person is there;
-- each address can request 3 texts an hour, each number 3 an hour, and the whole server 100
-  a day;
-- sign-up can be limited to chosen countries;
-- Twilio's own fraud protection blocks known pumping patterns.
-
-Our server sends every text itself, so all of these apply to every text.
+The cost is that the owner does the handing out, so it suits a community where the owner
+knows, or can talk to, the people joining. For a bigger, open server, phone sign-up is built
+in too ([below](#phone-sign-up-optional)).
 
 ### Why don't accounts create themselves any more?
 
@@ -124,24 +116,25 @@ it had.
 ### Why an API key?
 
 Agents create bots from the terminal (see [CLAUDE.md](../CLAUDE.md)). The key lets
-`create-bot.ts` act for you without your phone or a browser. It's shown once and stored only
-as a hash. Creating a new key cancels the old one, so a leaked key is one click to revoke.
+`create-bot.ts` act for you without a browser. It's shown once and stored only as a hash.
+Creating a new key cancels the old one, so a leaked key is one click to revoke.
 
-### Why only a hash of your number?
+### Why only a hash of your code?
 
-We only need to know "has this number signed up before?", not the number itself. It's
-stored as an HMAC-SHA256 with a server secret, so the table alone can't be reversed by
-hashing every possible phone number. Twilio, which sends the text, sees the number; its own
-privacy policy covers that.
+We only need to know "is this a code we gave out?", not the code itself. It's stored as an
+HMAC-SHA256 with a server secret, so even someone who copied the table couldn't sign in with
+it. That's also why a lost code can't be looked up, only replaced.
 
 ## What this doesn't stop
 
 No sign-up check fully stops a determined person. These rules make cheating cost something
 and keep honest play easy. Gaps we know about:
 
-- **Several real numbers.** Someone with more than one SIM, or numbers bought from
-  SMS-activation sites, can make more than one player. Each one costs money, gets texts
-  capped, and is up against Twilio's fraud checks.
+- **Asking twice.** Someone who gets two codes under two names is two players. The owner's
+  invites page lists every player, their note, when they first signed in and how many bots
+  they run, and disabling one stops all of their bots.
+- **Sharing a code.** Two people sharing one code share one player's five bots, so the total
+  doesn't grow.
 - **Collusion between real people.** Two friends feeding each other kills or items are two
   players. The [PvP board](../RULES.md#pvp-hiscores) already ignores kills between players on
   one address, kills of victims who risked under 1,000 gp, and repeat kills between the same
@@ -149,63 +142,70 @@ and keep honest play easy. Gaps we know about:
 - **Planned:** owner-only flags for bots of different players sharing an address, one-way
   trades, and farmed kills, for the owner to review. These aren't built yet.
 
-## What it costs
+## For the server owner
 
-- **Twilio Verify:** about **$0.06 per sign-in** in the US ($0.05 per successful check plus
-  the text). Other countries cost more. Each sign-in is one text, and a session lasts 30 days.
-- **Cloudflare Turnstile:** free.
+### Switching it on
 
-## For the server owner: switching it on
+`PLAYER_ACCOUNTS = "true"` in `fly.toml` asks for fair play. With invite codes (the default) it's
+enforced once two secrets are set: `ACCOUNTS_SECRET` and the `OWNER_TOKEN` you already sign in
+with. Until then the server runs as before and logs `fair play is NOT enforced yet`, because
+enforcing while nobody can sign in would lock everyone out.
 
-`PLAYER_ACCOUNTS = "true"` in `fly.toml` asks for fair play. It's enforced only once all six
-secrets below are set. Until then the server runs as before and logs
-`fair play is NOT enforced yet`. That's deliberate: enforcing while nobody can sign up would
-lock everyone out. For the same reason, leave it `"false"` until Twilio can text everyone
-(step 1's Primary Customer Profile). While it's off, `/account` works for anyone Twilio can
-text, and accounts still create themselves. Those accounts need claiming once fair play is
-on.
+1. **A secret for hashing:** for example `openssl rand -base64 32`, staged with
+   `fly secrets set --stage --app pvp-sdk ACCOUNTS_SECRET=...`. **Never change it:** a new
+   one makes every invite code stop working and signs everyone out.
+2. Deploy with `PLAYER_ACCOUNTS` still `"false"`. Sign in at `/owner`, open
+   **`/account/invites`**, make an invite for yourself, sign in with it, and claim your own
+   bots. Test bots count too, unless they're staff.
+3. Make an invite for each player (the note is just for you) and send them the message the
+   page gives you. Each code is shown once.
+4. Set `PLAYER_ACCOUNTS = "true"` and deploy. From then on, only bots in someone's slots log
+   in.
 
-1. **Twilio:** create an account and upgrade it from the trial, which can only text numbers
-   you've verified yourself. Then, under **Trust Hub**, create a **Primary Customer Profile**
-   and get it approved. Until it's approved, even an upgraded account only texts its
-   **Verified Caller IDs**, and players see "Sign-up texts aren't switched on yet" (Twilio error
-   21608 in the log). Approval can take a few days; in the meantime, add your own number as a
-   Verified Caller ID to sign up yourself. Create a **Verify Service**, leave **Fraud Guard**
-   on, and under **Geo Permissions** allow only the countries you want. Note the Account SID,
-   Auth Token and the service's SID (`VA...`).
-2. **Cloudflare Turnstile:** add a widget for `pvp-sdk.fly.dev` and note its site key and
-   secret key.
-3. **A secret for hashing:** for example `openssl rand -base64 32`. **Never change it.** A new
-   one makes every phone number look new and signs everyone out.
-4. Stage the secrets, then deploy or restart:
+On `/account/invites`, **New code** replaces a player's lost code, and **Disable** shuts a
+player out along with all their bots (**Enable** undoes it).
 
-   ```sh
-   fly secrets set --stage --app pvp-sdk ACCOUNTS_SECRET=... \
-       TWILIO_ACCOUNT_SID=AC... TWILIO_AUTH_TOKEN=... TWILIO_VERIFY_SERVICE_SID=VA... \
-       TURNSTILE_SITE_KEY=... TURNSTILE_SECRET_KEY=...
-   ```
+### Phone sign-up (optional)
 
-5. Sign up yourself and claim your own bots. Test bots count too, unless they're staff.
+With `PLAYER_SIGNUP = "phone"`, players sign in with a texted code (Twilio Verify) instead,
+behind a [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) human check. It
+scales without the owner handing anything out, but it costs money and paperwork:
+
+- **Cost:** about $0.06 per sign-in in the US, more elsewhere.
+- **Twilio approval:** upgrade from the trial, then get a **Primary Customer Profile** approved
+  in **Trust Hub**. Until then, even an upgraded account only texts its Verified Caller IDs,
+  and players see "Sign-up texts aren't switched on yet" (error 21608 in the log). In the
+  Verify Service, leave **Fraud Guard** on and allow only the countries you want under
+  **Geo Permissions**.
+- **SMS pumping:** every text costs money, so scripts mustn't be able to request them. Each
+  address can request 3 texts an hour, each number 3, and the whole server 100 a day, and
+  sign-up can be limited to chosen countries. A text that Twilio refuses doesn't count.
+- **Secrets:** `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`,
+  `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`, besides `ACCOUNTS_SECRET`. Phone numbers
+  are kept only as a hash, like invite codes.
+
+### Settings
 
 | Setting | Default | |
 |---|---|---|
-| `PLAYER_ACCOUNTS` | `false` (`true` in fly.toml) | Ask for fair play; enforced once the keys are set |
+| `PLAYER_ACCOUNTS` | `false` | Ask for fair play; enforced once its keys are set |
+| `PLAYER_SIGNUP` | `invite` | `invite` (codes from the owner) or `phone` (texted codes) |
 | `BOTS_PER_PLAYER` | `5` | Slots per player per season |
-| `SMS_PER_IP_PER_HOUR` | `3` | Texts one address can request in an hour |
-| `SMS_PER_DAY` | `100` | Texts the whole server sends in a day |
-| `SMS_ALLOWED_PREFIXES` | any | Comma-separated country codes, e.g. `+1,+44,+356` |
+| `SMS_PER_IP_PER_HOUR` | `3` | Phone sign-up: texts one address can request in an hour |
+| `SMS_PER_DAY` | `100` | Phone sign-up: texts the whole server sends in a day |
+| `SMS_ALLOWED_PREFIXES` | any | Phone sign-up: comma-separated country codes, e.g. `+1,+44,+356` |
 | `PHONE_VERIFY` | `twilio` | `dev` sends nothing and accepts `000000`. **Local testing only** |
 
-For a local stack, `PLAYER_ACCOUNTS=true PHONE_VERIFY=dev ACCOUNTS_SECRET=anything` turns it
-all on without Twilio or Turnstile.
+For a local stack, `PLAYER_ACCOUNTS=true ACCOUNTS_SECRET=anything OWNER_TOKEN=anything` turns
+on invite codes.
 
 ## Where it lives
 
 | | |
 |---|---|
-| [`server/engine/src/server/accounts/Players.ts`](../server/engine/src/server/accounts/Players.ts) | The rules: players, slots, claims, API keys, who may log in |
-| [`server/engine/src/server/accounts/PhoneVerify.ts`](../server/engine/src/server/accounts/PhoneVerify.ts) | Twilio Verify and Turnstile |
-| [`server/engine/src/web/pages/account.ts`](../server/engine/src/web/pages/account.ts) | `/account`, `/api/bots` and the text caps |
+| [`server/engine/src/server/accounts/Players.ts`](../server/engine/src/server/accounts/Players.ts) | The rules: players, invites, slots, claims, API keys, who may log in |
+| [`server/engine/src/server/accounts/PhoneVerify.ts`](../server/engine/src/server/accounts/PhoneVerify.ts) | Twilio Verify and Turnstile, for phone sign-up |
+| [`server/engine/src/web/pages/account.ts`](../server/engine/src/web/pages/account.ts) | `/account`, `/account/invites`, `/api/bots` and the text caps |
 | [`server/engine/src/server/login/LoginServer.ts`](../server/engine/src/server/login/LoginServer.ts) | Refuses bots outside the slots |
 | [`bots/create-bot.ts`](../bots/create-bot.ts) | `PVP_SDK_KEY` and `--claim` |
 | [`server/engine/test/player-accounts.test.ts`](../server/engine/test/player-accounts.test.ts) | Tests for all of the above |

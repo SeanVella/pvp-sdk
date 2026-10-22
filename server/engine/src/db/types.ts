@@ -174,6 +174,9 @@ export type player = {
     phone_hash: string;
     api_key_hash: string | null;
     created: Timestamp;
+    note: string | null;
+    first_sign_in: Timestamp | null;
+    disabled: Generated<number>;
 };
 export type player_bot = {
     id: Generated<number>;

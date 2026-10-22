@@ -15,9 +15,14 @@ const config = migrateFromLegacyEnv(loadWorldConfig(), process.env as Record<str
 // ?profile=; setting SEASON back brings one back. An explicit NODE_PROFILE wins.
 const SEASON = Math.max(1, tryParseInt(process.env.SEASON, 1));
 
-// pvp-sdk: fair play can only be enforced once players can sign up (docs/FAIR_PLAY.md).
+// pvp-sdk: fair play can only be enforced once players can sign up (docs/FAIR_PLAY.md):
+// with invite codes the owner must be able to make them (OWNER_TOKEN); by phone, the
+// Twilio and Turnstile keys must be set.
+const PLAYER_SIGNUP = process.env.PLAYER_SIGNUP === 'phone' ? 'phone' as const : 'invite' as const;
+
 function accountsReady(): boolean {
     if (!process.env.ACCOUNTS_SECRET) return false;
+    if (PLAYER_SIGNUP === 'invite') return Boolean(process.env.OWNER_TOKEN);
     if (process.env.PHONE_VERIFY === 'dev') return true;
     return Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_VERIFY_SERVICE_SID &&
         process.env.TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY);
@@ -101,9 +106,11 @@ export default {
     SEASON,
 
     // pvp-sdk: fair play (docs/FAIR_PLAY.md). On, accounts no longer register themselves:
-    // a player verifies a phone number on /account and gets BOTS_PER_PLAYER bots a season,
-    // and only those bots (and staff) can log in. ACCOUNTS_SECRET keys the phone hashes and
-    // session cookies; the SMS and Turnstile keys are Fly secrets, never fly.toml.
+    // a player signs in on /account (with the invite code the owner gave them, or with a texted
+    // code when PLAYER_SIGNUP=phone) and gets BOTS_PER_PLAYER bots a season, and only those bots
+    // (and staff) can log in. ACCOUNTS_SECRET keys the invite and phone hashes and the session
+    // cookies; it and the SMS and Turnstile keys are Fly secrets, never fly.toml.
+    PLAYER_SIGNUP,
     // It only takes effect once sign-up can work: refusing every unslotted login while
     // nobody can sign up would lock the whole server out (web/index.ts warns instead).
     PLAYER_ACCOUNTS: tryParseBoolean(process.env.PLAYER_ACCOUNTS, false) && accountsReady(),

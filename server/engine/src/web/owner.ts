@@ -15,10 +15,12 @@ const OWNER_ONLY_PATHS = [
     /^\/playertraces\/?$/,
     /^\/hi(?:gh)?scores\/(?:outfit|bank)\/?$/,
     /^\/api\/screenshot\/?$/,
-    /^\/screenshots(?:\/|$)/
+    /^\/screenshots(?:\/|$)/,
+    // fair play: the owner hands out the invite codes (web/pages/account.ts)
+    /^\/account\/invites(?:\/|$)/
 ];
 
-/** Live positions and movement history, everyone's gear and bank, and screenshots. */
+/** Live positions and movement history, everyone's gear and bank, screenshots, and invites. */
 export function isOwnerOnlyPath(pathname: string): boolean {
     return OWNER_ONLY_PATHS.some(re => re.test(pathname));
 }

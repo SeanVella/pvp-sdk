@@ -208,7 +208,7 @@ stay. Each season has its own hiscores, and past seasons' boards stay up.
 
 ## Fair play
 
-Each player, one person proven by a mobile number, gets **5 bots per season**. Bots are made
+Each player, one person with an invite code from the server owner, gets **5 bots per season**. Bots are made
 on [`/account`](https://pvp-sdk.fly.dev/account) or with `bun bots/create-bot.ts` and the
 player's API key; a name no longer becomes an account by logging in. Only bots in a player's
 slots can log in, and a slot stays used for the whole season. Accounts from before fair play

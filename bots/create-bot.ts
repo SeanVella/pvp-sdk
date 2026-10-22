@@ -50,7 +50,7 @@ async function botApi(base: string, path: string, key: string, body: object): Pr
 
 function needKey(base: string, rules: FairPlay): never {
     console.error(`This server gives each player ${rules.botsPerPlayer} bots a season (docs/FAIR_PLAY.md).`);
-    console.error(`1. Sign up at ${base}${rules.signup} and create an API key there.`);
+    console.error(`1. Sign in at ${base}${rules.signup} (with the invite code the server owner gave you) and create an API key there.`);
     console.error(`2. Put PVP_SDK_KEY=<key> in the project's .env (or pass --key=<key>), then run this again.`);
     process.exit(1);
 }

@@ -24,7 +24,9 @@ import { phoneVerifier, verifyTurnstile } from '#/server/accounts/PhoneVerify.js
 // pvp-sdk: fair play - sign-up and bot slots on /account and /api/bots (docs/FAIR_PLAY.md)
 const handleAccount = createAccountRoutes({
     accounts: new PlayerAccounts(db, Environment.SEASON, Environment.BOTS_PER_PLAYER, Environment.BANNED_USERNAME_WORDS),
-    verifier: phoneVerifier(),
+    signup: Environment.PLAYER_SIGNUP,
+    isOwner: req => isOwnerRequest(req),
+    verifier: Environment.PLAYER_SIGNUP === 'phone' ? phoneVerifier() : null,
     secret: Environment.ACCOUNTS_SECRET,
     enforced: Environment.PLAYER_ACCOUNTS,
     turnstileSiteKey: Environment.TURNSTILE_SITE_KEY,
@@ -34,7 +36,7 @@ const handleAccount = createAccountRoutes({
     allowedPrefixes: Environment.SMS_ALLOWED_PREFIXES
 });
 if (Environment.PLAYER_ACCOUNTS_REQUESTED && !Environment.PLAYER_ACCOUNTS) {
-    console.warn('[accounts] PLAYER_ACCOUNTS is on, but ACCOUNTS_SECRET and the Twilio and Turnstile keys are not all set: fair play is NOT enforced yet (docs/FAIR_PLAY.md)');
+    console.warn(`[accounts] PLAYER_ACCOUNTS is on, but the keys for ${Environment.PLAYER_SIGNUP} sign-up are not all set: fair play is NOT enforced yet (docs/FAIR_PLAY.md)`);
 }
 
 export type { WebSocketData };

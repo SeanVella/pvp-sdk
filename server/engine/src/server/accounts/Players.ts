@@ -1,5 +1,6 @@
-// pvp-sdk: fair play (docs/FAIR_PLAY.md). A player is one verified phone number, and each
-// player gets BOTS_PER_PLAYER game accounts ("bots") a season. Slots never come back within
+// pvp-sdk: fair play (docs/FAIR_PLAY.md). A player is one person: an invite code the server
+// owner gave them, or a verified phone number. Each player gets BOTS_PER_PLAYER game accounts
+// ("bots") a season. Slots never come back within
 // a season, so nobody can cycle fresh characters. The login server, the /account pages and
 // the bot API all go through this file, so they can't disagree about the rules.
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
@@ -35,6 +36,32 @@ export function normalizePhone(input: string): string | null {
 export function phoneHash(e164: string, secret: string): string {
     return createHmac('sha256', secret).update('phone:' + e164).digest('hex');
 }
+
+/** Crockford base32: no I, L, O or U, so a code that's read out or retyped survives. */
+const CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+/** A new invite code, PVP-XXXX-XXXX-XXXX-XXXX: 80 random bits, so it can't be guessed. */
+export function newInviteCode(): string {
+    const bytes = randomBytes(16);
+    let code = '';
+    for (let i = 0; i < 16; i++) code += CODE_ALPHABET[bytes[i]! & 31]; // 256 / 32: every character equally likely
+    return `PVP-${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12)}`;
+}
+
+/** " pvp-7k2m q9xd-..." -> "7K2MQ9XD...", or null if it can't be one of our codes. */
+export function normalizeInvite(input: string): string | null {
+    let code = input.toUpperCase().replace(/[\s-]/g, '');
+    if (code.length === 19 && code.startsWith('PVP')) code = code.slice(3);
+    code = code.replace(/O/g, '0').replace(/[IL]/g, '1');
+    return /^[0-9A-HJKMNP-TV-Z]{16}$/.test(code) ? code : null;
+}
+
+/** Keyed like phone hashes: the table alone can't be used to sign in. */
+export function inviteHash(code: string, secret: string): string {
+    return createHmac('sha256', secret).update('invite:' + code).digest('hex');
+}
+
+export type PlayerRow = { id: number; note: string | null; created: string; firstSignIn: string | null; disabled: boolean; bots: number };
 
 function sessionMac(playerId: number, expires: number, secret: string): string {
     return createHmac('sha256', secret).update(`session:${playerId}.${expires}`).digest('base64url');
@@ -110,17 +137,75 @@ export default class PlayerAccounts {
         private readonly bannedWords: string[] = []
     ) {}
 
-    /** The player for a verified phone number, created on their first sign-in. */
-    async playerForPhone(hash: string): Promise<number> {
-        const found = await this.db.selectFrom('player').select('id').where('phone_hash', '=', hash).executeTakeFirst();
-        if (found) return found.id;
+    /** The player for a verified phone number, created on their first sign-in; null if disabled. */
+    async playerForPhone(hash: string): Promise<number | null> {
+        const found = await this.db.selectFrom('player').select(['id', 'disabled']).where('phone_hash', '=', hash).executeTakeFirst();
+        if (found) return Number(found.disabled) ? null : found.id;
         try {
-            await this.db.insertInto('player').values({ phone_hash: hash, created: dbDate() }).executeTakeFirst();
+            await this.db.insertInto('player').values({ phone_hash: hash, created: dbDate(), first_sign_in: dbDate() }).executeTakeFirst();
         } catch {
             // a second tab signed in at the same moment; its row is the one we want
         }
         const row = await this.db.selectFrom('player').select('id').where('phone_hash', '=', hash).executeTakeFirstOrThrow();
         return row.id;
+    }
+
+    /** A new player for someone the owner invited. The code is returned once; only its hash is kept. */
+    async createInvite(note: string, secret: string): Promise<{ id: number; code: string }> {
+        const code = newInviteCode();
+        const hash = inviteHash(normalizeInvite(code)!, secret);
+        await this.db.insertInto('player').values({ phone_hash: hash, created: dbDate(), note: note.trim().slice(0, 100) || null }).executeTakeFirst();
+        const row = await this.db.selectFrom('player').select('id').where('phone_hash', '=', hash).executeTakeFirstOrThrow();
+        return { id: row.id, code };
+    }
+
+    /** The player an invite code signs in, or null: unknown, mistyped or disabled. */
+    async playerForInvite(input: string, secret: string): Promise<number | null> {
+        const code = normalizeInvite(input);
+        if (!code) return null;
+        const row = await this.db.selectFrom('player').select(['id', 'disabled', 'first_sign_in']).where('phone_hash', '=', inviteHash(code, secret)).executeTakeFirst();
+        if (!row || Number(row.disabled)) return null;
+        if (row.first_sign_in === null) {
+            await this.db.updateTable('player').set({ first_sign_in: dbDate() }).where('id', '=', row.id).execute();
+        }
+        return row.id;
+    }
+
+    /** A replacement code for a player who lost theirs; the old one stops working. */
+    async reissueInvite(playerId: number, secret: string): Promise<string | null> {
+        const code = newInviteCode();
+        const result = await this.db.updateTable('player').set({ phone_hash: inviteHash(normalizeInvite(code)!, secret) }).where('id', '=', playerId).executeTakeFirst();
+        return Number(result.numUpdatedRows) > 0 ? code : null;
+    }
+
+    /** A disabled player can't sign in, and none of their bots can log in. */
+    async setDisabled(playerId: number, disabled: boolean): Promise<void> {
+        await this.db.updateTable('player').set({ disabled: disabled ? 1 : 0 }).where('id', '=', playerId).execute();
+    }
+
+    async isActive(playerId: number): Promise<boolean> {
+        const row = await this.db.selectFrom('player').select('disabled').where('id', '=', playerId).executeTakeFirst();
+        return row !== undefined && !Number(row.disabled);
+    }
+
+    /** Every player, newest first, with how many bots they have this season. */
+    async players(): Promise<PlayerRow[]> {
+        const rows = await this.db.selectFrom('player').select(['id', 'note', 'created', 'first_sign_in', 'disabled']).orderBy('id', 'desc').execute();
+        const counts = await this.db
+            .selectFrom('player_bot')
+            .select(['player_id', eb => eb.fn.countAll<number>().as('n')])
+            .where('season', '=', this.season)
+            .groupBy('player_id')
+            .execute();
+        const bots = new Map(counts.map(c => [c.player_id, Number(c.n)]));
+        return rows.map(r => ({
+            id: r.id,
+            note: r.note,
+            created: String(r.created),
+            firstSignIn: r.first_sign_in === null ? null : String(r.first_sign_in),
+            disabled: Boolean(Number(r.disabled)),
+            bots: bots.get(r.id) ?? 0
+        }));
     }
 
     async playerForApiKey(key: string | null | undefined): Promise<number | null> {
@@ -209,10 +294,17 @@ export default class PlayerAccounts {
         return { ok: true, username, password };
     }
 
-    /** Staff always; anyone else only with a slot this season. */
+    /** Staff always; anyone else only with a slot this season, owned by a player who isn't disabled. */
     async mayLogIn(accountId: number, staffmodlevel: number): Promise<boolean> {
         if (staffmodlevel >= 2) return true;
-        return (await this.slotOwner(accountId)) !== null;
+        const row = await this.db
+            .selectFrom('player_bot')
+            .innerJoin('player', 'player.id', 'player_bot.player_id')
+            .select('player.disabled')
+            .where('player_bot.account_id', '=', accountId)
+            .where('player_bot.season', '=', this.season)
+            .executeTakeFirst();
+        return row !== undefined && !Number(row.disabled);
     }
 
     private async slotOwner(accountId: number): Promise<number | null> {

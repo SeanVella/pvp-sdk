@@ -103,15 +103,15 @@ v2 deploy (2026-10-22).
       name/password rules on the gateway path, `BANNED_USERNAME_WORDS`, and login rate limits
       on their own env flag instead of `NODE_PRODUCTION` (which also removes the tutorial skip
       bots rely on).
-- [x] **Fair play: 5 bots per player per season** ([`FAIR_PLAY.md`](FAIR_PLAY.md)). Players
-      sign up on `/account` with a texted code (Twilio Verify) behind Cloudflare Turnstile. The
-      server makes each account in a slot (`/account` or `create-bot.ts` with `PVP_SDK_KEY`),
-      slots never come back within a season, old accounts are claimed with their password, and
-      unslotted logins are refused. All six secrets are set, and it was enforced in v10-v11.
-      `PLAYER_ACCOUNTS` is `"false"` again until Twilio approves the owner's Primary Customer
-      Profile, because until then texts reach only Verified Caller IDs. **Owner to do:** get the
-      profile approved, then set it `"true"` and deploy. Still open: owner-only flags for bots of
-      different players sharing an address, one-way trades and farmed kills.
+- [x] **Fair play: 5 bots per player per season** ([`FAIR_PLAY.md`](FAIR_PLAY.md)). A player
+      is one person with an invite code the owner makes on `/account/invites` (the owner's choice
+      on 2026-10-22, after Twilio's compliance profile held up phone sign-up). Phone sign-up is
+      still built in, behind `PLAYER_SIGNUP=phone`. The server makes each account in a slot
+      (`/account`, or `create-bot.ts` with `PVP_SDK_KEY`), slots never come back within a
+      season, old accounts are claimed with their password, the owner can disable a player, and
+      unslotted logins are refused. **Owner to do:** make invites (yourself first), then set
+      `PLAYER_ACCOUNTS = "true"` and deploy. Still open: owner-only flags for bots of different
+      players sharing an address, one-way trades and farmed kills.
       With fair play on, the registration caps above no longer apply: nothing registers itself.
 - [ ] Lower `MAX_PLAYERS_PER_IP` (100 today) to slow alt farms. This is a trade-off, since
       agent developers legitimately run fleets.

@@ -7,7 +7,7 @@ import { Kysely } from 'kysely';
 
 import { BunSqliteDialect } from '../src/db/dialect/BunSqliteDialect.js';
 import type { DB } from '../src/db/types.js';
-import PlayerAccounts, { normalizeBotName, normalizePhone, phoneHash, randomPassword, readSession, signSession } from '../src/server/accounts/Players.js';
+import PlayerAccounts, { newInviteCode, normalizeBotName, normalizeInvite, normalizePhone, phoneHash, randomPassword, readSession, signSession } from '../src/server/accounts/Players.js';
 import { type PhoneVerifier, TwilioVerify } from '../src/server/accounts/PhoneVerify.js';
 import { createAccountRoutes } from '../src/web/pages/account.js';
 
@@ -20,7 +20,9 @@ function freshDb(): Kysely<DB> {
     const database = new Database(':memory:');
     database.exec(`CREATE TABLE account (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL,
         registration_ip TEXT, registration_date DATETIME, staffmodlevel INTEGER NOT NULL DEFAULT 0)`);
-    database.exec(readFileSync(join(import.meta.dir, '../prisma/singleworld/migrations/20261022100000_player_accounts/migration.sql'), 'utf8'));
+    for (const migration of ['20261022100000_player_accounts', '20261022120000_player_invites']) {
+        database.exec(readFileSync(join(import.meta.dir, `../prisma/singleworld/migrations/${migration}/migration.sql`), 'utf8'));
+    }
     return new Kysely<DB>({ dialect: new BunSqliteDialect({ database }) });
 }
 
@@ -190,7 +192,7 @@ describe('/account and /api/bots', () => {
         const db = freshDb();
         const accounts = new PlayerAccounts(db, 1, 5);
         const handle = createAccountRoutes({
-            accounts, verifier, secret: SECRET, enforced: true, turnstileSiteKey: 'site-key',
+            accounts, signup: 'phone', isOwner: req => req.headers.get('x-test-owner') === 'yes', verifier, secret: SECRET, enforced: true, turnstileSiteKey: 'site-key',
             turnstile: async token => token === 'human', smsPerIpPerHour: 3, smsPerDay: 100, allowedPrefixes: [], ...overrides
         });
         const call = (path: string, init: RequestInit = {}, ip = '203.0.113.9') => handle(new Request(`https://pvp-sdk.fly.dev${path}`, init), new URL(`https://pvp-sdk.fly.dev${path}`), ip);
@@ -348,7 +350,7 @@ describe('TwilioVerify', () => {
 });
 
 describe('switching fair play on', () => {
-    const KEYS = ['PLAYER_ACCOUNTS', 'ACCOUNTS_SECRET', 'PHONE_VERIFY', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_VERIFY_SERVICE_SID', 'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'];
+    const KEYS = ['PLAYER_ACCOUNTS', 'PLAYER_SIGNUP', 'OWNER_TOKEN', 'ACCOUNTS_SECRET', 'PHONE_VERIFY', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_VERIFY_SERVICE_SID', 'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'];
 
     async function enforced(env: Record<string, string>): Promise<string | undefined> {
         const inherited = Object.fromEntries(Object.entries(process.env).filter(([k]) => !KEYS.includes(k)));
@@ -363,23 +365,136 @@ describe('switching fair play on', () => {
     }
 
     const live = { ACCOUNTS_SECRET: 's', TWILIO_ACCOUNT_SID: 'AC', TWILIO_AUTH_TOKEN: 't', TWILIO_VERIFY_SERVICE_SID: 'VA', TURNSTILE_SITE_KEY: 'k', TURNSTILE_SECRET_KEY: 'k' };
+    const phone = { PLAYER_SIGNUP: 'phone' };
 
     test('off unless asked for', async () => {
         expect(await enforced(live)).toBe('false');
     });
 
     test('asked for with every key set, it is enforced', async () => {
-        expect(await enforced({ ...live, PLAYER_ACCOUNTS: 'true' })).toBe('true');
+        expect(await enforced({ ...live, ...phone, PLAYER_ACCOUNTS: 'true' })).toBe('true');
     });
 
     test('a missing key keeps it off, so nobody is locked out while sign-up cannot work', async () => {
         for (const missing of Object.keys(live)) {
             const { [missing]: _gone, ...rest } = live as Record<string, string>;
-            expect(await enforced({ ...rest, PLAYER_ACCOUNTS: 'true' })).toBe('false');
+            expect(await enforced({ ...rest, ...phone, PLAYER_ACCOUNTS: 'true' })).toBe('false');
         }
     });
 
     test('dev mode needs only the secret', async () => {
-        expect(await enforced({ PLAYER_ACCOUNTS: 'true', PHONE_VERIFY: 'dev', ACCOUNTS_SECRET: 's' })).toBe('true');
+        expect(await enforced({ ...phone, PLAYER_ACCOUNTS: 'true', PHONE_VERIFY: 'dev', ACCOUNTS_SECRET: 's' })).toBe('true');
+    });
+
+    test('invite codes, the default, need only the secret and the owner token', async () => {
+        expect(await enforced({ PLAYER_ACCOUNTS: 'true', ACCOUNTS_SECRET: 's', OWNER_TOKEN: 'o' })).toBe('true');
+        expect(await enforced({ PLAYER_ACCOUNTS: 'true', ACCOUNTS_SECRET: 's' })).toBe('false');
+        expect(await enforced({ PLAYER_ACCOUNTS: 'true', OWNER_TOKEN: 'o' })).toBe('false');
+    });
+});
+
+describe('invite codes', () => {
+    test('look like PVP-XXXX-XXXX-XXXX-XXXX and survive retyping', () => {
+        const code = newInviteCode();
+        expect(code).toMatch(/^PVP-[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){3}$/);
+        expect(newInviteCode()).not.toBe(code);
+        const bare = code.slice(4).replace(/-/g, '');
+        expect(normalizeInvite(code)).toBe(bare);
+        expect(normalizeInvite(` ${code.toLowerCase()} `)).toBe(bare);
+        expect(normalizeInvite(bare)).toBe(bare);
+        expect(normalizeInvite('PVP-OOOO-IIII-LLLL-2222')).toBe('0000111111112222');
+        expect(normalizeInvite('PVP-1234')).toBeNull();
+        expect(normalizeInvite('PVP-UUUU-UUUU-UUUU-UUUU')).toBeNull();
+    });
+
+    test('an invite is one player; the code signs them in and only its hash is kept', async () => {
+        const db = freshDb();
+        const accounts = new PlayerAccounts(db, 1, 5);
+        const { id, code } = await accounts.createInvite('Alex from Discord', SECRET);
+        const row = await db.selectFrom('player').selectAll().where('id', '=', id).executeTakeFirstOrThrow();
+        expect(row.phone_hash).not.toContain(normalizeInvite(code)!);
+        expect(row.note).toBe('Alex from Discord');
+        expect(row.first_sign_in).toBeNull();
+        expect(await accounts.playerForInvite(code.toLowerCase(), SECRET)).toBe(id);
+        expect((await db.selectFrom('player').select('first_sign_in').where('id', '=', id).executeTakeFirstOrThrow()).first_sign_in).not.toBeNull();
+        expect(await accounts.playerForInvite(newInviteCode(), SECRET)).toBeNull();
+        expect(await accounts.playerForInvite(code, 'another-secret')).toBeNull();
+    });
+
+    test('a new code replaces the lost one', async () => {
+        const accounts = new PlayerAccounts(freshDb(), 1, 5);
+        const { id, code } = await accounts.createInvite('', SECRET);
+        const fresh = (await accounts.reissueInvite(id, SECRET))!;
+        expect(await accounts.playerForInvite(code, SECRET)).toBeNull();
+        expect(await accounts.playerForInvite(fresh, SECRET)).toBe(id);
+        expect(await accounts.reissueInvite(9999, SECRET)).toBeNull();
+    });
+
+    test('a disabled player can neither sign in nor log their bots in', async () => {
+        const db = freshDb();
+        const accounts = new PlayerAccounts(db, 1, 5);
+        const { id, code } = await accounts.createInvite('', SECRET);
+        await accounts.createBot(id, 'invitebot', null);
+        const bot = (await db.selectFrom('account').select('id').where('username', '=', 'invitebot').executeTakeFirstOrThrow()).id;
+        expect(await accounts.mayLogIn(bot, 0)).toBe(true);
+        await accounts.setDisabled(id, true);
+        expect(await accounts.playerForInvite(code, SECRET)).toBeNull();
+        expect(await accounts.mayLogIn(bot, 0)).toBe(false);
+        expect(await accounts.isActive(id)).toBe(false);
+        await accounts.setDisabled(id, false);
+        expect(await accounts.mayLogIn(bot, 0)).toBe(true);
+        expect((await accounts.players()).map(p => [p.id, p.bots, p.disabled])).toEqual([[id, 1, false]]);
+    });
+
+    function inviteRoutes() {
+        const db = freshDb();
+        const accounts = new PlayerAccounts(db, 1, 5);
+        const handle = createAccountRoutes({
+            accounts, signup: 'invite', isOwner: req => req.headers.get('x-test-owner') === 'yes', verifier: null, secret: SECRET, enforced: true,
+            turnstileSiteKey: '', turnstile: async () => false, smsPerIpPerHour: 3, smsPerDay: 100, allowedPrefixes: []
+        });
+        const call = (path: string, init: RequestInit = {}) => handle(new Request(`https://pvp-sdk.fly.dev${path}`, init), new URL(`https://pvp-sdk.fly.dev${path}`), '203.0.113.9');
+        const post = (path: string, fields: Record<string, string>, headers: Record<string, string> = {}) =>
+            call(path, { method: 'POST', body: new URLSearchParams(fields), headers });
+        return { db, accounts, call, post };
+    }
+
+    test('signed out, /account asks for an invite code, not a phone number', async () => {
+        const html = await (await inviteRoutes().call('/account'))!.text();
+        expect(html).toContain('action="/account/invite"');
+        expect(html).toContain('Invite code');
+        expect(html).not.toContain('action="/account/sms"');
+        expect(html).not.toContain('challenges.cloudflare.com');
+    });
+
+    test('the invites page is the owner\'s alone', async () => {
+        const r = inviteRoutes();
+        expect((await r.call('/account/invites'))!.status).toBe(404);
+        expect((await r.post('/account/invites', { note: 'sneaky' }))!.status).toBe(404);
+        expect(await r.accounts.players()).toEqual([]);
+        const page = (await r.call('/account/invites', { headers: { 'x-test-owner': 'yes' } }))!;
+        expect(page.status).toBe(200);
+        expect(await page.text()).toContain('Make an invite');
+    });
+
+    test('the owner makes an invite, the player signs in with it, the phone flow is closed', async () => {
+        const r = inviteRoutes();
+        const made = await (await r.post('/account/invites', { note: 'Alex' }, { 'x-test-owner': 'yes' }))!.text();
+        const code = made.match(/PVP-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}/)![0];
+        expect(made).toContain('Sign in at https://pvp-sdk.fly.dev/account');
+        expect(await (await r.call('/account/invites', { headers: { 'x-test-owner': 'yes' } }))!.text()).toContain('Alex');
+
+        expect(await (await r.post('/account/invite', { code: newInviteCode() }))!.text()).toContain('That code didn&#39;t work');
+        const res = (await r.post('/account/invite', { code }))!;
+        expect(res.status).toBe(303);
+        const cookie = res.headers.get('set-cookie')!.split(';')[0]!;
+        expect(await (await r.call('/account', { headers: { cookie } }))!.text()).toContain('slots used');
+
+        expect(await (await r.post('/account/sms', { phone: '+35699123456' }))!.text()).toContain('action="/account/invite"');
+
+        // disabling the player signs them out
+        const id = (await r.accounts.players())[0]!.id;
+        await r.post('/account/invites/disable', { id: String(id) }, { 'x-test-owner': 'yes' });
+        expect(await (await r.call('/account', { headers: { cookie } }))!.text()).toContain('action="/account/invite"');
     });
 });

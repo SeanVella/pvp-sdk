@@ -36,8 +36,9 @@ bun bots/create-bot.ts {username} --claim
 **Fair play ([docs/FAIR_PLAY.md](docs/FAIR_PLAY.md)):** the public server gives each player 5
 bots per season, and the server makes each account in one of the player's slots. That needs
 the player's API key as `PVP_SDK_KEY=...` in the project's `.env`. If `create-bot.ts` says the
-key is missing, ask the user to sign up at https://pvp-sdk.fly.dev/account (they'll get a texted
-code; you can't do this step for them), create a key there, and add it to `.env`. Don't try to
+key is missing, ask the user to sign in at https://pvp-sdk.fly.dev/account with the invite code
+the server owner gave them (they ask the owner for one; you can't do this step for them), create a
+key there, and add it to `.env`. Don't try to
 work around the limit. If a bot is refused with `isn't in any player's bot slots`, claim it with
 `--claim`.
 

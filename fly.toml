@@ -42,12 +42,12 @@ GATEWAY_PUBLIC_PORT = "7781"
 # Fly-Client-IP, which clients can't spoof.
 MAX_PLAYERS_PER_IP = "100"
 # pvp-sdk: fair play (docs/FAIR_PLAY.md) - 5 bots per player per season, made on /account by a
-# phone-verified player; only those bots log in. It starts enforcing once the Fly secrets
-# ACCOUNTS_SECRET, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_SERVICE_SID,
-# TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY are all set; until then the server runs as before.
-# Off for now (2026-10-22): all six are set, but Twilio only texts Verified Caller IDs until the
-# owner's Primary Customer Profile is approved. Set "true" and deploy once it is.
+# player with an invite code from the owner (/account/invites); only those bots log in. It's
+# enforced once the Fly secrets ACCOUNTS_SECRET and OWNER_TOKEN are set (both are). Off until
+# the owner has handed out invites; then set "true" and deploy. PLAYER_SIGNUP = "phone" would
+# use texted codes instead (Twilio, needs an approved Primary Customer Profile).
 PLAYER_ACCOUNTS = "false"
+PLAYER_SIGNUP = "invite"
 BOTS_PER_PLAYER = "5"
 
 # One machine is the whole world: never auto-stop it, and never run a second

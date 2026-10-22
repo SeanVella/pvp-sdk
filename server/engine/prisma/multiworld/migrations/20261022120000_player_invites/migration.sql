@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `player` ADD COLUMN `note` VARCHAR(191) NULL,
+    ADD COLUMN `first_sign_in` DATETIME(3) NULL,
+    ADD COLUMN `disabled` INTEGER NOT NULL DEFAULT 0;

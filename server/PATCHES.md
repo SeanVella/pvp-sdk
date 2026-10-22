@@ -515,7 +515,11 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       (`authenticateSDK(…, ip)` in `gateway.ts`). `REGISTRATIONS_PER_IP_PER_HOUR` /
       `REGISTRATIONS_PER_HOUR` in `Environment.ts`.
 - [ ] **Fair play (player accounts)** — fork-only `engine/src/server/accounts/Players.ts`
-      (players are phone hashes, `player_bot` slots per season, claims, API keys, `mayLogIn`),
+      (players are keyed hashes of an owner-made invite code or a phone number, `player_bot`
+      slots per season, claims, API keys, disabling, `mayLogIn`); the owner's invites page
+      `/account/invites` is also in `web/owner.ts`'s owner-only list; `PLAYER_SIGNUP` picks
+      invite (default) or phone; migration `20261022120000_player_invites` adds `note`,
+      `first_sign_in` and `disabled` to `player`;
       `accounts/PhoneVerify.ts` (Twilio Verify, Turnstile) and `web/pages/account.ts`
       (`/account`, `/api/bots`, `/api/accounts`, routed at the top of `web/index.ts`). In
       `LoginServer.ts`, with `PLAYER_ACCOUNTS` (enforced only when `accountsReady()` in

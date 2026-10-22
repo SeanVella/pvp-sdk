@@ -218,14 +218,18 @@ model pvp_kill {
     @@index([timestamp])
 }
 
-// pvp-sdk: fair play (docs/FAIR_PLAY.md). A player is one verified phone number, kept only
-// as a keyed hash; player_bot gives them up to BOTS_PER_PLAYER accounts a season.
+// pvp-sdk: fair play (docs/FAIR_PLAY.md). A player is one person: an invite code the owner
+// gave them, or a verified phone number. phone_hash holds the keyed hash of either (never the
+// code or number itself); player_bot gives them up to BOTS_PER_PLAYER accounts a season.
 model player {
     id Int @id @default(autoincrement())
 
-    phone_hash   String  @unique
-    api_key_hash String? @unique
-    created      DateTime
+    phone_hash    String    @unique
+    api_key_hash  String?   @unique
+    created       DateTime
+    note          String?
+    first_sign_in DateTime?
+    disabled      Int       @default(0)
 }
 
 model player_bot {
