@@ -90,26 +90,27 @@ v2 deploy (2026-10-22).
 
 ### 2. Fair play and public-server hardening (before announcing)
 
-- [ ] **Hide live positions.** `/playerpositions` (every player's name and coordinates, every
-      second; feeds `/mapview`), `/playertraces` and the gateway's unauthenticated
-      `/status/:bot` (any bot's live coordinates) are free targeting data in a PvP world. Put
-      them behind an env flag that defaults off here.
-- [ ] **Hide carried risk.** `/hiscores/outfit` shows everyone's worn gear and value;
-      `/hiscores/bank` has item search over every bank. Disable or delay both.
-- [ ] **Close `/api/screenshot`** (unauthenticated writes, served back publicly).
-- [ ] **Throttle account creation.** Any unused name logs in and becomes an account, including
-      through the gateway's HTTP API, with no rate limit, no IP-ban check on `sdk_auth` and no
-      password rules there. Add per-IP limits and the same name/password rules on every path;
-      set `BANNED_USERNAME_WORDS`; give login rate limits their own env flag instead of
-      `NODE_PRODUCTION` (which also removes the tutorial skip bots rely on).
+- [x] **Hide live positions** (owner-only, see "Owner access" below): `/playerpositions`,
+      `/playertraces`, the gateway's bot list (`/`, `/status`), and the position and sessions
+      in `/status/:bot`, which players still get for their own bot with its password.
+- [x] **Hide carried risk** (owner-only): `/hiscores/outfit` and `/hiscores/bank`, and their
+      sidebar links are gone.
+- [x] **Close `/api/screenshot`** and `/screenshots` (owner-only).
+- [ ] **Throttle account creation.** Done: every auto-registration (game login and the
+      gateway's `sdk_auth`) is capped per IP and overall (`REGISTRATIONS_PER_IP_PER_HOUR` 10,
+      `REGISTRATIONS_PER_HOUR` 200), and `sdk_auth` now checks IP bans. Still open: the same
+      name/password rules on the gateway path, `BANNED_USERNAME_WORDS`, and login rate limits
+      on their own env flag instead of `NODE_PRODUCTION` (which also removes the tutorial skip
+      bots rely on).
 - [ ] Lower `MAX_PLAYERS_PER_IP` (100 today) to slow alt farms. This is a trade-off, since
       agent developers legitimately run fleets.
 - [ ] `LOGGER_SERVER=true` so PvP loot events and abuse reports are kept (watch DB growth).
 - [ ] Decide `NODE_DEBUG=true`: it disables idle logout, so AFK bots stay in the world as targets.
 - [ ] Staff: make moderators at `staffmodlevel` 2 via SQLite on the volume. Never 3+ (item
       spawning works on any world).
-- [ ] The RSA private key is committed and port 43594 is plain TCP: rotate the key (client
-      modulus too) or drop that service. Web and bot traffic already rides TLS.
+- [x] The RSA private key is committed, so plain-TCP port 43594 exposed passwords: that Fly
+      service is gone. Every web and bot client already rides TLS. (The Java applet page,
+      served only with `NODE_DEBUG`, can't connect any more.)
 - [ ] Performance VM once unlocked; alerting on machine restarts.
 
 ### 3. PvP telemetry and leaderboards
@@ -178,6 +179,21 @@ fly ssh console -a pvp-sdk             # shell; data lives on /opt/server/data
 fly status -a pvp-sdk
 fly scale vm performance-1x --memory 2048 -a pvp-sdk
 ```
+
+### Owner access
+
+Live positions, the gear and bank boards, screenshots, the gateway's bot list and any bot's
+position are the owner's. Set the secret once (it never goes in `fly.toml`); `--stage` holds
+it for the next deploy instead of restarting the world now:
+
+```sh
+fly secrets set --stage OWNER_TOKEN=$(openssl rand -hex 32) -a pvp-sdk
+```
+
+Then send `Authorization: Bearer <token>` (e.g. `curl -H "Authorization: Bearer $T"
+https://pvp-sdk.fly.dev/playerpositions`), or sign a browser in at
+https://pvp-sdk.fly.dev/owner (a 30-day cookie) and open `/mapview/`, `/hiscores/outfit`,
+`/hiscores/bank` or `/status`. Without the secret those routes are closed to everyone.
 
 Make a moderator (then relog): `fly ssh console -a pvp-sdk -C "sqlite3 /opt/server/data/db.sqlite \"UPDATE account SET staffmodlevel=2 WHERE username='name'\""`.
 

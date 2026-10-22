@@ -3,6 +3,7 @@ import path from 'path';
 
 import Environment from '#/util/Environment.js';
 import { handleHiscoresPage, handleHiscoresPlayerPage, handleHiscoresOutfitPage, handleHiscoresBankPage, handleHiscoresRunitePage } from './pages/hiscores.js';
+import { isOwnerOnlyPath, isOwnerRequest, notFound } from './owner.js';
 import { handlePublicFiles } from './pages/static.js';
 import { handleSpriteRequest } from './sprites/SpriteRenderer.js';
 
@@ -125,6 +126,8 @@ export function startHiscoresWeb() {
         port: Environment.HISCORES_WEB_PORT,
         async fetch(req) {
             const url = new URL(req.url ?? '', `http://${req.headers.get('host')}`);
+            // pvp-sdk: the gear and bank boards are the owner's here too (web/owner.ts)
+            if (isOwnerOnlyPath(url.pathname) && !isOwnerRequest(req)) return notFound();
 
             // Hiscores pages
             const hiscoresResponse = await handleHiscoresPage(url);

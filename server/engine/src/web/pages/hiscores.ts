@@ -125,8 +125,7 @@ function hiscoreTableLinks(profile: string): string {
             })
             .join('\n') +
         `\n<tr><td>&nbsp;</td></tr>\n<tr><td><a href="/hiscores?category=${QUEST_POINTS_HISCORE_TYPE}&profile=${profile}" class="c text-orange">Quest Points</a></td></tr>` +
-        `\n<tr><td><a href="/hiscores/outfit?profile=${profile}" class="c text-orange">Equipment</a></td></tr>` +
-        `\n<tr><td><a href="/hiscores/bank?profile=${profile}" class="c text-orange">Bank</a></td></tr>` +
+        // pvp-sdk: no Equipment or Bank links - those boards are the owner's (web/owner.ts)
         `\n<tr><td><a href="/hiscores/runite?profile=${profile}" class="c text-orange">Lava Maze Runite</a></td></tr>`
     );
 }

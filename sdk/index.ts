@@ -506,13 +506,17 @@ export class BotSDK {
         const statusUrl = this.getStatusUrl();
         try {
             console.log(`[BotSDK] Checking bot status via URL: ${statusUrl}`);
-            const response = await fetch(statusUrl);
+            // pvp-sdk: the gateway shows a bot's sessions and position only with its
+            // password; without it the answer carries just status, inGame and stateAge.
+            const response = await fetch(statusUrl, this.config.password
+                ? { headers: { Authorization: `Bearer ${this.config.password}` } }
+                : undefined);
             if (!response.ok) {
                 console.log(`[BotSDK] Status check HTTP error: ${response.status} ${response.statusText} (URL: ${statusUrl})`);
                 throw new Error(`Status check failed: ${response.status}`);
             }
             const data = await response.json();
-            return data;
+            return { controllers: [], observers: [], player: null, ...data };
         } catch (error) {
             // If endpoint doesn't exist or bot not found, return disconnected status
             const errorMsg = error instanceof Error ? error.message : String(error);

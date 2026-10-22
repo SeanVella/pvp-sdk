@@ -194,7 +194,10 @@ function writeAtomic(bytes: Uint8Array): void {
 
 async function isOnline(): Promise<boolean | null> {
     try {
-        const res = await fetch(`${web}/playerpositions`);
+        // pvp-sdk: /playerpositions is owner-only; on the machine OWNER_TOKEN is in the env
+        const token = process.env.OWNER_TOKEN;
+        const res = await fetch(`${web}/playerpositions`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
+        if (!res.ok) throw new Error(`HTTP ${res.status} (is OWNER_TOKEN set?)`);
         const players = (await res.json()) as { name: string }[];
         return players.some(p => p.name.toLowerCase().replace(/[^a-z0-9]/g, '_') === username);
     } catch (e) {

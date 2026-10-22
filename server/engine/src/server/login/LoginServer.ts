@@ -19,6 +19,7 @@ import InvType from '#/cache/config/InvType.js';
 import ObjType from '#/cache/config/ObjType.js';
 import VarPlayerType from '#/cache/config/VarPlayerType.js';
 import { outfitAppearance } from '#/server/login/OutfitAppearance.js';
+import RegistrationLimiter from '#/server/login/RegistrationLimiter.js';
 
 // bcrypt-ts is pure JS: one compare pins this thread for ~50-200ms. Prod outage
 // 2026-08-17: a reconnect stampede after a redeploy (~5 auths/s across fleets and
@@ -290,6 +291,8 @@ export async function updateWealthHiscores(account: HiscoreAccount, player: Play
 export default class LoginServer {
     private server: WebSocketServer;
     private loginRequests: Set<string> = new Set();
+    // pvp-sdk: caps new accounts per IP and overall (RegistrationLimiter.ts)
+    private registrations = new RegistrationLimiter(Environment.REGISTRATIONS_PER_IP_PER_HOUR, Environment.REGISTRATIONS_PER_HOUR);
     // In-memory tracking of concurrent logins per IP
     private ipLoginCount: Map<string, Set<number>> = new Map();
     private accountIp: Map<number, string> = new Map();
@@ -442,6 +445,17 @@ export default class LoginServer {
                                         JSON.stringify({
                                             replyTo,
                                             response: 1
+                                        })
+                                    );
+                                    return;
+                                }
+
+                                // pvp-sdk: too many new accounts from this address, or overall
+                                if (!this.registrations.tryRegister(remoteAddress ?? '')) {
+                                    s.send(
+                                        JSON.stringify({
+                                            replyTo,
+                                            response: 9
                                         })
                                     );
                                     return;
@@ -826,6 +840,13 @@ export default class LoginServer {
                         // Normalize like player_login so case differences (e.g. "Bitty" vs "bitty")
                         // resolve to the same account row.
                         const username = toSafeName(msg.username);
+                        // pvp-sdk: the client's IP as the gateway saw it, when it knows it
+                        const sdkIp = typeof msg.ip === 'string' ? msg.ip : '';
+
+                        if (sdkIp && (await db.selectFrom('ipban').selectAll().where('ip', '=', sdkIp).executeTakeFirst())) {
+                            s.send(JSON.stringify({ replyTo, success: false, error: 'Your address is banned' }));
+                            return;
+                        }
 
                         let account = await db.selectFrom('account')
                             .where('username', '=', username)
@@ -846,13 +867,23 @@ export default class LoginServer {
                                 return;
                             }
 
+                            // pvp-sdk: too many new accounts from this address, or overall
+                            if (!this.registrations.tryRegister(sdkIp)) {
+                                s.send(JSON.stringify({
+                                    replyTo,
+                                    success: false,
+                                    error: 'Too many new accounts from your address; try again in an hour'
+                                }));
+                                return;
+                            }
+
                             try {
                                 const insertResult = await db
                                     .insertInto('account')
                                     .values({
                                         username,
                                         password: await hashPassword(password),
-                                        registration_ip: 'sdk',
+                                        registration_ip: sdkIp || 'sdk',
                                         registration_date: toDbDate(new Date())
                                     })
                                     .executeTakeFirst();

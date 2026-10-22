@@ -49,12 +49,9 @@ min_machines_running = 1
 destination = "/opt/server/data"
 source = "lostcity_data"
 
-[[services]]
-internal_port = 43594
-protocol = "tcp"
-
-  [[services.ports]]
-  port = 43594
+# No plain-TCP game port (43594): its login block is encrypted only with the RSA key
+# committed in this public repo, so anyone on the path could read passwords. Every web
+# and lite client connects over WSS through the HTTPS service above.
 
 # SDK gateway, direct: wss://pvp-sdk.fly.dev:7443. Compressed state frames,
 # and the relay work stays off the game server's tick thread. The SDK and lite

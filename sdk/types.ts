@@ -758,11 +758,12 @@ export interface BotStatus {
     inGame: boolean;
     /** Milliseconds since last state was received (null if never) */
     stateAge: number | null;
-    /** SDK clients controlling this bot */
+    /** SDK clients controlling this bot. Like `observers` and `player`, filled in only
+     * for the bot's own password or the server owner; otherwise empty. */
     controllers: string[];
     /** SDK clients observing this bot */
     observers: string[];
-    /** Basic player info (null if not in-game) */
+    /** Basic player info (null if not in-game, or not authorized to see it) */
     player: {
         name: string;
         worldX: number;

@@ -16,6 +16,7 @@ import { chunkMessage } from '../../sdk/chunking';
 import { repeatsLastFanout } from './state-fanout';
 import { StateFieldSampler, TrafficMeter, formatFieldReport, formatTrafficReport, type ConnectionLabel } from './traffic';
 import { isIP } from 'node:net';
+import { timingSafeEqual } from 'node:crypto';
 
 const GATEWAY_PORT = parseInt(process.env.AGENT_PORT || '7780');
 // Bind address. Fleet hosts running a private gateway set 127.0.0.1 so only
@@ -46,6 +47,19 @@ function connectionLabel(req: Request, url: URL, server: any): ConnectionLabel {
         ip: isIP(ip) ? ip : (server.requestIP?.(req)?.address ?? ''),
         via: direct ? 'direct' : 'relay'
     };
+}
+
+// pvp-sdk: the server owner's secret (shared with the engine, see its web/owner.ts). The
+// bot list and every bot's position and state are the owner's; players see only whether
+// a bot is connected, and their own bot's details with its password.
+const OWNER_TOKEN = process.env.OWNER_TOKEN || '';
+
+function isOwnerRequest(req: Request): boolean {
+    const header = req.headers.get('authorization');
+    if (!OWNER_TOKEN || !header?.startsWith('Bearer ')) return false;
+    const a = Buffer.from(header.slice(7));
+    const b = Buffer.from(OWNER_TOKEN);
+    return a.length === b.length && timingSafeEqual(a, b);
 }
 
 // Login server configuration - when enabled, SDK connections require per-bot authentication
@@ -100,7 +114,9 @@ function connectToLoginServer() {
     };
 }
 
-async function authenticateSDK(username: string, password: string): Promise<{ success: boolean; error?: string }> {
+// `ip` is the client's (pvp-sdk): the login server caps new accounts per address and
+// checks IP bans, since a first sdk_auth for an unknown name registers it.
+async function authenticateSDK(username: string, password: string, ip: string = ''): Promise<{ success: boolean; error?: string }> {
     if (!LOGIN_SERVER_ENABLED) {
         // No login server - allow all connections (development mode)
         return { success: true };
@@ -127,6 +143,7 @@ async function authenticateSDK(username: string, password: string): Promise<{ su
             replyTo,
             username,
             password,
+            ip,
             // lets the login server skip requests we've already timed out on
             sentAt: Date.now()
         }));
@@ -383,7 +400,7 @@ const SyncModule = {
             const clientId = message.clientId || `bot-${Date.now()}`;
 
             // Authenticate bot using per-bot password (same as SDK auth)
-            const authResult = await authenticateSDK(username, message.password || '');
+            const authResult = await authenticateSDK(username, message.password || '', ws.data?.ip ?? '');
             if (!authResult.success) {
                 console.log(`[Gateway] Bot auth failed: ${clientId} -> ${username} (${authResult.error})`);
                 try {
@@ -530,7 +547,7 @@ const SyncModule = {
             let authResult: { success: boolean; error?: string };
             let outdated: OutdatedClient | null = null;
             try {
-                authResult = await authenticateSDK(targetUsername, message.password || '');
+                authResult = await authenticateSDK(targetUsername, message.password || '', ws.data?.ip ?? '');
                 // A bot with no client attached may be stuck on an old client revision
                 const bot = botSessions.get(targetUsername);
                 if (authResult.success && (!bot || getSessionStatus(bot) === 'dead')) {
@@ -742,13 +759,14 @@ const SyncModule = {
  * header, or a ?password= query param (a no-op unless LOGIN_SERVER is on,
  * matching the WebSocket paths).
  */
-async function authenticateHttpRequest(req: Request, url: URL, username: string, bodyPassword?: unknown): Promise<{ success: boolean; error?: string }> {
+async function authenticateHttpRequest(req: Request, url: URL, username: string, bodyPassword?: unknown, ip: string = ''): Promise<{ success: boolean; error?: string }> {
+    if (isOwnerRequest(req)) return { success: true }; // pvp-sdk: the owner may read any bot
     const header = req.headers.get('authorization');
     const bearer = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
     const password = typeof bodyPassword === 'string' && bodyPassword !== ''
         ? bodyPassword
         : (bearer ?? url.searchParams.get('password') ?? '');
-    return authenticateSDK(username, password);
+    return authenticateSDK(username, password, ip);
 }
 
 /**
@@ -893,11 +911,22 @@ const gatewayHandlers = {
             return new Response(null, { headers: corsHeaders });
         }
 
+        const clientIp = connectionLabel(req, url, server).ip;
+
         // Per-bot status endpoint: /status/:username
         const botStatusMatch = url.pathname.match(/^\/status\/(.+)$/);
         if (botStatusMatch && botStatusMatch[1]) {
             const username = decodeURIComponent(botStatusMatch[1]);
             const botSession = botSessions.get(username);
+
+            // pvp-sdk: anyone may ask whether a bot is connected (the SDK does before it
+            // attaches), but its position and sessions go only to the server owner or to
+            // whoever has its password. A password is checked only when one was sent, and
+            // only for a connected bot: checking an unknown name would register it. With
+            // the login server off nothing here has auth, so everyone gets the details.
+            const sentPassword = !!req.headers.get('authorization') || url.searchParams.has('password');
+            const detailed = isOwnerRequest(req) || (!!botSession && (!LOGIN_SERVER_ENABLED || sentPassword) &&
+                (await authenticateHttpRequest(req, url, username, undefined, clientIp)).success);
 
             const controllers = SyncModule.getControllersForBot(username).map(s => s.sessionId);
             const observers = SyncModule.getObserversForBot(username).map(s => s.sessionId);
@@ -912,13 +941,15 @@ const gatewayHandlers = {
                 inGame: isConnected ? (botSession?.lastState?.inGame || false) : false,
                 stateAge,
                 maxMessageLength: botSession?.maxMessageLength ?? null,
-                controllers,
-                observers,
-                player: isConnected && botSession?.lastState?.player ? {
-                    name: botSession.lastState.player.name,
-                    worldX: botSession.lastState.player.worldX,
-                    worldZ: botSession.lastState.player.worldZ
-                } : null,
+                ...(detailed ? {
+                    controllers,
+                    observers,
+                    player: isConnected && botSession?.lastState?.player ? {
+                        name: botSession.lastState.player.name,
+                        worldX: botSession.lastState.player.worldX,
+                        worldZ: botSession.lastState.player.worldZ
+                    } : null
+                } : {})
             };
 
             return new Response(JSON.stringify(response, null, 2), {
@@ -973,7 +1004,7 @@ const gatewayHandlers = {
         const chatMatch = url.pathname.match(/^\/chat\/(.+)$/);
         if (chatMatch && chatMatch[1] && req.method === 'GET') {
             const username = decodeURIComponent(chatMatch[1]);
-            const auth = await authenticateHttpRequest(req, url, username);
+            const auth = await authenticateHttpRequest(req, url, username, undefined, clientIp);
             if (!auth.success) {
                 return jsonResponse({ error: `Authentication failed: ${auth.error}` }, 401);
             }
@@ -1003,7 +1034,7 @@ const gatewayHandlers = {
         const stateMatch = url.pathname.match(/^\/state\/(.+)$/);
         if (stateMatch && stateMatch[1] && req.method === 'GET') {
             const username = decodeURIComponent(stateMatch[1]);
-            const auth = await authenticateHttpRequest(req, url, username);
+            const auth = await authenticateHttpRequest(req, url, username, undefined, clientIp);
             if (!auth.success) {
                 return jsonResponse({ error: `Authentication failed: ${auth.error}` }, 401);
             }
@@ -1050,7 +1081,7 @@ const gatewayHandlers = {
             if (!to || to.length > 12) {
                 return jsonResponse({ error: 'Missing or invalid "to" (target player name, max 12 chars)' }, 400);
             }
-            const auth = await authenticateHttpRequest(req, url, username, body?.password);
+            const auth = await authenticateHttpRequest(req, url, username, body?.password, clientIp);
             if (!auth.success) {
                 return jsonResponse({ error: `Authentication failed: ${auth.error}` }, 401);
             }
@@ -1098,7 +1129,7 @@ const gatewayHandlers = {
             if (!text) {
                 return jsonResponse({ error: 'Missing "text"' }, 400);
             }
-            const auth = await authenticateHttpRequest(req, url, username, body?.password);
+            const auth = await authenticateHttpRequest(req, url, username, body?.password, clientIp);
             if (!auth.success) {
                 return jsonResponse({ error: `Authentication failed: ${auth.error}` }, 401);
             }
@@ -1135,8 +1166,15 @@ const gatewayHandlers = {
             return jsonResponse({ ok, results }, ok ? 200 : 502);
         }
 
-        // Status endpoint (admin/debugging - more detailed)
-        if (url.pathname === '/' || url.pathname === '/status') {
+        // Status endpoint (admin/debugging - more detailed). pvp-sdk: the server owner's
+        // only; everyone else gets the plain banner below (the SDK probes `/` for a 200
+        // before using this listener directly) or a bare status.
+        if (url.pathname === '/status' && !isOwnerRequest(req)) {
+            return new Response(JSON.stringify({ status: 'running' }), {
+                headers: { 'Content-Type': 'application/json', ...corsHeaders }
+            });
+        }
+        if ((url.pathname === '/' || url.pathname === '/status') && isOwnerRequest(req)) {
             const bots: Record<string, any> = {};
             for (const [username, session] of botSessions) {
                 const isConnected = session.ws !== null;

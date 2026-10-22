@@ -439,6 +439,29 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `game_castlewars` `castlewars_mapzoneexit` and `game_duelarena` `toggle_duel_challenge_off`
       restore it (the latter only outside the fight zones, so a duel keeps its "Fight" option).
       After a sync, grep for new `set_player_op(null, 2` callers.
+- [ ] **Owner-only routes** (`docs/PVP_PLAN.md` "Owner access"). `OWNER_TOKEN` (a Fly secret;
+      `Environment.ts`) unlocks them, as `Authorization: Bearer` or the cookie `POST /owner` sets.
+      - `engine/src/web/owner.ts` (fork-only): the path list, the constant-time check, `/owner`.
+      - `engine/src/web/index.ts`: 404 for owner-only paths at the top of `handleRequest`;
+        `gatewayAuth()` forwards the owner token or the caller's `Authorization` to the
+        gateway on the `/status`, `/status/:bot` and `/state|chat|say|dm` proxies.
+      - `engine/src/web/hiscoresServer.ts`: the same gate on the standalone hiscores server.
+      - `engine/src/web/pages/hiscores.ts`: no Equipment/Bank sidebar links.
+      - `webclient/src/mapview/MapView.ts`: a non-OK `/playerpositions` draws no players.
+      - `gateway/gateway.ts`: `OWNER_TOKEN`; `/` and `/status` list bots for the owner only
+        (`/` stays a 200 banner, which the direct-gateway probe needs); `/status/:bot` keeps
+        position and sessions for the owner or the bot's own password (checked only when sent,
+        only for a connected bot; anyone with the login server off); the owner passes
+        `authenticateHttpRequest` for any bot.
+      - `sdk/index.ts` `checkBotStatus`: sends the bot's password, defaults missing fields.
+      - `engine/tools/server/grant-bank-item.ts`: sends `OWNER_TOKEN` to `/playerpositions`.
+      Verify: `bun test server/engine/test/owner.test.ts sdk/test/gateway-owner.test.ts`.
+- [ ] **Registration caps** — `engine/src/server/login/RegistrationLimiter.ts` (fork-only);
+      `LoginServer.ts` caps both auto-registration paths (`player_login` answers 9, "Login
+      limit exceeded"), and `sdk_auth` checks IP bans and records the IP the gateway now sends
+      (`authenticateSDK(…, ip)` in `gateway.ts`). `REGISTRATIONS_PER_IP_PER_HOUR` /
+      `REGISTRATIONS_PER_HOUR` in `Environment.ts`.
+- [ ] **`fly.toml`: no 43594 service.** The login block is encrypted with the committed RSA key.
 - [ ] **`bots/create-bot.ts --local`** — the `SERVER=localhost` rewrite matches `\r?\n`. The
       template is CRLF on a Windows checkout, and upstream's `'\n'` match silently left a bot
       dialling port 80. Upstream bug too; drop once fixed there.

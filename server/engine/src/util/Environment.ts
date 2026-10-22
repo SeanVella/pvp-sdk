@@ -61,5 +61,13 @@ export default {
     // Clients must send activity (the viewer sends a ping every 30s) to keep their slot.
     WORLD_FEED_IDLE_TIMEOUT_MS: tryParseInt(process.env.WORLD_FEED_IDLE_TIMEOUT_MS, 120_000),
     HISCORES_HIDDEN_NAMES: (process.env.HISCORES_HIDDEN_NAMES || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
-    BANNED_USERNAME_WORDS: (process.env.BANNED_USERNAME_WORDS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+    BANNED_USERNAME_WORDS: (process.env.BANNED_USERNAME_WORDS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+
+    // pvp-sdk: the server owner's secret (a Fly secret, never fly.toml). It unlocks the
+    // routes that would let players hunt each other - live positions, everyone's gear
+    // and banks - and screenshots (web/owner.ts). Unset, those routes are closed to all.
+    OWNER_TOKEN: process.env.OWNER_TOKEN || '',
+    // pvp-sdk: accounts register themselves on first login; cap how fast (0 = no cap).
+    REGISTRATIONS_PER_IP_PER_HOUR: tryParseInt(process.env.REGISTRATIONS_PER_IP_PER_HOUR, 10),
+    REGISTRATIONS_PER_HOUR: tryParseInt(process.env.REGISTRATIONS_PER_HOUR, 200)
 };

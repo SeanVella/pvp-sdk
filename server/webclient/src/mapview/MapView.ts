@@ -2044,7 +2044,8 @@ export class MapView extends GameShell {
     fetchPlayerPositions(): void {
         this.playerFetchPending = true;
         fetch('/playerpositions', { signal: AbortSignal.timeout(5000) })
-            .then(res => res.json())
+            // pvp-sdk: owner-only, so a 404 for everyone else; keep the map player-free
+            .then(res => res.ok ? res.json() : [])
             .then((data: {x: number, z: number, level: number, name: string}[]) => {
                 this.playerPositions = data;
                 this.updateTrails(data);

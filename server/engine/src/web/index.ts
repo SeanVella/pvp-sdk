@@ -14,6 +14,7 @@ import { handleDisclaimerPage, handleMapviewPage, handlePublicFiles } from './pa
 import { WebSocketData, handleWebSocketUpgrade, handleGatewayEndpointGet, websocketHandlers } from './websocket.js';
 import { getIp } from './utils.js';
 import { getPlayerPositionsJson } from './worldfeed.js';
+import { handleOwnerSignIn, isOwnerOnlyPath, isOwnerRequest, notFound } from './owner.js';
 
 export type { WebSocketData };
 
@@ -82,8 +83,20 @@ export async function startWeb() {
     });
 }
 
+// pvp-sdk: what the gateway needs to see who's asking - the owner's token (also when it
+// came as the owner cookie), or the caller's own Authorization header (a bot password).
+function gatewayAuth(req: Request): Record<string, string> {
+    if (isOwnerRequest(req)) return { Authorization: `Bearer ${Environment.OWNER_TOKEN}` };
+    const auth = req.headers.get('authorization');
+    return auth ? { Authorization: auth } : {};
+}
+
 async function handleRequest(req: Request, server: Bun.Server, url: URL): Promise<Response | undefined> {
             if (/^\/hi(?:gh)?scores(?:\/|$)/.test(url.pathname)) server.timeout(req, 60);
+            // pvp-sdk: owner-only routes look absent to everyone else (web/owner.ts)
+            if (isOwnerOnlyPath(url.pathname) && !isOwnerRequest(req)) return notFound();
+            const ownerSignIn = await handleOwnerSignIn(req, url);
+            if (ownerSignIn) return ownerSignIn;
             // Handle WebSocket upgrades first
             const wsResponse = handleWebSocketUpgrade(req, server, url);
             if (wsResponse !== undefined) {
@@ -175,7 +188,8 @@ async function handleRequest(req: Request, server: Bun.Server, url: URL): Promis
             if (url.pathname === '/status' || url.pathname === '/status/') {
                 try {
                     const gatewayUrl = process.env.GATEWAY_URL || 'http://localhost:7780';
-                    const response = await fetch(`${gatewayUrl}/status`);
+                    // pvp-sdk: the gateway shows the bot list to the owner only
+                    const response = await fetch(`${gatewayUrl}/status`, { headers: gatewayAuth(req) });
                     const data = await response.json();
                     return new Response(JSON.stringify(data, null, 2), {
                         headers: {
@@ -216,10 +230,10 @@ async function handleRequest(req: Request, server: Bun.Server, url: URL): Promis
                 try {
                     const gatewayUrl = process.env.GATEWAY_URL || 'http://localhost:7780';
                     const target = `${gatewayUrl}/${route}/${username}${url.search}`;
-                    const init: RequestInit = { method: req.method, signal: AbortSignal.timeout(15000) };
+                    const init: RequestInit = { method: req.method, signal: AbortSignal.timeout(15000), headers: gatewayAuth(req) };
                     if (isPost) {
                         init.body = await req.text();
-                        init.headers = { 'Content-Type': req.headers.get('content-type') || 'application/json' };
+                        init.headers = { ...gatewayAuth(req), 'Content-Type': req.headers.get('content-type') || 'application/json' };
                     }
                     const response = await fetch(target, init);
                     const text = await response.text();
@@ -247,7 +261,8 @@ async function handleRequest(req: Request, server: Bun.Server, url: URL): Promis
                 const username = botStatusMatch[1];
                 try {
                     const gatewayUrl = process.env.GATEWAY_URL || 'http://localhost:7780';
-                    const response = await fetch(`${gatewayUrl}/status/${username}`);
+                    // pvp-sdk: a bot's position goes only to its owner (password) or the server owner
+                    const response = await fetch(`${gatewayUrl}/status/${username}${url.search}`, { headers: gatewayAuth(req) });
                     const data = await response.json();
                     return new Response(JSON.stringify(data, null, 2), {
                         status: response.status,
