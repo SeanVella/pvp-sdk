@@ -341,7 +341,7 @@ describe('TwilioVerify', () => {
         expect(await failing(60203).send('+35699123456')).toEqual({ ok: false, error: 'Too many codes sent to that number. Try again later.' });
         expect(await failing(60605).send('+35699123456')).toEqual({ ok: false, error: "We can't send texts to that number's country." });
         expect(await failing(60200).send('+35699123456')).toEqual({ ok: false, error: "That doesn't look like a valid mobile number." });
-        expect(await failing(21608, 403).send('+35699123456')).toEqual({ ok: false, error: 'Sign-up texts are switched off for now. Tell the server owner.' });
+        expect(await failing(21608, 403).send('+35699123456')).toEqual({ ok: false, error: "Sign-up texts aren't switched on yet. Tell the server owner." });
         expect(await failing(21408, 403).send('+35699123456')).toEqual({ ok: false, error: "We can't send texts to that number's country." });
         expect(await failing(20404, 404).check('+35699123456', '1')).toBe(false);
     });

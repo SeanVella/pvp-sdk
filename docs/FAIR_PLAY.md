@@ -163,9 +163,13 @@ as all six secrets below are set. Until then the server runs as before and logs
 lock everyone out.
 
 1. **Twilio:** create an account and upgrade it from the trial, which can only text numbers
-   you've verified yourself. Create a **Verify Service**, leave **Fraud Guard** on, and under
-   **Geo Permissions** allow only the countries you want. Note the Account SID, Auth Token and
-   the service's SID (`VA...`).
+   you've verified yourself. Then, under **Trust Hub**, create a **Primary Customer Profile**
+   and get it approved. Until it's approved, even an upgraded account only texts its
+   **Verified Caller IDs**, and players see "Sign-up texts aren't switched on yet" (Twilio error
+   21608 in the log). Approval can take a few days; in the meantime, add your own number as a
+   Verified Caller ID to sign up yourself. Create a **Verify Service**, leave **Fraud Guard**
+   on, and under **Geo Permissions** allow only the countries you want. Note the Account SID,
+   Auth Token and the service's SID (`VA...`).
 2. **Cloudflare Turnstile:** add a widget for `pvp-sdk.fly.dev` and note its site key and
    secret key.
 3. **A secret for hashing:** for example `openssl rand -base64 32`. **Never change it.** A new

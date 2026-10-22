@@ -278,39 +278,39 @@ function redirect(location: string, cookie?: string): Response {
 // parchment for secrets: the look of the game's own interfaces, in plain CSS.
 const STYLE = `
 :root { color-scheme: dark; --stone: #3e3529; --stone-dark: #2b241c; --edge: #14110d; --hi: #6e604c; --hi-btn: #7a6a55; --btn: #4a3f33; --well: #1a1611;
-  --orange: #ff981f; --yellow: #ffff00; --muted: #c9b896; --faint: #a8987c; --err: #ff7a5c; --ok: #9fe07a; }
+  --orange: #ff981f; --yellow: #ffff00; --text: #ece3cf; --muted: #c9b896; --faint: #a8987c; --err: #ff7a5c; --ok: #9fe07a; }
 body { margin: 0; min-height: 100vh; background-color: #17130f; background-image: linear-gradient(#0d0b09 2px, transparent 2px), linear-gradient(90deg, #0d0b09 2px, transparent 2px); background-size: 72px 36px;
-  font: 18px/1.45 'Pixelify Sans', ui-monospace, monospace; color: var(--orange); }
+  font: 17px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: var(--text); }
 .wrap { max-width: 760px; margin: 0 auto; padding: 28px 16px 64px; display: flex; flex-direction: column; gap: 22px; }
 a { color: var(--yellow); } a:hover { color: #fff; }
-.top, .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 24px; text-shadow: 1px 1px 0 #000; }
+.top, .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 24px; }
 .mark { font-family: 'IM Fell English SC', Georgia, serif; font-size: 38px; color: var(--orange); text-decoration: none; text-shadow: 2px 2px 0 #000; }
 .mark:hover { color: var(--yellow); }
-nav { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 16px; }
+nav { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 15px; }
 .foot { font-size: 15px; color: var(--faint); }
 .panel { background: var(--stone); border: 2px solid var(--edge); box-shadow: inset 2px 2px 0 var(--hi), inset -2px -2px 0 var(--stone-dark), 0 0 0 2px #5d5447, 0 18px 48px rgba(0,0,0,0.65); }
 .bar { background: var(--stone-dark); border-bottom: 2px solid var(--edge); box-shadow: inset 0 -1px 0 var(--btn); padding: 12px 20px; text-align: center; }
 h1, h2 { font-family: 'IM Fell English SC', Georgia, serif; font-weight: 400; color: var(--orange); text-shadow: 2px 2px 0 #000; }
 h1 { margin: 0; font-size: 32px; } h2 { margin: 0; font-size: 24px; }
-.body { padding: 24px 28px 30px; display: flex; flex-direction: column; gap: 18px; text-shadow: 1px 1px 0 #000; }
-.m0 { margin: 0; } .y { color: var(--yellow); font-weight: 400; } .w { color: #fff; font-weight: 400; } .muted { color: var(--muted); } .faint { color: var(--faint); }
-.small { font-size: 16px; } .tiny { font-size: 13px; }
+.body { padding: 24px 28px 30px; display: flex; flex-direction: column; gap: 18px; }
+.m0 { margin: 0; } .y { color: var(--yellow); font-weight: 600; } .w { color: #fff; font-weight: 600; } .muted { color: var(--muted); } .faint { color: var(--faint); }
+.small { font-size: 15px; } .tiny { font-size: 13px; }
 code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 0.85em; color: #fff; }
-label { display: flex; flex-direction: column; gap: 8px; color: #fff; }
-input { box-sizing: border-box; width: 100%; padding: 10px 12px; font: 18px 'Pixelify Sans', ui-monospace, monospace; color: #fff; background: var(--well);
+label { display: flex; flex-direction: column; gap: 8px; color: var(--orange); font-weight: 600; font-size: 15px; }
+input { box-sizing: border-box; width: 100%; padding: 10px 12px; font: 400 17px system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #fff; background: var(--well);
   border: 2px solid var(--edge); box-shadow: inset 2px 2px 0 #0a0806, inset -1px -1px 0 var(--btn); outline: none; }
 input:focus { border-color: var(--orange); }
-input.wide { max-width: 420px; font-size: 20px; letter-spacing: 1px; }
-input.code { width: 220px; font-size: 28px; letter-spacing: 8px; text-align: center; color: var(--yellow); }
-.btn { min-height: 46px; padding: 10px 26px; font: 600 18px 'Pixelify Sans', ui-monospace, monospace; color: var(--orange); text-shadow: 1px 1px 0 #000; background: var(--btn);
+input.wide { max-width: 420px; font-size: 18px; }
+input.code { width: 220px; font-size: 26px; letter-spacing: 6px; text-align: center; font-variant-numeric: tabular-nums; color: var(--yellow); }
+.btn { min-height: 46px; padding: 10px 24px; font: 600 16px system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: var(--orange); text-shadow: 1px 1px 0 #000; background: var(--btn);
   border: 2px solid var(--edge); box-shadow: inset 2px 2px 0 var(--hi-btn), inset -2px -2px 0 var(--stone-dark); cursor: pointer; }
 .btn:hover { color: var(--yellow); } .btn:active { box-shadow: inset 2px 2px 0 var(--stone-dark), inset -2px -2px 0 var(--hi-btn); }
 .btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
-.btn.small { min-height: 44px; padding: 6px 10px; font-size: 15px; font-weight: 400; }
-.btn.quiet { color: var(--muted); background: var(--stone-dark); box-shadow: inset 1px 1px 0 var(--btn); font-weight: 400; font-size: 16px; }
+.btn.small { min-height: 44px; padding: 6px 10px; font-size: 14px; }
+.btn.quiet { color: var(--muted); background: var(--stone-dark); box-shadow: inset 1px 1px 0 var(--btn); font-weight: 400; font-size: 15px; }
 .stack { display: flex; flex-direction: column; gap: 16px; margin: 4px 0 0; }
 .row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; margin: 0; }
-.row > a { align-self: center; font-size: 16px; }
+.row > a { align-self: center; font-size: 15px; }
 .grow { flex: 1 1 220px; }
 .split { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 16px; }
 .alert { margin: 0; padding: 10px 14px; border: 2px solid var(--edge); }
@@ -320,8 +320,8 @@ input.code { width: 220px; font-size: 28px; letter-spacing: 8px; text-align: cen
 .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; padding: 10px; background: var(--stone-dark); border: 2px solid var(--edge); box-shadow: inset 2px 2px 0 var(--well), inset -1px -1px 0 var(--btn); }
 .slot { min-height: 150px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 8px; text-align: center; }
 .slot.filled { background: var(--stone); border: 2px solid var(--edge); box-shadow: inset 1px 1px 0 var(--hi), inset -1px -1px 0 var(--stone-dark); }
-.slot.empty { justify-content: center; background: #241e17; border: 2px dashed var(--btn); color: #8f8068; font-size: 15px; }
-.slot .name { font-size: 17px; word-break: break-all; }
+.slot.empty { justify-content: center; background: #241e17; border: 2px dashed var(--btn); color: #a8987c; font-size: 14px; }
+.slot .name { font-size: 16px; word-break: break-all; }
 .sect { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 2px solid var(--stone-dark); box-shadow: 0 -1px 0 var(--btn); }
 .scroll { background: #e4d6b2; border: 2px solid var(--edge); box-shadow: inset 0 0 0 3px #c9b88f, inset 0 0 0 5px #e4d6b2, inset 0 0 18px rgba(110,80,40,0.35), 0 6px 18px rgba(0,0,0,0.5); padding: 22px 24px; text-shadow: none; }
 .scroll pre { margin: 0; white-space: pre-wrap; word-break: break-all; font: 17px/1.6 ui-monospace, 'Cascadia Mono', Consolas, monospace; color: #2a1f12; }
@@ -332,7 +332,7 @@ function page(title: string, body: string, season: number, botsPerPlayer: number
     const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)} - PvP-SDK</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&amp;family=Pixelify+Sans:wght@400;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&amp;display=swap">
 ${opts.turnstile ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ''}
 <style>${STYLE}</style></head><body><div class="wrap">
 <header class="top"><a class="mark" href="/">PvP-SDK</a>

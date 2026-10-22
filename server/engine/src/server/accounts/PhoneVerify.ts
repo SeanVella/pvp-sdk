@@ -32,9 +32,10 @@ export class TwilioVerify implements PhoneVerifier {
             return { ok: false, error: "We can't send texts to that number's country." };
         }
         if (body.code === 21608) {
-            // a trial Twilio account only texts numbers verified in its console
-            console.warn('[accounts] Twilio refused an unverified number (21608): the Twilio account is still on trial');
-            return { ok: false, error: 'Sign-up texts are switched off for now. Tell the server owner.' };
+            // A trial account, or an upgraded one without an approved Primary Customer Profile,
+            // only texts the numbers listed as Verified Caller IDs in its console.
+            console.warn('[accounts] Twilio refused an unverified number (21608): the Twilio account needs an approved Primary Customer Profile (Trust Hub); until then only Verified Caller IDs get texts');
+            return { ok: false, error: 'Sign-up texts aren\'t switched on yet. Tell the server owner.' };
         }
         console.warn(`[accounts] Twilio send failed: ${res.status} ${body.code ?? ''}`);
         return { ok: false, error: "Couldn't send a text right now. Try again in a few minutes." };
