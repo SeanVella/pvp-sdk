@@ -46,13 +46,18 @@ and Castle Wars only lets you attack the other team.
 Nobody can attack **into** or **out of** a safe area. Coordinates are inclusive world coordinates
 (`x`, `z`); "levels" are floors (0 = ground).
 
+A walled town's safe area is the ground inside its walls, traced from the map: step out of a
+gate and you're on open ground, and the guards stay inside. The exact tiles are in
+[`pvp_safe_zones.dbrow`](server/content/scripts/pvp_world/configs/pvp_safe_zones.dbrow); the
+bounds below are each town's outer edges.
+
 | Area | Bounds |
 |---|---|
-| Lumbridge (castle, courtyard and town; everyone respawns here) | x 3200-3240, z 3200-3260 (levels 0-3) |
-| Varrock | x 3175-3290, z 3380-3505 (levels 0-3) |
-| Falador | x 2940-3065, z 3305-3395 (levels 0-3) |
-| East Ardougne | x 2560-2690, z 3260-3340 (levels 0-3) |
-| Yanille | x 2530-2625, z 3070-3110 (levels 0-3) |
+| Lumbridge (everyone respawns here) | The castle grounds and village up to the road, x 3200-3236, z 3200-3260, and the churchyard, x 3237-3249, z 3200-3217 (levels 0-3). The river and the bridge east are open ground |
+| Varrock | Inside the city walls, within x 3174-3287, z 3377-3507 (levels 0-3). The Jolly Boar Inn and the fields outside the walls are open ground |
+| Falador | Inside the city walls, within x 2936-3065, z 3309-3394 (levels 0-3) |
+| East Ardougne | The walled market side, the river through town and the castle quarter up to the West Ardougne wall, within x 2560-2687, z 3263-3340 (levels 0-3) |
+| Yanille | Inside the city walls, within x 2533-2621, z 3071-3110 (levels 0-3) |
 | Seers' Village bank | x 2721-2730, z 3490-3497 (levels 0-1)<br>x 2724-2727, z 3487-3489 (level 0) |
 | Catherby bank | x 2806-2812, z 3438-3445 (level 0) |
 | Tutorial Island | x 3053-3156, z 3056-3136 (all levels)<br>x 3072-3118, z 9492-9535 (underground) |

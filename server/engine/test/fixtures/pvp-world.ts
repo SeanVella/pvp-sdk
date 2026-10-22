@@ -228,6 +228,25 @@ test('guards shoot a skulled player in a safe area harder every hit, and only th
     expect(p.vars[varp('dmm_guard_hits')]).toBe(0);
 });
 
+test('the safe areas end at the town walls', () => {
+    // Open ground the old rectangles took in: by the Jolly Boar Inn outside Varrock's north-east
+    // wall, the fields outside Falador's south-east wall and Lumbridge's bridge. Fights go ahead
+    // there, and the guards leave a skull alone.
+    for (const open of [{ x: 3280, z: 3470 }, { x: 3050, z: 3315 }, { x: 3239, z: 3227 }]) {
+        const a = player('outside', 40, open.x, open.z);
+        const b = player('rival', 40, open.x + 1, open.z);
+        expect(attack(a, b).allowed).toBe(true);
+        a.vars[varp('pk_skull')] = 2000;
+        run('[softtimer,dmm_guard_check]', a);
+        expect(a.levels[PlayerStat.HITPOINTS]).toBe(40);
+    }
+    // Lumbridge's churchyard, which the old rectangle cut in half, is guarded all through.
+    const church = player('church', 40, 3245, 3210);
+    church.vars[varp('pk_skull')] = 2000;
+    run('[softtimer,dmm_guard_check]', church);
+    expect(church.messages).toContain('The guards attack you for bringing a skull into a safe area!');
+});
+
 test('the client skull countdown is written with the skull and resynced every 50 ticks', () => {
     World.currentTick = 5000;
     const p = player('countdown', 10, FIELD.x, FIELD.z);

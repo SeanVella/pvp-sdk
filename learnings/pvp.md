@@ -10,7 +10,9 @@ are in [`RULES.md`](../RULES.md).
 - **Level range: 15 combat levels**, plus one per Wilderness level inside the Wilderness.
 - **Safe areas** are towns, not banks: Lumbridge, Varrock, Falador, East Ardougne and Yanille,
   plus the Seers' and Catherby banks, Tutorial Island, the Duel Arena and Castle Wars. **Edgeville,
-  Draynor, Al Kharid and every other bank outside those towns are dangerous.**
+  Draynor, Al Kharid and every other bank outside those towns are dangerous.** A walled town ends
+  at its walls: just outside a gate is open ground, and so is Lumbridge's bridge. Use
+  `sdk.assessPvpAttack()` or `safeArea` on players rather than guessing (see below).
 - **Skulls** come from attacking someone who didn't attack you first and last 10 minutes. While
   skulled:
   - **guards** shoot you in any safe area until you leave or die;

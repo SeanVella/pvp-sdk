@@ -49,6 +49,12 @@ v2 deploy (2026-10-22).
 - **Range 15**, the Old School PvP-world convention, instead of DMM's fixed bracket worlds.
 - **Safe towns, not banks** (v2, DMM). v1 made every bank safe; DMM keeps banks outside guarded
   towns dangerous.
+- **Towns end at their walls** (owner, 2026-10-22: the guards were shooting in bad spots). The
+  first zones were one rectangle per town, which took in fields, the Jolly Boar Inn and half of
+  Lumbridge's churchyard. `server/engine/tools/pvp/safeZones.ts` now traces each walled town's
+  walls from the map and covers the inside with rectangles (99.5%+, missing only a few tiles
+  along the walls); Lumbridge, with no walls, is its castle grounds and village up to the road,
+  plus the churchyard. `^dmm_rules_version` 2.
 - **Bank keys take 10 stacks**, valued at store price (DMM used 28, then 10; it valued by GE
   price, which this game doesn't have).
 - **Full-health respawn** plus 30s spawn protection instead of upstream's 1 HP respawn.

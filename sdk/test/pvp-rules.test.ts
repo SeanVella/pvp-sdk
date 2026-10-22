@@ -64,6 +64,15 @@ describe('safe areas and Wilderness levels', () => {
         expect(safeZoneAt(3100, 3100)?.name).toBe('Tutorial Island');
     });
 
+    test('walled towns end at their walls', () => {
+        expect(safeZoneAt(3280, 3470)).toBeNull(); // by the Jolly Boar Inn, outside Varrock's north-east wall
+        expect(safeZoneAt(3266, 3470)?.name).toBe('Varrock'); // just inside it
+        expect(safeZoneAt(3050, 3315)).toBeNull(); // the fields outside Falador's south-east wall
+        expect(safeZoneAt(2689, 3330)).toBeNull(); // outside East Ardougne's north-east wall
+        expect(safeZoneAt(3245, 3210)?.name).toBe('Lumbridge'); // the churchyard
+        expect(safeZoneAt(3239, 3227)).toBeNull(); // the bridge out of Lumbridge
+    });
+
     test('a zone only covers its own planes', () => {
         expect(safeZoneAt(2809, 3440, 0)?.name).toBe('Catherby bank');
         expect(safeZoneAt(2809, 3440, 1)).toBeNull();

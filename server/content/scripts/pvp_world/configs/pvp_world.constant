@@ -23,7 +23,9 @@
 // older version are cleared at their next login (~dmm_rules_login).
 // 1 = the Deadman rules, which turned the v1 open ground around the towns into
 // guarded safe zones.
-^dmm_rules_version = 1
+// 2 = the towns traced to their walls (tools/pvp/safeZones.ts): mostly smaller, but
+// Lumbridge's churchyard and some strips inside the walls are new.
+^dmm_rules_version = 2
 
 // PvP kit: Tele Block stops the target teleporting for this many ticks (1000 = 5 minutes at
 // 300ms), half that if they were praying Protect from Magic when it hit.
