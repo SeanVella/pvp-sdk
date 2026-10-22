@@ -558,6 +558,8 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `player/specwep.rs2` adds `[if_button,combat_whip:specbar]` and 377's "You're not fighting
       anything." guard on the blunt bar for the maul. Specials only run from
       `[opplayer2,_]`/`[applayer2,_]` after `~pvp_is_attackable`, so the PvP gate covers them.
+      Source: `areas/area_varrock/configs/varrock.inv` `[swordshop]` stocks both (2 each, one back
+      per 1000 ticks), the only way to get them since 289 has no Slayer monsters to drop them.
 - [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`
       from the repo root (needs built content). Server refusal wording is mirrored in
       `sdk/actions-helpers.ts` `PVP_REFUSALS` and in `RULES.md` — change them together.

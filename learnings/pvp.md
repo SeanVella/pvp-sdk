@@ -130,6 +130,22 @@ there: the sites are multi-combat.
 Sigils (Fury, Stone, the Feast, Escape, Fortune) work while carried and are destroyed when you
 die, so carrying one is a bet. See RULES.md for what each does.
 
+## The abyssal whip and the granite maul
+
+Two 2005 PvP weapons were added to this January-2005 world. Both are sold in the Varrock
+Swordshop (two of each; one comes back every 1,000 ticks, 5 minutes), and Varrock is a safe town.
+
+| | Abyssal whip | Granite maul |
+|---|---|---|
+| Wield | 70 Attack | 50 Attack and 50 Strength; two-handed |
+| Price | 100,001 gp | 50,000 gp |
+| Speed | 4 ticks | 7 ticks |
+| Special (half the bar) | 25% more accurate; a hit moves a tenth of the target's run energy to you | Lands on the next tick, even mid-swing: a full bar is two smashes in a row |
+
+There's no special-attack action in the SDK yet. Click the bar on the combat tab instead:
+`sdk.sendClickComponent(12311)` with the whip, `sdk.sendClickComponent(7462)` with the maul. The
+maul's bar only arms while you're fighting ("You're not fighting anything.").
+
 ## The PvP hiscores
 
 https://pvp-sdk.fly.dev/hiscores/pvp ranks kills, deaths, K/D, best streak and loot for today,

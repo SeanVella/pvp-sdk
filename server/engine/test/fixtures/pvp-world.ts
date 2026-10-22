@@ -578,6 +578,16 @@ test('the granite maul special lands through the attack delay; other specials wa
     expect(queuedDamage(target).length).toBe(2);
 });
 
+test('the Varrock Swordshop stocks the whip and the maul', () => {
+    const shop = InvType.get(inv('swordshop'));
+    for (const weapon of [WHIP, MAUL]) {
+        const slot = [...shop.stockobj!].indexOf(weapon);
+        expect(slot).toBeGreaterThanOrEqual(0);
+        expect(shop.stockcount![slot]).toBe(2);
+        expect(shop.stockrate![slot]).toBe(1000); // one back every 10 minutes
+    }
+});
+
 test('an armed special attack still stops at the PvP gate', () => {
     const attacker = player('specced', 70, FIELD.x, FIELD.z);
     const townsfolk = player('townsfolk', 70, VARROCK_SQUARE.x, VARROCK_SQUARE.z);
