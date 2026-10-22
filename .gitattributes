@@ -3,3 +3,6 @@
 # into "#!/bin/bash\r", and the machine crash-loops on "entrypoint.sh: not found".
 server/Dockerfile text eol=lf
 *.sh text eol=lf
+
+# Generated from sdk/*.ts with LF endings; api-docs.test.ts compares it byte for byte.
+sdk/API.md text eol=lf

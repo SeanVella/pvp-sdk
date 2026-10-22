@@ -437,6 +437,9 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `game_castlewars` `castlewars_mapzoneexit` and `game_duelarena` `toggle_duel_challenge_off`
       restore it (the latter only outside the fight zones, so a duel keeps its "Fight" option).
       After a sync, grep for new `set_player_op(null, 2` callers.
+- [ ] **`bots/create-bot.ts --local`** — the `SERVER=localhost` rewrite matches `\r?\n`. The
+      template is CRLF on a Windows checkout, and upstream's `'\n'` match silently left a bot
+      dialling port 80. Upstream bug too; drop once fixed there.
 - [ ] **`webclient/src/bot/StateCollector.ts` `hasSkullIcon`** — `state.isSkulled` reads bit 0
       (`^headicon_skull`) of our own head icons. Upstream reads varp 78 (`pk_skull`), which has
       no `transmit=yes`, so it always reported false. `collectNearbyPlayers` sets each player's
