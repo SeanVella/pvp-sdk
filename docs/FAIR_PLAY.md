@@ -157,10 +157,13 @@ and keep honest play easy. Gaps we know about:
 
 ## For the server owner: switching it on
 
-`fly.toml` already asks for fair play (`PLAYER_ACCOUNTS = "true"`). It starts enforcing as soon
-as all six secrets below are set. Until then the server runs as before and logs
+`PLAYER_ACCOUNTS = "true"` in `fly.toml` asks for fair play. It's enforced only once all six
+secrets below are set. Until then the server runs as before and logs
 `fair play is NOT enforced yet`. That's deliberate: enforcing while nobody can sign up would
-lock everyone out.
+lock everyone out. For the same reason, leave it `"false"` until Twilio can text everyone
+(step 1's Primary Customer Profile). While it's off, `/account` works for anyone Twilio can
+text, and accounts still create themselves. Those accounts need claiming once fair play is
+on.
 
 1. **Twilio:** create an account and upgrade it from the trial, which can only text numbers
    you've verified yourself. Then, under **Trust Hub**, create a **Primary Customer Profile**

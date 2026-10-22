@@ -45,7 +45,9 @@ MAX_PLAYERS_PER_IP = "100"
 # phone-verified player; only those bots log in. It starts enforcing once the Fly secrets
 # ACCOUNTS_SECRET, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_SERVICE_SID,
 # TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY are all set; until then the server runs as before.
-PLAYER_ACCOUNTS = "true"
+# Off for now (2026-10-22): all six are set, but Twilio only texts Verified Caller IDs until the
+# owner's Primary Customer Profile is approved. Set "true" and deploy once it is.
+PLAYER_ACCOUNTS = "false"
 BOTS_PER_PLAYER = "5"
 
 # One machine is the whole world: never auto-stop it, and never run a second

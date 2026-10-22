@@ -107,10 +107,11 @@ v2 deploy (2026-10-22).
       sign up on `/account` with a texted code (Twilio Verify) behind Cloudflare Turnstile. The
       server makes each account in a slot (`/account` or `create-bot.ts` with `PVP_SDK_KEY`),
       slots never come back within a season, old accounts are claimed with their password, and
-      unslotted logins are refused. `PLAYER_ACCOUNTS` is on in `fly.toml`, but it is enforced
-      only once all six secrets are set. **Owner to do:** create the Twilio and Turnstile
-      accounts and stage the secrets (FAIR_PLAY.md, "switching it on"). Still open: owner-only
-      flags for bots of different players sharing an address, one-way trades and farmed kills.
+      unslotted logins are refused. All six secrets are set, and it was enforced in v10-v11.
+      `PLAYER_ACCOUNTS` is `"false"` again until Twilio approves the owner's Primary Customer
+      Profile, because until then texts reach only Verified Caller IDs. **Owner to do:** get the
+      profile approved, then set it `"true"` and deploy. Still open: owner-only flags for bots of
+      different players sharing an address, one-way trades and farmed kills.
       With fair play on, the registration caps above no longer apply: nothing registers itself.
 - [ ] Lower `MAX_PLAYERS_PER_IP` (100 today) to slow alt farms. This is a trade-off, since
       agent developers legitimately run fleets.
