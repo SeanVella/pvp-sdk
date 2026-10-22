@@ -24,6 +24,12 @@ function formatAge(ms: number): string {
  * `options.xpBefore` maps skill name -> xp at script start; only skills that
  * moved are listed.
  */
+/** pvp-sdk: " (~7 min left)" when the server sends the skull countdown (0.3 s ticks), else "". */
+function skullLeft(state: BotWorldState): string {
+    const ticks = state.skullTicksRemaining;
+    return typeof ticks === 'number' && ticks > 0 ? ` (~${Math.ceil((ticks * 0.3) / 60)} min left)` : '';
+}
+
 export function formatWorldStateSummary(
     state: BotWorldState,
     stateAgeMs?: number,
@@ -37,7 +43,7 @@ export function formatWorldStateSummary(
         const hp = (state.skills || []).find(s => s.name === 'Hitpoints');
         const hpStr = hp ? ` | HP ${hp.level}/${hp.baseLevel}` : '';
         const dead = p.isDead ? ' | DEAD' : '';
-        const skull = state.isSkulled ? ' | SKULLED' : ''; // pvp-sdk: the guards shoot it in towns
+        const skull = state.isSkulled ? ` | SKULLED${skullLeft(state)}` : ''; // pvp-sdk: the guards shoot it in towns
         let combat = '';
         if (p.combat.inCombat) {
             const target = state.nearbyNpcs.find(n => n.index === p.combat.targetIndex);
@@ -168,7 +174,7 @@ export function formatWorldState(
         lines.push('## Player');
         lines.push(`Name: ${p.name} (Combat ${p.combatLevel})`);
         lines.push(`Position: (${p.worldX}, ${p.worldZ}) Level ${p.level}`);
-        if (state.isSkulled) lines.push('Skulled: yes'); // pvp-sdk
+        if (state.isSkulled) lines.push(`Skulled: yes${skullLeft(state)}`); // pvp-sdk
         if (p.isDead) {
             lines.push(`Status: DEAD (life ${p.lifeId}, death tick ${p.lastDeathTick ?? 'unknown'})`);
         } else if (p.respawnCount > 0) {

@@ -117,6 +117,9 @@ export class BotStateCollector implements ScanProvider {
     private lastTileX: number = -1;
     private lastTileZ: number = -1;
     private dialogObservations = new Map<string, { tick: number; observationId: number }>();
+    // pvp-sdk: skull countdown - see collectSkullTicks
+    private skullTicksValue: number = 0;
+    private skullTicksSince: number = -1;
 
     // Cached prayer component map (built once on first use)
     private prayerComponentMap: PrayerComponentMap | null = null;
@@ -193,6 +196,7 @@ export class BotStateCollector implements ScanProvider {
             // ^headicon_skull). Varp 78 (pk_skull) is never transmitted, so
             // it always read 0; the icon is set and cleared with the skull.
             isSkulled: BotStateCollector.hasSkullIcon(c.localPlayer),
+            skullTicksRemaining: this.collectSkullTicks(currentTick, BotStateCollector.hasSkullIcon(c.localPlayer)),
             // A policy-critical setting is an ordinary server varp. Keep it
             // explicit rather than blindly clicking a control that might
             // already be set.
@@ -413,6 +417,23 @@ export class BotStateCollector implements ScanProvider {
      */
     private static hasSkullIcon(player: ClientPlayer | null | undefined): boolean {
         return ((player?.headicons ?? 0) & 0x1) !== 0;
+    }
+
+    /**
+     * pvp-sdk: ticks until the skull wears off. Varp 1005 (pvp_skull_ticks) holds what
+     * was left when the server last wrote it - at each skull and every ~50 ticks after -
+     * so count down from the tick the value changed. Null while skulled on a server
+     * that doesn't send it yet.
+     */
+    private collectSkullTicks(currentTick: number, skulled: boolean): number | null {
+        const value: number = (this.client as any).var?.[1005] ?? 0;
+        if (value !== this.skullTicksValue || this.skullTicksSince === -1) {
+            this.skullTicksValue = value;
+            this.skullTicksSince = currentTick;
+        }
+        if (!skulled) return 0;
+        if (value <= 0) return null;
+        return Math.max(0, value - (currentTick - this.skullTicksSince));
     }
 
     private collectCombatEvents(currentTick: number): void {

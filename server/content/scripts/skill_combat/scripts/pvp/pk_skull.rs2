@@ -41,6 +41,7 @@ softtimer(pk_skull_timer, $duration);
 // pvp-sdk: the guards watch skulled players (pvp_world.rs2)
 clearsofttimer(dmm_guard_check);
 softtimer(dmm_guard_check, ^dmm_guard_interval);
+%pvp_skull_ticks = $duration; // pvp-sdk: the client's skull countdown
 
 [proc,clear_pk_skull]
 ~headicon_del(^headicon_skull);
@@ -48,6 +49,7 @@ clearsofttimer(pk_skull_timer);
 %pk_skull = 0;
 clearsofttimer(dmm_guard_check); // pvp-sdk
 %dmm_guard_hits = 0;
+%pvp_skull_ticks = 0; // pvp-sdk
 
 [softtimer,pk_skull_timer]
 ~clear_pk_skull;

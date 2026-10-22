@@ -15,3 +15,10 @@ protect=no
 [dmm_rules_version]
 protect=no
 scope=perm
+
+// Ticks the skull had left when last written: at every ~pk_skull and about every 50
+// ticks after (dmm_guard_check), so a re-skull always changes it. Clients count down
+// from the tick it changed (state.skullTicksRemaining).
+[pvp_skull_ticks]
+protect=no
+transmit=yes

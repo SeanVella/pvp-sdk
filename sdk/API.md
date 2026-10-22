@@ -92,6 +92,8 @@
 | `async closeBank(timeout: number = 5000): Promise<ActionResult>` | Close the bank interface. |
 | `async depositItem(target: InventoryItem \| string \| RegExp, amount: number = -1): Promise<BankDepositResult>` | Deposit an item into the bank. Use -1 for all. A pattern with `-1` deposits every distinct matching item: an alternation like `/^(shark\|burnt shark)$/i` covers both ids, not just whichever matched first. |
 | `async withdrawItem(target: BankItem \| string \| RegExp \| number, amount: number = 1, options: { asNote?: boolean } = {}): Promise<BankWithdrawResult>` | Withdraw an item from the bank by slot, name, or BankItem. `asNote: true` withdraws as a banknote: the note/item toggle is synced first (and synced back to items on the next plain withdrawal), and completion is detected on the noted item's arrival. Items the engine cannot note are withdrawn unnoted with a game message; the result then carries the unnoted item. |
+| `async checkBankKeys(timeout: number = 5000): Promise<BankKeyContents[]>` | List what each Bank key you hold contains (the key's Check option). Keys come from killing skulled players; see learnings/pvp.md. Empty when you hold none. |
+| `async openBankKey(timeout: number = 5000): Promise<OpenBankKeyResult>` | Open the first Bank key you hold: its stacks go to your bank, or fall at your feet if the bank is full. The server only allows it in a safe area while unskulled; a refusal comes back as `reason: 'skulled'` or `'not_in_safe_area'`. |
 
 ### Player Trading
 
@@ -113,7 +115,7 @@
 | `getEquipment(): InventoryItem[]` | Get all currently equipped items. |
 | `findEquippedItem(pattern: string \| RegExp): InventoryItem \| null` | Find an equipped item by name pattern. |
 | `async eatFood(target?: InventoryItem \| string \| RegExp): Promise<EatResult>` | Eat food to restore hitpoints. With no target, eats the first inventory item that offers Eat. |
-| `async attack(target: CombatTarget, timeout: number = 5000): Promise<AttackResult>` | Attack an NPC or another player, walking to the target if needed. Takes either an entity (from `sdk.findNearbyNpc`/`sdk.findNearbyPlayer`) or a name/pattern, matched against NPCs first and players second - so pass the entity when a player shares a name with a monster. ```ts await bot.attack(/^chicken$/i); await bot.attack(sdk.findNearbyPlayer('Zezima')!); ``` PvP attacks work anywhere outside safe areas (the guarded towns, Tutorial Island, minigame areas; see RULES.md) within 15 combat levels, plus one per Wilderness level. Refusals - a safe area, spawn protection, too big a level gap - come back as `reason: 'not_attackable'` with the server's own wording in `message`. |
+| `async attack(target: CombatTarget, timeout: number = 5000): Promise<AttackResult>` | Attack an NPC or another player, walking to the target if needed. Takes either an entity (from `sdk.findNearbyNpc`/`sdk.findNearbyPlayer`) or a name/pattern, matched against NPCs first and players second - so pass the entity when a player shares a name with a monster. ```ts await bot.attack(/^chicken$/i); await bot.attack(sdk.findNearbyPlayer('Zezima')!); ``` PvP attacks work anywhere outside safe areas (the guarded towns, Tutorial Island, minigame areas; see RULES.md) within 15 combat levels, plus one per Wilderness level. Refusals - a safe area, spawn protection, too big a level gap - come back as `reason: 'not_attackable'` with the server's own wording in `message`. Player attacks are never refused client-side: anything `sdk.assessPvpAttack` warns about (a refusal it expects, a skull it will give you, a guarded town on the way while skulled) is logged and returned in `warnings`. Call `sdk.assessPvpAttack` first to decide whether the attack is worth it. |
 | `async attackPlayer(target: NearbyPlayer \| string \| RegExp, timeout: number = 5000): Promise<AttackResult>` | Attack another player (OPPLAYER2). Prefer {@link attack}, which also takes NPCs. |
 | `async castSpell(target: CombatTarget, spellComponent: number \| string, timeout: number = 3000): Promise<CastSpellResult>` | Cast a combat spell on an NPC or another player. The two are the same action to the server (OPNPCT vs OPPLAYERT), so this takes either: an entity from `sdk.findNearbyNpc`/`sdk.findNearbyPlayer`, or a name/pattern matched against NPCs first and players second. ```ts await bot.castSpell('goblin', Spells.WIND_STRIKE); await bot.castSpell(sdk.findNearbyPlayer('Zezima')!, Spells.FIRE_STRIKE); ``` Magic XP is the evidence of a cast landing, so a splash still counts as success with `hit: false`. |
 | `async castSpellOnPlayer(target: NearbyPlayer \| string \| RegExp, spellComponent: number \| string, timeout: number = 3000): Promise<CastSpellResult>` | Cast a combat spell on another player (OPPLAYERT). Prefer {@link castSpell}. |
@@ -217,6 +219,7 @@
 | `async checkBotStatus(): Promise<BotStatus>` | Check bot status via gateway HTTP endpoint. Returns info about whether bot is connected and who else is controlling/observing. |
 | `async launchBrowser(): Promise<void>` | Launch native browser to client URL. Uses the `open` package for cross-platform support (macOS, Windows, Linux, WSL). Falls back to printing the URL if no browser can be opened. |
 | `countInventoryItems(pattern: string \| RegExp): number` | Count total item quantity matching a name pattern. This sums stack sizes across every matching slot. Use `getInventory().filter(...)` when the number of occupied slots is needed. |
+| `assessPvpAttack(target: NearbyPlayer \| string \| RegExp): PvpAttackAssessment \| null` | Weigh an attack on another player without making it: whether the server will refuse (a safe area, the level gap), whether it will skull you, and whether the target is skulled (their bank becomes your Bank key if you kill them). Nothing is sent; deciding is up to your script. `bot.attack` attaches the same warnings. ```ts const target = sdk.findNearbyPlayer('Zezima'); const risk = target && sdk.assessPvpAttack(target); if (risk?.allowed && risk.targetSkulled) await bot.attack(target!); ``` |
 | `async clickInterfaceOption(selector: InterfaceOptionSelector): Promise<ActionResult>` | Click exactly one interface option, selected by its state object or by visible text (substring for strings, match for regexes). This dispatches the option's `componentId` and never interprets `InterfaceOption.index` as an array position. |
 | `async dm(targetName: string, text: string, opts: { maxLen?: number; delayTicks?: number } = {}): Promise<ActionResult[]>` | Send a private message of any length, auto-split into chunks like {@link say}. Returns one ActionResult per chunk. |
 | `blockDoorTemporarily(level: number, x: number, z: number, ttlMs: number = 30_000): boolean` | Temporarily exclude a known door from this SDK instance's path queries. The shared collision map is never mutated beyond the synchronous query. |
@@ -364,6 +367,10 @@ interface PlayerState {
   respawnCount: number;
   /** Public game tick when death was last observed, or null if none was observed. */
   lastDeathTick: number | null;
+  /** Name of the safe area you stand in, or null (filled in by the SDK from `SAFE_ZONES`). */
+  safeArea?: string | null;
+  /** Your Wilderness level, 0 outside it (filled in by the SDK). */
+  wildernessLevel?: number;
 }
 ```
 
@@ -570,6 +577,8 @@ interface BotWorldState {
   prayers: PrayerState;
   /** Whether you carry a PK skull, read from your skull head icon. Absent when the connected client predates PK-skull telemetry; clients from before the head-icon fix always report false. */
   isSkulled?: boolean;
+  /** Ticks (0.3 s each) until your skull wears off, 0 when unskulled. Null while skulled on a server that doesn't send the countdown yet; absent on older clients. Accurate to about 50 ticks after you re-skull yourself. */
+  skullTicksRemaining?: number | null;
   /** Absent when the connected client predates authoritative auto-retaliate telemetry. */
   autoRetaliateEnabled?: boolean;
   /** Absent when the connected client predates the signal. */
@@ -732,6 +741,22 @@ interface AttackResult {
   reason?: 'npc_not_found' | 'no_attack_option' | 'out_of_reach' | 'already_in_combat' | 'not_attackable' | 'died' | 'timeout';
   /** What the resolved target was, when one was found. */
   targetType?: 'npc' | 'player';
+  /** Player targets: what `sdk.assessPvpAttack` warned about before the attack was made anyway. Weigh these before attacking; nothing here stops an attack. */
+  warnings?: PvpWarning[];
+}
+```
+
+### OpenBankKeyResult
+
+```typescript
+interface OpenBankKeyResult {
+  success: boolean;
+  message: string;
+  reason?: 'no_key' | 'skulled' | 'not_in_safe_area' | 'timeout';
+  /** Stacks that went to your bank. */
+  banked?: number;
+  /** Stacks that fell at your feet because your bank was full. */
+  dropped?: number;
 }
 ```
 

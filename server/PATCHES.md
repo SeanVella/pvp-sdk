@@ -402,7 +402,9 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
         or players who logged out skulled on what is now town ground are killed by the guards
         the moment they log back in.
       - `pvp_world.varp`: `pvp_protection` (**1001**, transmitted), `pvp_combat_clock` (**1002**),
-        `dmm_guard_hits` (**1003**), `dmm_rules_version` (**1004**, perm).
+        `dmm_guard_hits` (**1003**), `dmm_rules_version` (**1004**, perm), `pvp_skull_ticks`
+        (**1005**, transmitted: the skull's ticks left when last written, by `~pk_skull` and
+        every ~50 ticks by `dmm_guard_check`; the bot client counts down from it).
       - `pvp_world.rs2`: `~pvp_in_safe_zone` (that table + Tutorial Island + Duel Arena + Castle
         Wars), spawn protection, the `dmm_guard_check` softtimer, `~pvp_teleport_locked`,
         `~dmm_rules_login` (clears a skull saved under an older `^dmm_rules_version`).
@@ -417,7 +419,7 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       never checks that the Attack op is set (`OpPlayerHandler` todo), so menu changes are cosmetic.
 - [ ] **`skill_combat/scripts/pvp/pk_skull.rs2`** — `set_pk_vars` ends spawn protection and
       stamps `pvp_combat_clock` on both players; `~pk_skull` starts and `~clear_pk_skull` stops
-      the guard softtimer.
+      the guard softtimer, and both write `pvp_skull_ticks`.
 - [ ] **`player/scripts/death.rs2`** — reads the skull before anything clears it, then
       `~dmm_death_to_player`/`~dmm_death_to_npc` (keys and bank raid); `pvp_death_lose_items`
       keeps nothing; `player_death_lose_items` keeps 3 only when unskulled and ignores Protect
@@ -444,7 +446,10 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       (`^headicon_skull`) of our own head icons. Upstream reads varp 78 (`pk_skull`), which has
       no `transmit=yes`, so it always reported false. `collectNearbyPlayers` sets each player's
       `isSkulled` the same way (`NearbyPlayer` in both `bot/types.ts` and `sdk/types.ts`), and
-      `sdk/formatter.ts` prints `SKULLED` / `[skulled]`. Verify: `cd server/webclient && bun test
+      `sdk/formatter.ts` prints `SKULLED` / `[skulled]`. `collectSkullTicks` turns varp 1005
+      into `state.skullTicksRemaining`. `sdk/pvp.ts` (fork-only) mirrors the safe areas,
+      Wilderness and level range; `sdk/test/pvp-rules.test.ts` fails if the content tables move
+      without it. `BotActions.attackPlayerEntity` attaches its warnings but never refuses. Verify: `cd server/webclient && bun test
       src/bot/StateCollector.test.ts`, and `bun test sdk/test/state-summary.test.ts`.
 - [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`
       from the repo root (needs built content). Server refusal wording is mirrored in

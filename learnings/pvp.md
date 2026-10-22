@@ -45,12 +45,39 @@ Refusals come back as `reason: 'not_attackable'` with the server's message:
 | `Your level difference is too great!` | Outside the 15 (+ Wilderness level) range. |
 | `I'm already under attack.` / `Someone else is already fighting your opponent.` | Single-combat lock: `reason: 'already_in_combat'`, retry after 8 ticks. |
 
-`bot.attack()` walks toward the target before attacking. If the target is in a safe town, that
-walk can take you into the town too: check where they stand first.
+`sdk.getNearbyPlayers()` gives each player's `combatLevel`, position, `distance`, `isSkulled`,
+`safeArea` (the town they stand in, or null), `wildernessLevel` and, while they're fighting,
+`combatTargetType`/`combatTargetIndex`. `state.player` has your own `safeArea` and
+`wildernessLevel`. A skulled player's bank is at risk: kill them and you get a Bank key.
 
-`sdk.getNearbyPlayers()` gives each player's `combatLevel`, position, `distance`, `isSkulled`
-and, while they're fighting, `combatTargetType`/`combatTargetIndex`. Check the level gap before
-you commit. A skulled player's bank is at risk: kill them and you get a Bank key.
+## Weighing an attack
+
+Nothing in the SDK refuses an attack: whether it's worth it is your script's call.
+`sdk.assessPvpAttack(target)` tells you what the client can see before you commit, and sends
+nothing:
+
+```typescript
+const target = sdk.findNearbyPlayer(/^zezima$/i);
+const risk = target && sdk.assessPvpAttack(target);
+if (risk && risk.allowed && (risk.targetSkulled || !risk.willSkull)) {
+    await bot.attack(target!);
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `allowed` | False when a safe area or the level gap means the server will refuse. Spawn protection and single-combat locks aren't visible, so true isn't a promise. |
+| `targetSkulled` | Killing them wins their 10 most valuable bank stacks as a Bank key. |
+| `willSkull` | They haven't hit you lately, so attacking skulls you (or resets your skull to 10 minutes). |
+| `levelGap`, `maxLevelGap`, `wildernessLevel` | The range check: 15 plus the shallower player's Wilderness level. |
+| `youInSafeArea`, `targetInSafeArea` | The town either of you stands in, or null. |
+| `warnings` | One `{ code, message }` per concern below. |
+
+Warning codes: `target_in_safe_area`, `level_gap`, `you_in_safe_area`, `will_skull`, and
+`skulled_route_through_safe_area` (you're skulled and the straight line to them crosses a town,
+where the guards shoot you). `bot.attack()` logs the same warnings and returns them on the
+result as `warnings`, but always attacks. It walks toward the target first, so chasing someone
+into a town walks you in too.
 
 ## Attacking first is a trade-off
 
@@ -59,18 +86,19 @@ on the line if you die, the towns' guards will kill you if you walk in, and you 
 keys you win. Fighting back never skulls you, so a bot that only retaliates risks only what it
 carries.
 
-`state.isSkulled` says whether you're skulled right now. Check it before you walk into a town or
-try to open a key; death clears it.
+`state.isSkulled` says whether you're skulled right now, and `state.skullTicksRemaining` how many
+ticks (0.3 s each) it has left. Check them before you walk into a town or try to open a key;
+death clears the skull.
 
 ## Opening a Bank key
 
 ```typescript
-const key = sdk.findInventoryItem(/^bank key$/i);
-if (key) {
-    await sdk.sendUseItem(key.slot, 2); // Check: one "Bank key N: count x item" message per stack
-    await sdk.sendUseItem(key.slot, 1); // Open: in a safe area, unskulled; stacks go to your bank
-}
+const keys = await bot.checkBankKeys(); // [{ key: 1, items: [{ name: 'Coins', count: 25 }] }]
+const opened = await bot.openBankKey();  // in a safe area, unskulled; stacks go to your bank
+if (!opened.success) console.log(opened.reason); // 'skulled', 'not_in_safe_area', 'no_key'
 ```
+
+Each "Bank key" item in your inventory is one key; `openBankKey` opens the first.
 
 A new key arrives the moment your victim dies, with the message "You take a bank key from your
 victim." It's saved with your character, and the inventory item is restored when you log in.

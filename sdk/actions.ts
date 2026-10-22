@@ -8,6 +8,7 @@ import { GEActions } from './ge-actions';
 import type { GEOfferRequest, GEActionResult } from './ge-types';
 import { ActionHelpers, ALREADY_FIGHTING_REFUSALS, NO_RUNES_REFUSALS } from './actions-helpers';
 import { findDoorsAlongPath, isTileWalkable } from './pathfinding';
+import { assessPvpAttack } from './pvp';
 import type {
     ActionResult,
     BotWorldState,
@@ -33,6 +34,8 @@ import type {
     UnequipResult,
     EatResult,
     AttackResult,
+    BankKeyContents,
+    OpenBankKeyResult,
     CastSpellResult,
     OpenDoorResult,
     FletchResult,
@@ -2900,6 +2903,11 @@ export class BotActions {
      * Wilderness level. Refusals - a safe area, spawn protection, too big a level
      * gap - come back as `reason: 'not_attackable'` with the server's own wording
      * in `message`.
+     *
+     * Player attacks are never refused client-side: anything `sdk.assessPvpAttack`
+     * warns about (a refusal it expects, a skull it will give you, a guarded town
+     * on the way while skulled) is logged and returned in `warnings`. Call
+     * `sdk.assessPvpAttack` first to decide whether the attack is worth it.
      */
     async attack(target: CombatTarget, timeout: number = 5000): Promise<AttackResult> {
         await this.dismissBlockingUI();
@@ -2924,6 +2932,72 @@ export class BotActions {
             return { success: false, message: `Player not found: ${target}`, reason: 'npc_not_found' };
         }
         return this.attackPlayerEntity(player, timeout);
+    }
+
+    /**
+     * List what each Bank key you hold contains (the key's Check option). Keys come
+     * from killing skulled players; see learnings/pvp.md. Empty when you hold none.
+     */
+    async checkBankKeys(timeout: number = 5000): Promise<BankKeyContents[]> {
+        await this.dismissBlockingUI();
+        const key = this.sdk.findInventoryItem(/^bank key$/i);
+        if (!key) return [];
+
+        const baseline = this.helpers.getMessageTick();
+        const lines = () => (this.sdk.getState()?.gameMessages ?? [])
+            .filter(m => this.helpers.isMessageAfter(m, baseline))
+            .map(m => /^Bank key (\d+): (\d+) x (.+)$/.exec(m.text))
+            .filter((m): m is RegExpExecArray => m !== null);
+        await this.sdk.sendUseItem(key.slot, 2);
+        try {
+            // One script prints every line, so they all arrive in the same state.
+            await this.sdk.waitForCondition(() => lines().length > 0, timeout);
+        } catch {
+            return [];
+        }
+
+        const keys = new Map<number, BankKeyContents>();
+        for (const [, n, count, name] of lines()) {
+            const contents = keys.get(Number(n)) ?? { key: Number(n), items: [] };
+            contents.items.push({ name: name!, count: Number(count) });
+            keys.set(Number(n), contents);
+        }
+        return [...keys.values()].sort((a, b) => a.key - b.key);
+    }
+
+    /**
+     * Open the first Bank key you hold: its stacks go to your bank, or fall at your feet
+     * if the bank is full. The server only allows it in a safe area while unskulled; a
+     * refusal comes back as `reason: 'skulled'` or `'not_in_safe_area'`.
+     */
+    async openBankKey(timeout: number = 5000): Promise<OpenBankKeyResult> {
+        await this.dismissBlockingUI();
+        const key = this.sdk.findInventoryItem(/^bank key$/i);
+        if (!key) return { success: false, message: 'No bank key in your inventory', reason: 'no_key' };
+
+        const baseline = this.helpers.getMessageTick();
+        const newMessages = () => (this.sdk.getState()?.gameMessages ?? [])
+            .filter(m => this.helpers.isMessageAfter(m, baseline))
+            .map(m => m.text);
+        const answer = (text: string) =>
+            text.startsWith('You open the bank key') ||
+            text === "You can't open a bank key while you're skulled." ||
+            text === 'Bank keys can only be opened in a safe area.';
+        await this.sdk.sendUseItem(key.slot, 1);
+        try {
+            await this.sdk.waitForCondition(() => newMessages().some(answer), timeout);
+        } catch {
+            return { success: false, message: 'No answer from the server', reason: 'timeout' };
+        }
+
+        const texts = newMessages();
+        const reply = texts.find(answer)!;
+        if (reply.startsWith("You can't")) return { success: false, message: reply, reason: 'skulled' };
+        if (reply.startsWith('Bank keys')) return { success: false, message: reply, reason: 'not_in_safe_area' };
+        const banked = Number(/: (\d+) stacks? goe?s? to your bank/.exec(reply)?.[1] ?? 0);
+        const fell = texts.find(t => t.startsWith('Your bank is full'));
+        const dropped = Number(/so (\d+) stacks? falls?/.exec(fell ?? '')?.[1] ?? 0);
+        return { success: true, message: fell ? `${reply} ${fell}` : reply, banked, dropped };
     }
 
     private async attackNpcEntity(npc: NearbyNpc, timeout: number): Promise<AttackResult> {
@@ -3047,12 +3121,25 @@ export class BotActions {
     }
 
     /**
+     * pvp-sdk: weigh the attack first (`assessPvpAttack`), then make it whatever the
+     * warnings say - whether an attack is worth it is the script's call. Warnings are
+     * logged and returned on the result.
+     */
+    private async attackPlayerEntity(player: NearbyPlayer, timeout: number): Promise<AttackResult> {
+        const state = this.sdk.getState();
+        const warnings = state ? assessPvpAttack(state, player).warnings : [];
+        for (const warning of warnings) console.warn(`[attack] ${warning.message}`);
+        const result = await this.engagePlayer(player, timeout);
+        return warnings.length > 0 ? { ...result, warnings } : result;
+    }
+
+    /**
      * Attack a resolved player with OPPLAYER2, the option `[opplayer2,_]` in
      * pvp_combat.rs2 handles. Evidence is the same shape as for NPCs - engagement
      * or a damage splat on the requested target - plus the PvP refusals, which
      * arrive as ordinary game messages and otherwise look like a silent no-op.
      */
-    private async attackPlayerEntity(player: NearbyPlayer, timeout: number): Promise<AttackResult> {
+    private async engagePlayer(player: NearbyPlayer, timeout: number): Promise<AttackResult> {
         const targetType = 'player' as const;
 
         // Walk near the target first - this handles doors. Players move, so this

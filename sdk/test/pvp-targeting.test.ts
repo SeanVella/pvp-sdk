@@ -207,3 +207,64 @@ describe('BotActions.castSpell target dispatch', () => {
         expect(harness.dispatched).toEqual([{ call: 'sendSpellOnTarget', args: [goblin, 1152] }]);
     });
 });
+
+describe('BotActions.attack PvP warnings', () => {
+    test('warns about a refusal and a skull but attacks anyway', async () => {
+        // The harness stands us and the rival in Lumbridge, 42 combat levels apart.
+        const harness = createBot(state({ message: 'That player is in a safe area.' }));
+        const result = await harness.bot.attack(rival);
+
+        expect(harness.dispatched).toEqual([{ call: 'sendInteractPlayer', args: [rival.index, 2] }]);
+        expect(result.warnings?.map(w => w.code)).toEqual(['target_in_safe_area', 'level_gap', 'you_in_safe_area', 'will_skull']);
+        expect(result).toMatchObject({ success: false, reason: 'not_attackable' });
+    });
+
+    test('npc attacks carry no warnings', async () => {
+        const result = await createBot(state({ engaged: 'npc' })).bot.attack(goblin);
+        expect(result.warnings).toBeUndefined();
+    });
+});
+
+describe('BotActions bank keys', () => {
+    function keyBot(replies: string[], hasKey = true) {
+        let current: any = { ...state({}), inventory: hasKey ? [{ slot: 3, id: 10000, name: 'Bank key', count: 1 }] : [] };
+        const sent: unknown[][] = [];
+        const sdk = {
+            getState: () => current,
+            findInventoryItem: (p: RegExp) => current.inventory.find((i: any) => p.test(i.name)) ?? null,
+            sendUseItem: async (...args: unknown[]) => {
+                sent.push(args);
+                current = { ...current, gameMessages: replies.map(text => ({ tick: 5, text, type: 0, sender: '', fromSelf: false })) };
+                return { success: true, message: 'dispatched' };
+            },
+            waitForCondition: async (pred: (s: any) => boolean) => {
+                if (!pred(current)) throw new Error('timeout');
+                return current;
+            }
+        };
+        return { bot: new BotActions(sdk as any), sent };
+    }
+
+    test('checkBankKeys groups the Check lines by key', async () => {
+        const { bot, sent } = keyBot(['Bank key 1: 25 x Coins', 'Bank key 1: 1 x Rune platebody', 'Bank key 2: 100 x Shark']);
+        expect(await bot.checkBankKeys()).toEqual([
+            { key: 1, items: [{ name: 'Coins', count: 25 }, { name: 'Rune platebody', count: 1 }] },
+            { key: 2, items: [{ name: 'Shark', count: 100 }] }
+        ]);
+        expect(sent).toEqual([[3, 2]]);
+    });
+
+    test('openBankKey counts banked and dropped stacks', async () => {
+        const { bot, sent } = keyBot(['You open the bank key: 3 stacks go to your bank.', 'Your bank is full, so 1 stack falls at your feet.']);
+        expect(await bot.openBankKey()).toMatchObject({ success: true, banked: 3, dropped: 1 });
+        expect(sent).toEqual([[3, 1]]);
+    });
+
+    test('openBankKey reports the server refusals', async () => {
+        expect(await keyBot(["You can't open a bank key while you're skulled."]).bot.openBankKey())
+            .toMatchObject({ success: false, reason: 'skulled' });
+        expect(await keyBot(['Bank keys can only be opened in a safe area.']).bot.openBankKey())
+            .toMatchObject({ success: false, reason: 'not_in_safe_area' });
+        expect(await keyBot([], false).bot.openBankKey()).toMatchObject({ success: false, reason: 'no_key' });
+    });
+});

@@ -43,6 +43,12 @@ if (%pvp_protection = ^true) {
 // ticks until they leave or die. The first hit takes a fifth of their base hitpoints
 // and every hit after that 2 more (Deadman: Reborn). Runs while the skull lasts.
 [softtimer,dmm_guard_check]
+// Resync the client's skull countdown about every 50 ticks, so that a re-skull, which
+// writes ^pk_skull_duration again, always changes the varp the client watches.
+def_int $left = sub(%pk_skull, map_clock);
+if (sub(%pvp_skull_ticks, $left) >= 50) {
+    %pvp_skull_ticks = $left;
+}
 if (~pvp_in_safe_zone(coord) = false) {
     %dmm_guard_hits = 0;
     return;

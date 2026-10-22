@@ -186,6 +186,21 @@ test('guards shoot a skulled player in a safe area harder every hit, and only th
     expect(p.vars[varp('dmm_guard_hits')]).toBe(0);
 });
 
+test('the client skull countdown is written with the skull and resynced every 50 ticks', () => {
+    World.currentTick = 5000;
+    const p = player('countdown', 10, FIELD.x, FIELD.z);
+    run('[proc,pk_skull]', p, null, [2000]);
+    expect(p.vars[varp('pvp_skull_ticks')]).toBe(2000);
+    World.currentTick = 5040; // 40 ticks on: the client's own count is still close enough
+    run('[softtimer,dmm_guard_check]', p);
+    expect(p.vars[varp('pvp_skull_ticks')]).toBe(2000);
+    World.currentTick = 5050;
+    run('[softtimer,dmm_guard_check]', p);
+    expect(p.vars[varp('pvp_skull_ticks')]).toBe(1950);
+    run('[proc,clear_pk_skull]', p);
+    expect(p.vars[varp('pvp_skull_ticks')]).toBe(0);
+});
+
 test('a skull from before the safe zones last grew is cleared once at login', () => {
     const fresh = player('fresh', 10, FIELD.x, FIELD.z);
     run('[proc,dmm_rules_login]', fresh);

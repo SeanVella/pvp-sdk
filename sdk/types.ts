@@ -49,6 +49,10 @@ export interface PlayerState {
     respawnCount: number;
     /** Public game tick when death was last observed, or null if none was observed. */
     lastDeathTick: number | null;
+    /** Name of the safe area you stand in, or null (filled in by the SDK from `SAFE_ZONES`). */
+    safeArea?: string | null;
+    /** Your Wilderness level, 0 outside it (filled in by the SDK). */
+    wildernessLevel?: number;
 }
 
 export interface SkillState {
@@ -147,6 +151,11 @@ export interface NearbyPlayer {
     /** The player shows the PK skull, so dying would cost them their 10 most valuable
      * bank stacks. Absent when the connected client predates it. */
     isSkulled?: boolean;
+    /** Name of the safe area they stand in, or null (filled in by the SDK from `SAFE_ZONES`,
+     * assuming they're on your plane). */
+    safeArea?: string | null;
+    /** Their Wilderness level, 0 outside it (filled in by the SDK). */
+    wildernessLevel?: number;
 }
 
 /**
@@ -598,6 +607,10 @@ export interface BotWorldState {
      * connected client predates PK-skull telemetry; clients from before the head-icon
      * fix always report false. */
     isSkulled?: boolean;
+    /** Ticks (0.3 s each) until your skull wears off, 0 when unskulled. Null while skulled
+     * on a server that doesn't send the countdown yet; absent on older clients. Accurate
+     * to about 50 ticks after you re-skull yourself. */
+    skullTicksRemaining?: number | null;
     /** Absent when the connected client predates authoritative auto-retaliate telemetry. */
     autoRetaliateEnabled?: boolean;
     /** Absent when the connected client predates the signal. */
@@ -856,6 +869,66 @@ export interface AttackResult {
     reason?: 'npc_not_found' | 'no_attack_option' | 'out_of_reach' | 'already_in_combat' | 'not_attackable' | 'died' | 'timeout';
     /** What the resolved target was, when one was found. */
     targetType?: 'npc' | 'player';
+    /** Player targets: what `sdk.assessPvpAttack` warned about before the attack was
+     * made anyway. Weigh these before attacking; nothing here stops an attack. */
+    warnings?: PvpWarning[];
+}
+
+// ============ PvP (pvp-sdk) ============
+
+export type PvpWarningCode =
+    /** The target stands in a safe area: the server will refuse. */
+    | 'target_in_safe_area'
+    /** The combat level gap is too big here: the server will refuse. */
+    | 'level_gap'
+    /** You stand in a safe area: the attack is refused until you step out. */
+    | 'you_in_safe_area'
+    /** The target hasn't hit you lately, so attacking them most likely skulls you. */
+    | 'will_skull'
+    /** You're skulled and the straight line to the target crosses a safe area. */
+    | 'skulled_route_through_safe_area';
+
+export interface PvpWarning {
+    code: PvpWarningCode;
+    message: string;
+}
+
+/** What `sdk.assessPvpAttack` can tell about an attack before it's made. */
+export interface PvpAttackAssessment {
+    target: string;
+    /** False when a safe area or the level gap means the server will refuse. Spawn
+     * protection and single-combat locks aren't visible to clients, so true isn't a promise. */
+    allowed: boolean;
+    warnings: PvpWarning[];
+    levelGap: number;
+    maxLevelGap: number;
+    /** The shallower of the two players' Wilderness levels, which sets the range. */
+    wildernessLevel: number;
+    youInSafeArea: string | null;
+    targetInSafeArea: string | null;
+    youSkulled: boolean;
+    /** A skulled target's 10 most valuable bank stacks become your Bank key if you kill them. */
+    targetSkulled: boolean;
+    /** Best guess: true unless the target has hit you in the recent combat events. The
+     * server remembers your last 3 attackers, which clients can't see. */
+    willSkull: boolean;
+}
+
+/** One Bank key's contents, from its Check option. */
+export interface BankKeyContents {
+    /** 1 for the first key held, as the server numbers them. */
+    key: number;
+    items: { name: string; count: number }[];
+}
+
+export interface OpenBankKeyResult {
+    success: boolean;
+    message: string;
+    reason?: 'no_key' | 'skulled' | 'not_in_safe_area' | 'timeout';
+    /** Stacks that went to your bank. */
+    banked?: number;
+    /** Stacks that fell at your feet because your bank was full. */
+    dropped?: number;
 }
 
 export interface CastSpellResult {

@@ -131,12 +131,12 @@ v2 deploy (2026-10-22).
       which the server never transmits.)
 - [ ] Actions: follow, special-attack toggle, auto-retaliate and run toggles, item-on-player,
       autocast, a same-tick gear + prayer switch, and attacking without a full `walkTo` first.
-      Safe-zone awareness: `bot.attack()` walks toward the target before attacking, so chasing
-      someone into a safe town walks you into it too, which kills you if you're skulled. Publish
-      whether each player stands in a safe area, and refuse client-side.
+      (Done, warn-only by the owner's choice: each player's `safeArea` and `wildernessLevel`,
+      `sdk.assessPvpAttack()`, and `bot.attack()` returning `warnings` - a refusal it expects,
+      a skull it will give you, a town on the way while skulled - but attacking anyway.)
       Add snare, entangle, god spells and Iban's blast to the spell table.
-- [ ] Deadman state and helpers: own skull timer, keys held and their contents, a
-      `bot.openBankKey()`. (Done: each nearby player's skull, `nearbyPlayers[].isSkulled`.)
+- [x] Deadman state and helpers: `state.skullTicksRemaining` (varp `pvp_skull_ticks`),
+      `bot.checkBankKeys()`, `bot.openBankKey()`, and each nearby player's `isSkulled`.
 - [ ] Reflexes: per-tick eat / pray / switch / attack-player inside the lite runner, so fights
       don't wait on an LLM turn (a draft of NPC reflexes exists in the sibling rs-sdk checkout).
 - [ ] Docs and examples: `learnings/pvp.md` for agents, example bots (hunter, survivor).

@@ -452,6 +452,9 @@ export interface BotState {
     prayers: PrayerState;
     /** A PK skull is currently active: the skull head icon (bit 0 of our own head icons). */
     isSkulled: boolean;
+    /** Ticks (0.3 s each) until the skull wears off, 0 when unskulled; null while skulled
+     * on a server that doesn't send the countdown (varp 1005, pvp_skull_ticks). */
+    skullTicksRemaining: number | null;
     /** Authoritative client varp 172: server auto-retaliation is enabled. */
     autoRetaliateEnabled: boolean;
     /** Whether the server accepted or silently discarded recent ops */

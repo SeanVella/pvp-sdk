@@ -27,9 +27,11 @@ import type {
     PrayerState,
     PrayerName,
     GameMessage,
-    FindOptions
+    FindOptions,
+    PvpAttackAssessment
 } from './types';
 import type { TradeState } from './types';
+import { assessPvpAttack, safeZoneAt, wildernessLevel } from './pvp';
 import { PRAYER_INDICES, PRAYER_NAMES, PLAYER_CHAT_TYPES, isPlayerChat, TRADE_REQUEST_CHAT_TYPE } from './types';
 import { ChatHistory } from './chat-history';
 import { executionContext, executionWait, throwIfExecutionAborted } from './execution-context';
@@ -166,6 +168,7 @@ interface PendingScreenshot {
 export { chunkMessage } from './chunking';
 import { chunkMessage } from './chunking';
 export { Spells, type SpellName } from './spells';
+export { SAFE_ZONES, WILDERNESS_ZONES, PVP_COMBAT_RANGE, SKULL_DURATION_TICKS, safeZoneAt, isInSafeArea, wildernessLevel, type PvpZone } from './pvp';
 
 export class BotSDK {
     readonly config: Required<SDKConfig>;
@@ -955,6 +958,24 @@ export class BotSDK {
     /** Get all nearby players, nearest first. */
     getNearbyPlayers(): NearbyPlayer[] {
         return this.state?.nearbyPlayers || [];
+    }
+
+    /**
+     * Weigh an attack on another player without making it: whether the server will
+     * refuse (a safe area, the level gap), whether it will skull you, and whether the
+     * target is skulled (their bank becomes your Bank key if you kill them). Nothing is
+     * sent; deciding is up to your script. `bot.attack` attaches the same warnings.
+     *
+     * ```ts
+     * const target = sdk.findNearbyPlayer('Zezima');
+     * const risk = target && sdk.assessPvpAttack(target);
+     * if (risk?.allowed && risk.targetSkulled) await bot.attack(target!);
+     * ```
+     */
+    assessPvpAttack(target: NearbyPlayer | string | RegExp): PvpAttackAssessment | null {
+        if (!this.state) return null;
+        const player = typeof target === 'object' && 'index' in target ? target : this.findNearbyPlayer(target);
+        return player ? assessPvpAttack(this.state, player) : null;
     }
 
     /** Get location (object) by coordinates and ID. */
@@ -1982,6 +2003,19 @@ export class BotSDK {
                 for (const p of message.state.nearbyPlayers) {
                     if (p.worldX === undefined) { p.worldX = p.x; p.worldZ = p.z; }
                 }
+            }
+
+            // pvp-sdk: where each player stands in PvP terms, from the server's own
+            // safe-area and Wilderness tables (sdk/pvp.ts).
+            const plane = message.state.player?.level ?? 0;
+            if (message.state.player) {
+                const me = message.state.player;
+                me.safeArea = safeZoneAt(me.worldX, me.worldZ, plane)?.name ?? null;
+                me.wildernessLevel = wildernessLevel(me.worldX, me.worldZ, plane);
+            }
+            for (const p of message.state.nearbyPlayers ?? []) {
+                p.safeArea = safeZoneAt(p.x, p.z, plane)?.name ?? null;
+                p.wildernessLevel = wildernessLevel(p.x, p.z, plane);
             }
 
             // Trade offers publish counts as `count`; mirror to `amount` so

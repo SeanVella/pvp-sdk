@@ -233,6 +233,30 @@ describe('BotStateCollector combat state', () => {
         expect(collector.collectState(3, true).isSkulled).toBeFalse();
     });
 
+    test('counts the skull down from the last pvp_skull_ticks the server sent', () => {
+        const client = createClient();
+        client.var = [];
+        client.localPlayer.headicons = 0x1;
+        const collector = new BotStateCollector(client);
+
+        // Skulled on a server that doesn't send the countdown: unknown, not zero.
+        expect(collector.collectState(10, true).skullTicksRemaining).toBeNull();
+
+        client.var[1005] = 2000;
+        expect(collector.collectState(11, true).skullTicksRemaining).toBe(2000);
+        expect(collector.collectState(41, true).skullTicksRemaining).toBe(1970);
+
+        // The server resyncs about every 50 ticks; a re-skull writes 2000 again.
+        client.var[1005] = 1950;
+        expect(collector.collectState(61, true).skullTicksRemaining).toBe(1950);
+        client.var[1005] = 2000;
+        expect(collector.collectState(70, true).skullTicksRemaining).toBe(2000);
+
+        client.localPlayer.headicons = 0;
+        client.var[1005] = 0;
+        expect(collector.collectState(80, true).skullTicksRemaining).toBe(0);
+    });
+
     test('reports which nearby players show the skull', () => {
         const client = createClient();
         const other = (name: string, headicons: number) => ({

@@ -82,6 +82,8 @@ describe('formatWorldStateSummary', () => {
     test('flags our own skull on the position line', () => {
         expect(formatWorldStateSummary(state({ isSkulled: true }), 0)).toContain('HP 7/10 | SKULLED');
         expect(formatWorldStateSummary(state({ isSkulled: false }), 0)).not.toContain('SKULLED');
+        // 1400 ticks of 0.3 s is 7 minutes.
+        expect(formatWorldStateSummary(state({ isSkulled: true, skullTicksRemaining: 1400 }), 0)).toContain('| SKULLED (~7 min left)');
     });
 
     test('reports xp gained per skill', () => {
