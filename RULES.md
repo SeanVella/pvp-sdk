@@ -125,8 +125,8 @@ waiting when you return.
 ## Teleporting
 
 For **24 ticks (7.2 seconds)** after hitting or being hit by another player, no teleport works:
-spells, jewellery or anything else. The message is "You can't teleport so soon after fighting
-another player." In the Wilderness the usual limits also apply: no teleports above level 20
+spells, jewellery, the Wilderness levers, the rune essence wizards or anything else. The message
+is "You can't teleport so soon after fighting another player." In the Wilderness the usual limits also apply: no teleports above level 20
 (amulet of glory: above 30), and a ring of life doesn't save you above level 30.
 
 ### Tele Block
@@ -134,7 +134,8 @@ another player." In the Wilderness the usual limits also apply: no teleports abo
 **Tele Block** (Magic 85; a law, a death and a chaos rune; 80 xp) is cast on another player under
 the usual attack rules. If it lands, they can't teleport for **1000 ticks (5 minutes)**, or **500
 (2.5 minutes)** if they were praying Protect from Magic when it hit. It stops teleport spells,
-jewellery and the Wilderness levers, with "A magical force stops you from teleporting." It lasts
+jewellery, the Wilderness levers and the rune essence wizards, with "A magical force stops you
+from teleporting." It lasts
 through logging out and ends when you die. It can't be cast on someone who's already blocked
 ("That player is already affected by this spell."). Like any attack, it can miss and it can
 skull you. It's in the spellbook after Charge.

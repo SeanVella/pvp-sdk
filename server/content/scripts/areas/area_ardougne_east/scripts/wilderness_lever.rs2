@@ -2,8 +2,8 @@
 // preferebly another video of this lever. https://youtu.be/GnaZfzxIyt8?list=PLn23LiLYLb1bYAFU3Vdk3N9niuHs-b-4-&t=164
 [oploc1,wildinlever]
 p_arrivedelay;
-// pvp-sdk: a lever is a teleport too, so Tele Block stops it (pvp_kit/scripts/tele_block.rs2)
-if (~pvp_tele_blocked = true) {
+// pvp-sdk: a lever is a teleport too, so the PvP teleport lock and Tele Block stop it (pvp_world.rs2)
+if (~pvp_teleport_refused = true) {
     return;
 }
 if (%warning_wilderness_teleport_lever = ^false) {
@@ -35,8 +35,8 @@ mes("...And teleport into the wilderness.");
 
 [oploc1,wildoutlever]
 p_arrivedelay;
-// pvp-sdk: a lever is a teleport too, so Tele Block stops it (pvp_kit/scripts/tele_block.rs2)
-if (~pvp_tele_blocked = true) {
+// pvp-sdk: a lever is a teleport too, so the PvP teleport lock and Tele Block stop it (pvp_world.rs2)
+if (~pvp_teleport_refused = true) {
     return;
 }
 // teleport to wilderness

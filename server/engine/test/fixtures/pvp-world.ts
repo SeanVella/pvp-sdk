@@ -32,6 +32,7 @@ const { default: ScriptProvider } = await import('../../src/engine/script/Script
 const { default: ScriptRunner } = await import('../../src/engine/script/ScriptRunner.js');
 const { default: ScriptState } = await import('../../src/engine/script/ScriptState.js');
 const { default: ScriptPointer } = await import('../../src/engine/script/ScriptPointer.js');
+const { ScriptOpcode } = await import('../../src/engine/script/ScriptOpcode.js');
 const { NetworkPlayer } = await import('../../src/engine/entity/NetworkPlayer.js');
 const { PlayerLoading } = await import('../../src/engine/entity/PlayerLoading.js');
 const { default: Packet } = await import('../../src/io/Packet.js');
@@ -288,6 +289,27 @@ test('a PvP hit teleport-locks both players for 24 ticks', () => {
     expect(target.messages).toContain("You can't teleport so soon after fighting another player.");
     World.currentTick = 1024;
     expect(run('[proc,pre_tele_checks]', target, null, [0]).popInt()).toBe(1);
+});
+
+test('levers and the rune essence wizards make the PvP teleport checks too', () => {
+    World.currentTick = 2000;
+    const p = player('lever', 10, FIELD.x, FIELD.z);
+    p.vars[varp('pvp_combat_clock')] = 1990; // hit 10 ticks ago
+    expect(run('[proc,pvp_teleport_refused]', p).popInt()).toBe(1);
+    expect(p.messages).toEqual(["You can't teleport so soon after fighting another player."]);
+    World.currentTick = 2014;
+    p.messages = [];
+    expect(run('[proc,pvp_teleport_refused]', p).popInt()).toBe(0);
+    p.vars[varp('pvp_tele_block')] = 3000;
+    expect(run('[proc,pvp_teleport_refused]', p).popInt()).toBe(1);
+    expect(p.messages).toEqual(['A magical force stops you from teleporting.']);
+    // Every teleport outside ~pre_tele_checks calls the same checks, and so does ~pre_tele_checks.
+    const refused = ScriptProvider.getByName('[proc,pvp_teleport_refused]')!.id;
+    for (const name of ['[oploc1,wildinlever]', '[oploc1,wildoutlever]', '[oploc1,dragonkinginlever]', '[oploc1,dragonkingoutlever]', '[label,teleport_to_essence_mine]', '[proc,pre_tele_checks]']) {
+        const script = ScriptProvider.getByName(name)!;
+        const checks = script.opcodes.some((op, i) => op === ScriptOpcode.GOSUB_WITH_PARAMS && script.intOperands[i] === refused);
+        expect(checks ? name : `${name} skips the PvP teleport checks`).toBe(name);
+    }
 });
 
 test('dying skulled raids your 10 most valuable tradeable bank stacks into a key for the killer', () => {

@@ -357,8 +357,8 @@ if (inv_total(worn, antidragonbreathshield) > 0) {
 return($maxhit);
 
 [oploc1,dragonkinginlever]
-// pvp-sdk: a lever is a teleport too, so Tele Block stops it (pvp_kit/scripts/tele_block.rs2)
-if (~pvp_tele_blocked = true) {
+// pvp-sdk: a lever is a teleport too, so the PvP teleport lock and Tele Block stop it (pvp_world.rs2)
+if (~pvp_teleport_refused = true) {
     return;
 }
 p_delay(0); // delay in osrs? isntead of arrivedelay
@@ -376,8 +376,8 @@ p_delay(0);
 mes("...And teleport into the Dragon's lair."); // changed to "Lair" (uppercase), on rev 317
 
 [oploc1,dragonkingoutlever]
-// pvp-sdk: a lever is a teleport too, so Tele Block stops it (pvp_kit/scripts/tele_block.rs2)
-if (~pvp_tele_blocked = true) {
+// pvp-sdk: a lever is a teleport too, so the PvP teleport lock and Tele Block stop it (pvp_world.rs2)
+if (~pvp_teleport_refused = true) {
     return;
 }
 p_arrivedelay;

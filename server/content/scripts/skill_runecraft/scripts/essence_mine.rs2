@@ -4,6 +4,11 @@ if(%runemysteries < ^runemysteries_complete) {
     mes("You need to have completed the Rune Mysteries Quest to use this feature.");
     return;
 }
+// pvp-sdk: the wizard's teleport is still a teleport: the PvP teleport lock and Tele Block stop it
+// (pvp_world.rs2). Sedridor teaches it at the Wizards' Tower, outside any safe area.
+if (~pvp_teleport_refused = true) {
+    return;
+}
 if_close;
 %exit_essence_mine_coord = $tele_back_coord;
 // this is lowercase

@@ -193,7 +193,9 @@ PvP kit, cherry-picking LostCity's 377-wip scripts where they exist:
       whip's lash swings rigidly. Open: the whip's run energy drain does nothing while
       `NODE_INFINITE_RUN` (default true) refills everyone's energy every tick.
 - [x] Tele Block (`scripts/pvp_kit/scripts/tele_block.rs2`): level 85, 5 minutes (2.5 under
-      Protect from Magic), stops spells, jewellery and the Wilderness levers, survives logout,
+      Protect from Magic), stops spells, jewellery, the Wilderness levers and the rune essence
+      wizards (all through `~pvp_teleport_refused`, which also applies the PvP teleport lock to
+      the levers and wizards since 2026-10-22), survives logout,
       ends on death. 377-wip has the impact graphic but no spell, so the spell, its spellbook
       button and its icon are ours (`engine/tools/pvp/import377TeleBlock.ts`). The SDK exposes
       `state.teleBlockTicksRemaining` and `Spells.TELE_BLOCK`.

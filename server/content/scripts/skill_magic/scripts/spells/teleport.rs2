@@ -126,13 +126,8 @@ if(inv_total(inv, thanainabarrel) > 0) {
 }
 
 [proc,pre_tele_checks](coord $coord)(boolean)
-// pvp-sdk: no teleporting out of a PvP fight (pvp_world.rs2)
-if (~pvp_teleport_locked = true) {
-    mes("You can't teleport so soon after fighting another player.");
-    return(false);
-}
-// pvp-sdk: Tele Block (pvp_kit/scripts/tele_block.rs2)
-if (~pvp_tele_blocked = true) {
+// pvp-sdk: no teleporting out of a PvP fight, nor while Tele Blocked (pvp_world.rs2)
+if (~pvp_teleport_refused = true) {
     return(false);
 }
 if (~in_tutorial_island(coord) = true) {

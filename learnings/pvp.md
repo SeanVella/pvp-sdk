@@ -22,7 +22,7 @@ are in [`RULES.md`](../RULES.md).
   Open it (inventory option 1) in a safe area while unskulled; option 2 lists what's inside. You
   can carry 5. If someone kills you, they take your keys.
 - **No teleporting for 7.2 seconds** (24 ticks) after any PvP hit, so you can't teleport out of a
-  fight the moment it turns. **Tele Block** stops it for 5 minutes (see below).
+  fight the moment it turns, levers included. **Tele Block** stops it for 5 minutes (see below).
 - **Spawn protection:** about 30 seconds after respawning nobody can attack you. Attacking
   someone ends it early.
 - **New-player protection:** a new account can't be attacked for its first 3 hours of play

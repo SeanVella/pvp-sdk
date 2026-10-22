@@ -124,3 +124,16 @@ if (%pvp_combat_clock > 0 & map_clock < add(%pvp_combat_clock, $lock)) {
     return(true);
 }
 return(false);
+
+// The PvP checks every teleport makes, saying why one is refused: the lock after a PvP hit, then
+// Tele Block. ~pre_tele_checks makes them for spells and jewellery; the Wilderness levers and the
+// rune essence wizards, which don't go through it, call this themselves.
+[proc,pvp_teleport_refused]()(boolean)
+if (~pvp_teleport_locked = true) {
+    mes("You can't teleport so soon after fighting another player.");
+    return(true);
+}
+if (~pvp_tele_blocked = true) { // pvp_kit/scripts/tele_block.rs2
+    return(true);
+}
+return(false);

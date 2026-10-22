@@ -426,8 +426,12 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       keeps nothing; `player_death_lose_items` keeps 3 only when unskulled and ignores Protect
       Item; every death respawns at full health with spawn protection (upstream respawns pvp
       deaths at 1hp via `pvp_death_mark`, now unused there).
-- [ ] **`skill_magic/scripts/spells/teleport.rs2` `~pre_tele_checks`** — the PvP teleport lock.
-      Every teleport (spells, jewellery, quest items) goes through this proc.
+- [ ] **`skill_magic/scripts/spells/teleport.rs2` `~pre_tele_checks`** — calls
+      `~pvp_teleport_refused` (pvp_world.rs2: the PvP teleport lock, then Tele Block). Spells,
+      jewellery and quest items go through this proc; the teleports that don't call
+      `~pvp_teleport_refused` themselves: the four Wilderness levers (`wilderness_lever.rs2`,
+      `king_black_dragon.rs2`) and the rune essence wizards
+      (`skill_runecraft/scripts/essence_mine.rs2` `[label,teleport_to_essence_mine]`).
 - [ ] **`login_logout/login.rs2`** — `~dmm_sync_key_tokens` so Bank key objs match the keys held;
       `~dmm_rules_login` before `~set_pk_skull_login` (it must run first, or the restored skull
       starts the guards).
@@ -551,7 +555,8 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       and its hover panel at the end, components 40593-40602 in `interface.pack` and
       `interface.order`), `spells.constant` (`^tele_block = 105`), `teleport.rs2`
       (`~pre_tele_checks`), the four Wilderness levers (`wilderness_lever.rs2`,
-      `king_black_dragon.rs2`), `login.rs2` and `death.rs2`. Varps 1008/1009 in
+      `king_black_dragon.rs2`) and the rune essence wizards (`essence_mine.rs2`), all through
+      `~pvp_teleport_refused`, plus `login.rs2` and `death.rs2`. Varps 1008/1009 in
       `pvp_world.varp`. SDK: `teleBlockTicksRemaining` (StateCollector, both types files,
       formatter), `Spells.TELE_BLOCK`. Verify: `bun test server/engine/test/pvp-world.test.ts`.
 - [ ] **PvP kit: Ancient Magicks** — fork-only `content/scripts/pvp_kit/scripts/ancients.rs2`,
