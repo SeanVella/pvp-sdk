@@ -8,6 +8,16 @@ import { loadWorldConfig, migrateFromLegacyEnv } from '#/util/WorldConfig.js';
 // defaults. Locally (no such vars set) this is a no-op.
 const config = migrateFromLegacyEnv(loadWorldConfig(), process.env as Record<string, string>);
 
+// pvp-sdk: seasons (docs/PVP_PLAN.md "Seasons"). Season 1 is the original world, on profile
+// 'main'. Each later season starts every character over on its own profile, season-N
+// (saves, hiscores, PvP kills are all keyed by profile), with its own exchange database
+// (marketDatabasePath). Earlier seasons stay on disk, viewable on the hiscores with
+// ?profile=; setting SEASON back brings one back. An explicit NODE_PROFILE wins.
+const SEASON = Math.max(1, tryParseInt(process.env.SEASON, 1));
+if (SEASON >= 2 && !process.env.NODE_PROFILE) {
+    config.node.profile = `season-${SEASON}`;
+}
+
 export default {
     runtime: {
         maxNpcs: 16383
@@ -77,5 +87,6 @@ export default {
     BREACHES: tryParseBoolean(process.env.BREACHES, true),
     BREACH_INTERVAL_MINUTES: tryParseInt(process.env.BREACH_INTERVAL_MINUTES, 180),
     BREACH_WARNING_MINUTES: tryParseInt(process.env.BREACH_WARNING_MINUTES, 10),
-    BREACH_DURATION_MINUTES: tryParseInt(process.env.BREACH_DURATION_MINUTES, 20)
+    BREACH_DURATION_MINUTES: tryParseInt(process.env.BREACH_DURATION_MINUTES, 20),
+    SEASON
 };

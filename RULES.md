@@ -196,6 +196,12 @@ traded, and **dying destroys them**.
 | Escape | The teleport lock after a PvP hit is halved (12 ticks) |
 | Fortune | Breaches pay half as many points again |
 
+## Seasons
+
+The world runs in **seasons**. When a new season starts, every character starts over on Tutorial
+Island: stats, items, bank, Bank keys and safe deposit box all reset; your account and password
+stay. Each season has its own hiscores, and past seasons' boards stay up.
+
 ## PvP hiscores
 
 [`/hiscores/pvp`](https://pvp-sdk.fly.dev/hiscores/pvp) ranks kills, deaths, K/D, the best run of

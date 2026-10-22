@@ -162,7 +162,11 @@ From [`DEADMAN.md`](DEADMAN.md), roughly in order of value:
       ahead, for 20 minutes; its fighters earn breach points (varp 1007) by damage and sigils;
       the breach warden (npc 2047, Lumbridge) sells rewards; `GET /api/breach`. Env:
       `BREACHES`, `BREACH_INTERVAL_MINUTES`, `BREACH_WARNING_MINUTES`, `BREACH_DURATION_MINUTES`.
-- [ ] Seasons: wipes, PvP leaderboards (item 3) and a finale.
+- [x] Seasons with full wipes (owner, 2026-10-22): `SEASON` picks the profile (season 1 =
+      `main`, season N = `season-N`) and the exchange database (`market.season-N.sqlite`), so a
+      new season starts every character over while earlier seasons stay on disk and on the
+      hiscores (`?profile=`). Runbook under "Starting a season" below. Still open: a finale
+      event.
 - [x] Sigils (objs 10001-10005): Fury, Stone, the Feast, Escape, Fortune; perks while carried,
       destroyed on death. Classic XP loss stays off (owner, 2026-10-22).
 
@@ -206,6 +210,20 @@ Then send `Authorization: Bearer <token>` (e.g. `curl -H "Authorization: Bearer 
 https://pvp-sdk.fly.dev/playerpositions`), or sign a browser in at
 https://pvp-sdk.fly.dev/owner (a 30-day cookie) and open `/mapview/`, `/hiscores/outfit`,
 `/hiscores/bank` or `/status`. Without the secret those routes are closed to everyone.
+
+### Starting a season
+
+A new season starts every character over (stats, items, bank, keys, safe deposit box, quests)
+on Tutorial Island; accounts and passwords stay. Nothing is deleted: the old season's saves
+(`data/players/<profile>/`), exchange database and hiscores stay on the volume.
+
+1. Announce the date a few days ahead.
+2. Snapshot the volume: `fly volumes snapshots create vol_r7y5y0l6m560wn3r -a pvp-sdk`.
+3. Set `SEASON = "N"` in `fly.toml` `[env]` (the next number; it isn't a secret) and deploy.
+4. Check `/hiscores/pvp`: it shows the new season, with links to the old ones.
+
+Every character is new, so everyone gets new-player protection for their first 3 hours of play.
+To undo, set `SEASON` back and deploy: the previous season's characters come back as they were.
 
 Make a moderator (then relog): `fly ssh console -a pvp-sdk -C "sqlite3 /opt/server/data/db.sqlite \"UPDATE account SET staffmodlevel=2 WHERE username='name'\""`.
 

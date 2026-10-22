@@ -140,7 +140,7 @@ export async function handleHiscoresPlayerPage(url: URL): Promise<Response | nul
     }
 
     const username = decodeURIComponent(match[1]);
-    const profile = (url.searchParams.get('profile') || 'main').replace(/[^a-zA-Z0-9_-]/g, '');
+    const profile = (url.searchParams.get('profile') || Environment.node.profile).replace(/[^a-zA-Z0-9_-]/g, '');
 
     // Find the account
     const accountQuery = db.selectFrom('account').select(['id', 'username']).where('username', '=', username).where('staffmodlevel', '<=', 1);
@@ -305,7 +305,7 @@ export async function handleHiscoresPage(url: URL): Promise<Response | null> {
     }
 
     const category = tryParseInt(url.searchParams.get('category'), -1);
-    const profile = (url.searchParams.get('profile') || 'main').replace(/[^a-zA-Z0-9_-]/g, '');
+    const profile = (url.searchParams.get('profile') || Environment.node.profile).replace(/[^a-zA-Z0-9_-]/g, '');
     const playerSearch = url.searchParams.get('player')?.toLowerCase().trim() || '';
     const rankSearch = tryParseInt(url.searchParams.get('rank'), -1);
 
@@ -610,7 +610,7 @@ export async function handleHiscoresOutfitPage(url: URL): Promise<Response | nul
     const match = url.pathname.match(/^\/hi(?:gh)?scores\/outfit\/?$/);
     if (!match) return null;
 
-    const profile = (url.searchParams.get('profile') || 'main').replace(/[^a-zA-Z0-9_-]/g, '');
+    const profile = (url.searchParams.get('profile') || Environment.node.profile).replace(/[^a-zA-Z0-9_-]/g, '');
 
     let query = db
         .selectFrom('hiscore_outfit')
@@ -824,7 +824,7 @@ export async function handleHiscoresRunitePage(url: URL): Promise<Response | nul
     const match = url.pathname.match(/^\/hi(?:gh)?scores\/runite\/?$/);
     if (!match) return null;
 
-    const profile = (url.searchParams.get('profile') || 'main').replace(/[^a-zA-Z0-9_-]/g, '');
+    const profile = (url.searchParams.get('profile') || Environment.node.profile).replace(/[^a-zA-Z0-9_-]/g, '');
 
     const [allTime, week, day] = await Promise.all([getRuniteRows(profile, 0), getRuniteRows(profile, 7 * 24 * 3600_000), getRuniteRows(profile, 24 * 3600_000)]);
 
@@ -1029,7 +1029,7 @@ export async function handleHiscoresPvpPage(url: URL): Promise<Response | null> 
     const match = url.pathname.match(/^\/hi(?:gh)?scores\/pvp\/?$/);
     if (!match) return null;
 
-    const profile = (url.searchParams.get('profile') || 'main').replace(/[^a-zA-Z0-9_-]/g, '');
+    const profile = (url.searchParams.get('profile') || Environment.node.profile).replace(/[^a-zA-Z0-9_-]/g, '');
     const requested = url.searchParams.get('window') ?? '';
     const windowKey = requested in PVP_WINDOWS ? requested : 'week';
     const results = await getPvpBoard(profile, PVP_WINDOWS[windowKey]!.ms);
@@ -1037,6 +1037,15 @@ export async function handleHiscoresPvpPage(url: URL): Promise<Response | null> 
     const tabs = Object.entries(PVP_WINDOWS)
         .map(([key, w]) => (key === windowKey ? `<b>${w.label}</b>` : `<a href="/hiscores/pvp?window=${key}&profile=${profile}" class="c">${w.label}</a>`))
         .join(' | ');
+    // Seasons (Environment.SEASON): season 1 is profile 'main', season N is 'season-N'.
+    const seasonOf = (p: string) => (p === 'main' ? 1 : Number(/^season-(\d+)$/.exec(p)?.[1] ?? 0));
+    const season = seasonOf(profile);
+    const seasonLinks = Array.from({ length: Environment.SEASON }, (_, i) => i + 1)
+        .map(n => {
+            const p = n === 1 ? 'main' : `season-${n}`;
+            return n === season ? `<b>${n}</b>` : `<a href="/hiscores/pvp?window=all&profile=${p}" class="c">${n}</a>`;
+        })
+        .join(' ');
     const rows = results
         .map(
             (r, i) => `
@@ -1082,7 +1091,7 @@ export async function handleHiscoresPvpPage(url: URL): Promise<Response | null> 
                     <tr>
                         <td class="e">
                             <center>
-                                <b>PvP</b><br>
+                                <b>PvP${season > 0 && Environment.SEASON > 1 ? ` - Season ${season}` : ''}</b><br>
                                 <a href="/" class="c">Main menu</a> | <a href="/hiscores?profile=${profile}" class="c">All Hiscores</a>
                             </center>
                         </td>
@@ -1096,7 +1105,7 @@ export async function handleHiscoresPvpPage(url: URL): Promise<Response | null> 
                             <center>
                                 A kill counts when the victim risked at least ${MIN_RISK_GP.toLocaleString()} gp, came from another address,
                                 and the same two players haven't had a counted kill in the last hour. Loot is what the victims risked.<br><br>
-                                ${tabs}
+                                ${tabs}${Environment.SEASON > 1 ? `<br>Seasons: ${seasonLinks}` : ''}
                             </center>
                         </td>
                     </tr>
@@ -1189,7 +1198,7 @@ export async function handleHiscoresBankPage(url: URL): Promise<Response | null>
     const match = url.pathname.match(/^\/hi(?:gh)?scores\/bank\/?$/);
     if (!match) return null;
 
-    const profile = (url.searchParams.get('profile') || 'main').replace(/[^a-zA-Z0-9_-]/g, '');
+    const profile = (url.searchParams.get('profile') || Environment.node.profile).replace(/[^a-zA-Z0-9_-]/g, '');
     const itemSearch = (url.searchParams.get('q') || '').trim();
     const results = itemSearch
         ? rankMatchingBanks(await getBankSearchSnapshot(profile), itemSearch)

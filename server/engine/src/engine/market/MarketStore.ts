@@ -283,15 +283,20 @@ export class MarketStore {
     }
 }
 let store: MarketStore | undefined;
+/** pvp-sdk: GE_DATABASE, or beside it market.season-N.sqlite from season 2 on, so the
+ * checkpoints that override saves (PlayerLoading) start empty with the season too. */
+export function marketDatabasePath(base: string = process.env.GE_DATABASE ?? 'data/market.sqlite', season: number = Environment.SEASON): string {
+    return season >= 2 ? base.replace(/(\.sqlite)?$/, `.season-${season}$1`) : base;
+}
 export function marketStore(): MarketStore {
     if (!Environment.GE_ENABLED) throw new Error('Grand Exchange is not available on this server.');
-    return (store ??= new MarketStore(process.env.GE_DATABASE ?? 'data/market.sqlite'));
+    return (store ??= new MarketStore(marketDatabasePath()));
 }
 /** Preserve crash recovery and later re-enabling for existing exchange participants.
  * A world that has never used GE does not create or require a market database.
  */
 export function playerSaveStore(): MarketStore | undefined {
-    const path = process.env.GE_DATABASE ?? 'data/market.sqlite';
+    const path = marketDatabasePath();
     if (!Environment.GE_ENABLED && !store && !existsSync(path)) return undefined;
     return (store ??= new MarketStore(path));
 }
