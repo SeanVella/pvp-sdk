@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import Environment from '#/util/Environment.js';
-import { handleHiscoresPage, handleHiscoresPlayerPage, handleHiscoresOutfitPage, handleHiscoresBankPage, handleHiscoresRunitePage } from './pages/hiscores.js';
+import { handleHiscoresPage, handleHiscoresPlayerPage, handleHiscoresOutfitPage, handleHiscoresBankPage, handleHiscoresRunitePage, handleHiscoresPvpPage } from './pages/hiscores.js';
 import { isOwnerOnlyPath, isOwnerRequest, notFound } from './owner.js';
 import { handlePublicFiles } from './pages/static.js';
 import { handleSpriteRequest } from './sprites/SpriteRenderer.js';
@@ -144,6 +144,9 @@ export function startHiscoresWeb() {
 
             const hiscoresRuniteResponse = await handleHiscoresRunitePage(url);
             if (hiscoresRuniteResponse) return hiscoresRuniteResponse;
+
+            const hiscoresPvpResponse = await handleHiscoresPvpPage(url); // pvp-sdk
+            if (hiscoresPvpResponse) return hiscoresPvpResponse;
 
             const spriteResponse = await handleSpriteRequest(url);
             if (spriteResponse) return spriteResponse;

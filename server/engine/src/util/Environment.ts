@@ -69,5 +69,7 @@ export default {
     OWNER_TOKEN: process.env.OWNER_TOKEN || '',
     // pvp-sdk: accounts register themselves on first login; cap how fast (0 = no cap).
     REGISTRATIONS_PER_IP_PER_HOUR: tryParseInt(process.env.REGISTRATIONS_PER_IP_PER_HOUR, 10),
-    REGISTRATIONS_PER_HOUR: tryParseInt(process.env.REGISTRATIONS_PER_HOUR, 200)
+    REGISTRATIONS_PER_HOUR: tryParseInt(process.env.REGISTRATIONS_PER_HOUR, 200),
+    // pvp-sdk: a kill counts toward /hiscores/pvp only if the victim risked this much (gp)
+    PVP_KILL_MIN_RISK: tryParseInt(process.env.PVP_KILL_MIN_RISK, 1000)
 };

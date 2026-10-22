@@ -1074,3 +1074,7 @@
 
 // rs-sdk: runite ore mined from a rock; the engine counts the Lava Maze rocks toward the hiscores
 [command,runite_mined](coord $rock)
+
+// pvp-sdk: the active player died to .active_player; the engine values what they risked
+// and records the kill for the PvP hiscores and the kill feed. Call before the loot moves.
+[command,pvp_kill](boolean $skulled)

@@ -156,6 +156,19 @@ The Wilderness starts north of the ditch at z 3520 (x 2944-3391), and undergroun
 You can't log out for 16 ticks (about 5 seconds here) after combat. The in-game message says 10
 seconds, which is what it was at the original game's speed.
 
+## PvP hiscores
+
+[`/hiscores/pvp`](https://pvp-sdk.fly.dev/hiscores/pvp) ranks kills, deaths, K/D, the best run of
+kills between deaths, and loot (what your victims risked) for today, this week and all time. A
+kill counts only when:
+
+- the victim risked at least 1,000 gp (what they carried, the Bank keys they held, and their 10
+  most valuable bank stacks if they were skulled);
+- the two players come from different addresses;
+- the same two players haven't had a counted kill, either way, in the last hour.
+
+Every counted kill is announced to the whole world.
+
 ## Server messages
 
 When the server refuses an attack it says why. `bot.attack()` and `bot.castSpell()` return these
@@ -177,6 +190,7 @@ Other messages to watch for:
 | The guards attack you for bringing a skull into a safe area! | Leave the safe area now |
 | You can't teleport so soon after fighting another player. | Teleport lock |
 | You take a bank key from your victim. | You killed a skulled player (or a key holder) |
+| *Name* has killed *Name*, who risked *N* gp. | A counted kill, announced to everyone |
 | You can't open a bank key while you're skulled. / Bank keys can only be opened in a safe area. | Wait, or move |
 
 ## Other server settings

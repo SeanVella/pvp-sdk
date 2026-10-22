@@ -106,6 +106,7 @@ import FriendlistLoaded from '#/network/game/server/model/FriendlistLoaded.js';
 import HashTable from '#/datastruct/HashTable.js';
 import Midi from '#/cache/midi/Midi.js';
 import { WorldQueue } from '#/engine/WorldQueue.js';
+import { KillJudge, PAIR_COOLDOWN_MS, comparableIp, riskedValue, type Stack } from '#/engine/pvp/PvpKills.js';
 
 const priv = forge.pki.privateKeyFromPem(fs.readFileSync('data/config/private.pem', 'ascii'));
 
@@ -118,6 +119,8 @@ class World {
     private loginThread = new Worker(new URL('../server/login/LoginThread.ts', import.meta.url));
     private friendThread = new Worker(new URL('../server/friend/FriendThread.ts', import.meta.url));
     private loggerThread = new Worker(new URL('../server/logger/LoggerThread.ts', import.meta.url));
+    // pvp-sdk: decides which PvP kills count toward /hiscores/pvp (engine/pvp/PvpKills.ts)
+    private readonly killJudge = new KillJudge(PAIR_COOLDOWN_MS, Environment.PVP_KILL_MIN_RISK);
     private devThread: Worker | null = null;
 
     private static readonly PLAYERS: number = 2047;
@@ -2809,6 +2812,35 @@ class World {
             offender,
             reason
         });
+    }
+
+    // pvp-sdk: one row per death to a player (hiscores /pvp), called before the loot
+    // moves. Counted kills are announced to the world.
+    notifyPvpKill(killer: Player, victim: Player, skulled: boolean) {
+        const stacks = (inv: number): Stack[] => (victim.getInventory(inv)?.items ?? []).filter((item): item is Stack => item !== null);
+        const keys: Stack[] = [];
+        for (let k = 1; k <= 5; k++) keys.push(...stacks(InvType.getId(`dmm_key_${k}`)));
+        const value = riskedValue(id => ObjType.get(id), [...stacks(InvType.INV), ...stacks(InvType.WORN)], keys, stacks(InvType.getId('bank')), skulled);
+
+        const ip = (p: Player) => comparableIp(p instanceof NetworkPlayer ? p.client.remoteAddress : null);
+        const now = Date.now();
+        const verdict = this.killJudge.judge(killer.username, victim.username, ip(killer), ip(victim), value, now);
+        this.loggerThread.postMessage({
+            type: 'pvp_kill',
+            event: {
+                timestamp: now,
+                profile: Environment.node.profile,
+                killer: killer.username,
+                victim: victim.username,
+                value,
+                victim_skulled: skulled,
+                counted: verdict.counted,
+                reason: verdict.reason
+            }
+        });
+        if (verdict.counted) {
+            this.broadcastMes(`${killer.displayName} has killed ${victim.displayName}, who risked ${value.toLocaleString('en-US')} gp.`);
+        }
     }
 
     // rs-sdk: one row per runite ore mined from a leaderboard rock (hiscores /runite)

@@ -103,6 +103,13 @@ Each "Bank key" item in your inventory is one key; `openBankKey` opens the first
 A new key arrives the moment your victim dies, with the message "You take a bank key from your
 victim." It's saved with your character, and the inventory item is restored when you log in.
 
+## The PvP hiscores
+
+https://pvp-sdk.fly.dev/hiscores/pvp ranks kills, deaths, K/D, best streak and loot for today,
+this week and all time, and every counted kill is announced to the world. A kill counts only
+when your victim risked at least 1,000 gp, came from another address, and the two of you
+haven't had a counted kill in the last hour, so farming your own alts scores nothing.
+
 ## Surviving
 
 - Keep food in the inventory and eat early with `bot.eatFood()`, well before your hitpoints get

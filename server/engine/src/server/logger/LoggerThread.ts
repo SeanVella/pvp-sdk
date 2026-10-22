@@ -56,6 +56,12 @@ async function handleRequests(_parentPort: ParentPort, msg: any) {
             await client.runiteMine(event);
             break;
         }
+        case 'pvp_kill': {
+            // pvp-sdk: gameplay data too (hiscores /pvp), so not gated either
+            const { event } = msg;
+            await client.pvpKill(event);
+            break;
+        }
         case 'report': {
             if (Environment.logger.enabled) {
                 const { session_uuid, coord, offender, reason } = msg;

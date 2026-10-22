@@ -509,6 +509,25 @@ export default class LoggerServer {
                                 .execute();
                             break;
                         }
+                        case 'pvp_kill': {
+                            // pvp-sdk: hiscores /pvp
+                            const { event } = msg;
+
+                            await db
+                                .insertInto('pvp_kill')
+                                .values({
+                                    timestamp: toDbDate(event.timestamp),
+                                    profile: event.profile,
+                                    killer: event.killer,
+                                    victim: event.victim,
+                                    value: event.value,
+                                    victim_skulled: event.victim_skulled ? 1 : 0,
+                                    counted: event.counted ? 1 : 0,
+                                    reason: event.reason
+                                })
+                                .execute();
+                            break;
+                        }
                         case 'report': {
                             const { session_uuid, timestamp, coord, offender, reason } = msg;
 

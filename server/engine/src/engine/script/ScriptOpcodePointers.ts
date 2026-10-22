@@ -1027,6 +1027,10 @@ const ScriptOpcodePointers: {
     // rs-sdk ops
     [ScriptOpcode.RUNITE_MINED]: {
         require: ['active_player']
+    },
+    // pvp-sdk: victim = active_player, killer = .active_player (findhero)
+    [ScriptOpcode.PVP_KILL]: {
+        require: ['active_player', 'active_player2']
     }
 };
 

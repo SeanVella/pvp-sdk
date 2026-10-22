@@ -115,13 +115,16 @@ v2 deploy (2026-10-22).
 
 ### 3. PvP telemetry and leaderboards
 
-- [ ] `pvp_kill` event, cloned from the runite leaderboard pipeline: content command in
-      `death.rs2` (victim = active player, killer = `findhero`) → engine opcode 10012 → logger
-      relay → `pvp_kill` table (both prisma schemas) → `/hiscores/pvp` with kills, deaths, K/D,
-      best streak and loot value over 24h / 7d / all time.
-- [ ] Anti-farming: count a kill only when killer and victim IPs differ, the same pair hasn't
-      traded kills recently, and the victim risked something.
-- [ ] Kill feed: world message and world-feed events for spectators (rs-world).
+- [x] `pvp_kill` event: the `pvp_kill` command in `death.rs2` (before the loot moves) → opcode
+      10012 → `World.notifyPvpKill` → logger relay → `pvp_kill` table (both prisma schemas) →
+      `/hiscores/pvp` with kills, deaths, K/D, best streak and loot (what the victims risked:
+      carried, keys held, and the 10 best bank stacks when skulled) for today / this week /
+      all time. Every death to a player is stored; `counted` marks the ones that score.
+- [x] Anti-farming (`engine/pvp/PvpKills.ts`): a kill counts only when the two players' IPs
+      differ, the victim risked at least `PVP_KILL_MIN_RISK` gp (1000), and the same pair
+      hasn't had a counted kill either way in the last hour (in memory, so a restart forgets).
+- [x] Kill feed: a world message for each counted kill. Still open: world-feed events for
+      spectators (rs-world), and a public JSON feed for bots.
 
 ### 4. SDK for PvP agents
 

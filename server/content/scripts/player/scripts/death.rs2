@@ -45,6 +45,7 @@ if (%pk_skull > 0) {
 }
 if (findhero = true) {
     $pvp_death = true;
+    pvp_kill($skulled); // pvp-sdk: hiscores /pvp and the kill feed, before the loot moves
     ~dmm_death_to_player($skulled);
     ~pvp_death_lose_items;
     session_log(^log_moderator, "Player died to <.displayname>");

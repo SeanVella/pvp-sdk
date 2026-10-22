@@ -6,6 +6,7 @@ import { itemSpriteUrl, playerSpriteUrl } from '#/web/sprites/SpriteRenderer.js'
 import { parseBankSnapshots, rankMatchingBanks } from './BankHiscores.js';
 import type { BankSnapshot } from './BankHiscores.js';
 import { loadRankedList, type RankedRow } from './RankedHiscores.js';
+import { MIN_RISK_GP, pvpBoard, type PvpBoardRow } from '#/engine/pvp/PvpKills.js';
 
 const hiddenNames = Environment.HISCORES_HIDDEN_NAMES;
 
@@ -126,6 +127,7 @@ function hiscoreTableLinks(profile: string): string {
             .join('\n') +
         `\n<tr><td>&nbsp;</td></tr>\n<tr><td><a href="/hiscores?category=${QUEST_POINTS_HISCORE_TYPE}&profile=${profile}" class="c text-orange">Quest Points</a></td></tr>` +
         // pvp-sdk: no Equipment or Bank links - those boards are the owner's (web/owner.ts)
+        `\n<tr><td><a href="/hiscores/pvp?profile=${profile}" class="c text-orange">PvP</a></td></tr>` + // pvp-sdk
         `\n<tr><td><a href="/hiscores/runite?profile=${profile}" class="c text-orange">Lava Maze Runite</a></td></tr>`
     );
 }
@@ -951,6 +953,177 @@ export async function handleHiscoresRunitePage(url: URL): Promise<Response | nul
 </table>
 
 <!-- Bottom edge decoration -->
+<table cellpadding="0" cellspacing="0">
+    <tr>
+        <td valign="top"><img src="/img/edge_g2.jpg" width="100" height="43"></td>
+        <td valign="top"><img src="/img/edge_c.jpg" width="400" height="42"></td>
+        <td valign="top"><img src="/img/edge_h2.jpg" width="100" height="43"></td>
+    </tr>
+</table>
+
+                </div>
+            </center>
+        </td>
+    </tr>
+</table>
+</body>
+</html>`;
+
+    return new Response(html, { headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=30' } });
+}
+
+// pvp-sdk: PvP leaderboard from pvp_kill rows (see notifyPvpKill in World.ts). Only
+// counted kills (engine/pvp/PvpKills.ts anti-farming) score: kills, deaths, the best
+// run of kills between deaths, and the value of what the victims risked.
+const PVP_BOARD_SIZE = 25;
+const PVP_WINDOWS: Record<string, { label: string; ms: number }> = {
+    day: { label: 'Today', ms: 24 * 3600_000 },
+    week: { label: 'This week', ms: 7 * 24 * 3600_000 },
+    all: { label: 'All time', ms: 0 }
+};
+
+const pvpCache = new Map<string, { at: number; rows: PvpBoardRow[]; pending: Promise<PvpBoardRow[]> | null }>();
+
+async function getPvpBoard(profile: string, windowMs: number): Promise<PvpBoardRow[]> {
+    const key = `${profile}:${windowMs}`;
+    const now = Date.now();
+    const cached = pvpCache.get(key);
+    if (cached && now - cached.at < RANKED_TTL_MS) {
+        return cached.rows;
+    }
+    if (cached?.pending) {
+        return cached.pending;
+    }
+    const load = (async () => {
+        let query = db
+            .selectFrom('pvp_kill')
+            .select(['killer', 'victim', 'value', 'timestamp'])
+            .where('profile', '=', profile)
+            .where('counted', '=', 1);
+        if (windowMs > 0) {
+            query = query.where('timestamp', '>', toDbDate(Date.now() - windowMs));
+        }
+        const [kills, staff] = await Promise.all([
+            query.execute(),
+            db.selectFrom('account').select('username').where('staffmodlevel', '>', 1).execute()
+        ]);
+        const hidden = new Set([...hiddenNames, ...staff.map(s => s.username.toLowerCase())]);
+        const rows = pvpBoard(
+            kills.map(k => ({ killer: k.killer, victim: k.victim, value: Number(k.value), timestamp: new Date(k.timestamp as string | Date).getTime() })),
+            name => hidden.has(name.toLowerCase()),
+            PVP_BOARD_SIZE
+        );
+        pvpCache.set(key, { at: Date.now(), rows, pending: null });
+        return rows;
+    })();
+    pvpCache.set(key, { at: cached?.at ?? 0, rows: cached?.rows ?? [], pending: load });
+    try {
+        return await load;
+    } catch (err) {
+        pvpCache.delete(key);
+        throw err;
+    }
+}
+
+export async function handleHiscoresPvpPage(url: URL): Promise<Response | null> {
+    const match = url.pathname.match(/^\/hi(?:gh)?scores\/pvp\/?$/);
+    if (!match) return null;
+
+    const profile = (url.searchParams.get('profile') || 'main').replace(/[^a-zA-Z0-9_-]/g, '');
+    const requested = url.searchParams.get('window') ?? '';
+    const windowKey = requested in PVP_WINDOWS ? requested : 'week';
+    const results = await getPvpBoard(profile, PVP_WINDOWS[windowKey]!.ms);
+
+    const tabs = Object.entries(PVP_WINDOWS)
+        .map(([key, w]) => (key === windowKey ? `<b>${w.label}</b>` : `<a href="/hiscores/pvp?window=${key}&profile=${profile}" class="c">${w.label}</a>`))
+        .join(' | ');
+    const rows = results
+        .map(
+            (r, i) => `
+                                <tr>
+                                    <td align="right">${i + 1}</td>
+                                    <td><a href="/hiscores/player/${encodeURIComponent(r.username)}?profile=${profile}" class="c">${escapeHtml(r.username)}</a></td>
+                                    <td align="right" class="yellow">${r.kills.toLocaleString()}</td>
+                                    <td align="right">${r.deaths.toLocaleString()}</td>
+                                    <td align="right">${(r.kills / Math.max(r.deaths, 1)).toFixed(2)}</td>
+                                    <td align="right">${r.bestStreak.toLocaleString()}</td>
+                                    <td align="right">${r.loot.toLocaleString()}</td>
+                                </tr>`
+        )
+        .join('');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>PvP Hiscores</title>
+    <style>${HISCORES_STYLES}</style>
+</head>
+<body>
+<table width="100%" height="100%" cellpadding="0" cellspacing="0">
+    <tr>
+        <td valign="middle">
+            <center>
+                <div style="width: 600px; position: relative;">
+
+<table cellpadding="0" cellspacing="0">
+    <tr>
+        <td valign="top"><img src="/img/edge_a.jpg" width="100" height="43"></td>
+        <td valign="top"><img src="/img/edge_c.jpg" width="400" height="42"></td>
+        <td valign="top"><img src="/img/edge_d.jpg" width="100" height="43"></td>
+    </tr>
+</table>
+
+<table width="600" cellpadding="0" cellspacing="0" border="0" background="/img/background2.jpg">
+    <tr>
+        <td valign="bottom">
+            <center>
+                <br>
+                <table width="350" bgcolor="black" cellpadding="4">
+                    <tr>
+                        <td class="e">
+                            <center>
+                                <b>PvP</b><br>
+                                <a href="/" class="c">Main menu</a> | <a href="/hiscores?profile=${profile}" class="c">All Hiscores</a>
+                            </center>
+                        </td>
+                    </tr>
+                </table>
+                <br>
+
+                <table width="560" bgcolor="black" cellpadding="4">
+                    <tr>
+                        <td class="e" style="font-size:12px">
+                            <center>
+                                A kill counts when the victim risked at least ${MIN_RISK_GP.toLocaleString()} gp, came from another address,
+                                and the same two players haven't had a counted kill in the last hour. Loot is what the victims risked.<br><br>
+                                ${tabs}
+                            </center>
+                        </td>
+                    </tr>
+                </table>
+                <br>
+
+                <table width="560" bgcolor="black" cellpadding="2">
+                    <tr>
+                        <td class="e" valign="top">
+                            ${
+                                results.length > 0
+                                    ? `<table width="100%" cellspacing="1" cellpadding="1">
+                                <tr><td align="right">#</td><td>Name</td><td align="right">Kills</td><td align="right">Deaths</td><td align="right">K/D</td><td align="right">Best streak</td><td align="right">Loot (gp)</td></tr>
+                                ${rows}
+                            </table>`
+                                    : '<center><br>No counted kills yet<br><br></center>'
+                            }
+                        </td>
+                    </tr>
+                </table>
+
+                <br>
+            </center>
+        </td>
+    </tr>
+</table>
+
 <table cellpadding="0" cellspacing="0">
     <tr>
         <td valign="top"><img src="/img/edge_g2.jpg" width="100" height="43"></td>

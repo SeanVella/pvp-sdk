@@ -158,6 +158,17 @@ export type runite_mine = {
     profile: Generated<string>;
     username: string;
 };
+export type pvp_kill = {
+    id: Generated<number>;
+    timestamp: Timestamp;
+    profile: Generated<string>;
+    killer: string;
+    victim: string;
+    value: Generated<number>;
+    victim_skulled: Generated<number>;
+    counted: Generated<number>;
+    reason: string | null;
+};
 export type player_skills_log = {
     id: Generated<number>;
     timestamp: Timestamp;
@@ -181,6 +192,7 @@ export type DB = {
     player_skills_log: player_skills_log;
     private_chat: private_chat;
     public_chat: public_chat;
+    pvp_kill: pvp_kill;
     report: report;
     runite_mine: runite_mine;
     session: session;

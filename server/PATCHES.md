@@ -456,6 +456,16 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       - `sdk/index.ts` `checkBotStatus`: sends the bot's password, defaults missing fields.
       - `engine/tools/server/grant-bank-item.ts`: sends `OWNER_TOKEN` to `/playerpositions`.
       Verify: `bun test server/engine/test/owner.test.ts sdk/test/gateway-owner.test.ts`.
+- [ ] **PvP kills** (`docs/PVP_PLAN.md` item 3). Opcode **10012** `PVP_KILL` (`ScriptOpcode.ts`,
+      `ScriptOpcodePointers.ts`, handler in `handlers/DebugOps.ts`), declared in
+      `content/scripts/engine.rs2` and called in `player/scripts/death.rs2` before
+      `~dmm_death_to_player`. `World.notifyPvpKill` values the risk and judges the kill with
+      `engine/pvp/PvpKills.ts` (fork-only), posts `pvp_kill` through `LoggerThread`/
+      `LoggerClient`/`LoggerServer`, and broadcasts counted kills. Table `pvp_kill` in both
+      prisma schemas (migration `20261022000000_pvp_kill`) and `db/types.ts`. Page
+      `handleHiscoresPvpPage` in `web/pages/hiscores.ts` (routed in `web/index.ts` and
+      `hiscoresServer.ts`, linked from the sidebar). Verify: `bun test
+      server/engine/test/pvp-kills.test.ts`.
 - [ ] **Registration caps** — `engine/src/server/login/RegistrationLimiter.ts` (fork-only);
       `LoginServer.ts` caps both auto-registration paths (`player_login` answers 9, "Login
       limit exceeded"), and `sdk_auth` checks IP bans and records the IP the gateway now sends

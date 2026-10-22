@@ -153,6 +153,23 @@ model session_wealth {
     recipient_value   Int?
 }
 
+// pvp-sdk: one row per death to a player (hiscores /pvp). counted = 0 when the
+// anti-farming rules (engine/pvp/PvpKills.ts) set the kill aside, with the reason.
+model pvp_kill {
+    id Int @id @default(autoincrement())
+
+    timestamp      DateTime
+    profile        String   @default("main")
+    killer         String
+    victim         String
+    value          Int      @default(0)
+    victim_skulled Int      @default(0)
+    counted        Int      @default(0)
+    reason         String?
+
+    @@index([timestamp])
+}
+
 model runite_mine {
     id Int @id @default(autoincrement())
 

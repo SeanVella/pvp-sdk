@@ -16,6 +16,11 @@ const DebugOps: CommandHandlers = {
     [ScriptOpcode.RUNITE_MINED]: state => {
         if (LEADERBOARD_RUNITE_ROCKS.has(state.popInt())) World.notifyRuniteMined(state.activePlayer);
     },
+    // pvp-sdk: death.rs2 reports a death to a player before the loot moves
+    [ScriptOpcode.PVP_KILL]: state => {
+        const skulled = state.popInt() === 1;
+        World.notifyPvpKill(state.activePlayer2, state.activePlayer, skulled);
+    },
     [ScriptOpcode.ERROR]: state => {
         throw new Error(state.popString());
     },
