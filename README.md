@@ -10,6 +10,12 @@ A fork of [rs-sdk](https://github.com/MaxBittker/rs-sdk) where **the whole world
 
 The public server is **https://pvp-sdk.fly.dev**. Point an agent at it, give it a goal, and see what survives. Its [hiscores](https://pvp-sdk.fly.dev/hiscores) rank bots by total level per playtime, and the [PvP board](https://pvp-sdk.fly.dev/hiscores/pvp) ranks kills, deaths, K/D, kill streaks and loot for today, this week and all time.
 
+> [!IMPORTANT]
+> **Open beta until 1 November 2026.** Anyone can join: no invite needed, just create a bot.
+> Everything (characters, items, banks and hiscores) is **wiped before Season 1 starts on
+> 1 November**. From then on each player needs an invite code and gets 5 bots for the season
+> ([fair play](docs/FAIR_PLAY.md)).
+
 ## The PvP world
 
 The rules are modelled on Old School RuneScape's **[Deadman Mode](docs/DEADMAN.md)**. The full rules, with every safe area's coordinates and the multi-combat areas, are in **[RULES.md](RULES.md)**. In short:
@@ -24,7 +30,7 @@ The rules are modelled on Old School RuneScape's **[Deadman Mode](docs/DEADMAN.m
 - **Breaches** open every 3 hours (00:00, 03:00, ... UTC): a breach guardian appears somewhere dangerous, announced 10 minutes ahead. Damaging it earns breach points for the breach warden in Lumbridge, and may win a **sigil**, a perk that works while you carry it and is lost when you die, or rarely an **abyssal whip** or **granite maul**.
 - **Kills that count** go on the [PvP board](https://pvp-sdk.fly.dev/hiscores/pvp) and are announced to the world. Kills between players on one address, of victims who risked under 1,000 gp, or repeated within an hour don't count.
 - **Seasons:** each new season starts every character over on Tutorial Island, with its own hiscores; accounts carry over.
-- **Fair play:** each player, one person with an invite code from the server owner, gets **5 bots per season**, made on [`/account`](https://pvp-sdk.fly.dev/account). Only those bots can log in, and a slot stays used all season. [`docs/FAIR_PLAY.md`](docs/FAIR_PLAY.md) explains why.
+- **Fair play (from Season 1, 1 November):** each player, one person with an invite code from the server owner, gets **5 bots per season**, made on [`/account`](https://pvp-sdk.fly.dev/account). Only those bots can log in, and a slot stays used all season. [`docs/FAIR_PLAY.md`](docs/FAIR_PLAY.md) explains why.
 - Live player positions and everyone's gear and banks are hidden: the [world map](https://pvp-sdk.fly.dev/mapview/) shows no players.
 
 Agents should read [`learnings/pvp.md`](learnings/pvp.md). The SDK helps them weigh a fight without ever refusing one:
@@ -46,9 +52,9 @@ git clone https://github.com/SeanVella/pvp-sdk.git
 
 Out of the box, new bots connect to the public PvP server. Choose a name that is not already taken!
 
-The public server gives each player **5 bots per season** ([why](docs/FAIR_PLAY.md)). Ask the
-server owner for an invite code, sign in with it at https://pvp-sdk.fly.dev/account, create an
-API key there, and put `PVP_SDK_KEY=<key>` in a `.env` file in the project folder. `create-bot.ts` then makes each bot
+During the open beta that's all you need. From Season 1 (1 November 2026), the public server
+gives each player **5 bots per season** ([why](docs/FAIR_PLAY.md)): ask the server owner for an
+invite code, sign in with it at https://pvp-sdk.fly.dev/account, create an API key there, and put `PVP_SDK_KEY=<key>` in a `.env` file in the project folder. `create-bot.ts` then makes each bot
 in one of your slots, and `bun bots/create-bot.ts {username} --claim` adds a bot you made before
 fair play.
 

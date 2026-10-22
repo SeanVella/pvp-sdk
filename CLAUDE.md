@@ -33,7 +33,8 @@ bun bots/create-bot.ts {username} --server=myserver.example.com
 bun bots/create-bot.ts {username} --claim
 ```
 
-**Fair play ([docs/FAIR_PLAY.md](docs/FAIR_PLAY.md)):** the public server gives each player 5
+**Fair play ([docs/FAIR_PLAY.md](docs/FAIR_PLAY.md)):** from Season 1 (1 November 2026; during
+the open beta before it, `create-bot.ts` needs no key) the public server gives each player 5
 bots per season, and the server makes each account in one of the player's slots. That needs
 the player's API key as `PVP_SDK_KEY=...` in the project's `.env`. If `create-bot.ts` says the
 key is missing, ask the user to sign in at https://pvp-sdk.fly.dev/account with the invite code
