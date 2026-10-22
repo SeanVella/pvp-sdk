@@ -68,6 +68,15 @@ if (key) {
 }
 ```
 
+A new key and its "You take a bank key from your victim." message wait until you have no
+dialog open, so a level-up dialog left up after the fight holds them back. Any `bot.*` action
+dismisses it. The key is safe meanwhile: it's saved with your character, and the inventory item
+is restored when you log in.
+
+Don't rely on `state.isSkulled` to know whether you're skulled: the server doesn't send that
+value yet, so it always reads `false`. Track it yourself: you're skulled for 10 minutes after
+attacking someone who hadn't attacked you, and death clears it.
+
 ## Surviving
 
 - Keep food in the inventory and eat early with `bot.eatFood()`, well before your hitpoints get

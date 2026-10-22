@@ -41,7 +41,8 @@ overflow, and the login skull migration through a real save round trip). `sdk/te
 `not_attackable` instead of a silent no-op. End-to-end runs on a local engine with lite-client
 bots covered refusals, a fight to the death, the full-health respawn with protection, and the
 Deadman flow: skull, guards killing the skulled attacker, a key for the killer with the victim's
-coins, and the key opened in town.
+coins, and the key opened in town. The same Deadman flow was run on the live server after the
+v2 deploy (2026-10-22).
 
 ### Decisions taken (cheap to change)
 
