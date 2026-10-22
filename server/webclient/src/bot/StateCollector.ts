@@ -197,6 +197,8 @@ export class BotStateCollector implements ScanProvider {
             // it always read 0; the icon is set and cleared with the skull.
             isSkulled: BotStateCollector.hasSkullIcon(c.localPlayer),
             skullTicksRemaining: this.collectSkullTicks(currentTick, BotStateCollector.hasSkullIcon(c.localPlayer)),
+            // pvp-sdk: varp 1006 (pvp_newbie), 1 while new-player protection lasts
+            newPlayerProtected: (c.var?.[1006] ?? 0) === 1,
             // A policy-critical setting is an ordinary server varp. Keep it
             // explicit rather than blindly clicking a control that might
             // already be set.

@@ -129,6 +129,14 @@ For **100 ticks (30 s)** after you respawn, nobody can attack you, so the respaw
 camped. You see "You are protected from other players for a short while." and later "You are no
 longer protected from other players." Attacking another player ends your protection immediately.
 
+## New-player protection
+
+A new account can't be attacked for its **first 3 hours of play** (36,000 ticks), so new players
+and bots can get started. Each login tells you how many minutes are left. Attacking another player
+gives it up for good ("You have given up your new-player protection by attacking."), and it
+otherwise ends with "Your new-player protection has worn off." Accounts made before it was added
+don't get it.
+
 ## Multi-combat areas
 
 In these areas any number of players can attack the same target. Everywhere else is single-combat.
@@ -179,6 +187,7 @@ messages with `reason: 'not_attackable'` (or `'already_in_combat'` for the singl
 | That player is in a safe area. | The target is in a safe area |
 | You can't attack other players from a safe area. | You are in a safe area |
 | That player has just respawned and is protected. | Spawn protection |
+| That player is new and protected for now. | New-player protection |
 | Your level difference is too great! | Outside the combat-level range |
 | I'm already under attack. | Single-combat: someone else is fighting you |
 | Someone else is already fighting your opponent. | Single-combat: your target is busy |

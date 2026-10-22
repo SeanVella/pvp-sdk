@@ -1031,6 +1031,10 @@ const ScriptOpcodePointers: {
     // pvp-sdk: victim = active_player, killer = .active_player (findhero)
     [ScriptOpcode.PVP_KILL]: {
         require: ['active_player', 'active_player2']
+    },
+    [ScriptOpcode.PLAYTIME]: {
+        require: ['active_player'],
+        require2: ['active_player2']
     }
 };
 

@@ -454,7 +454,8 @@ export const enum ScriptOpcode {
     TIMESPENT, // custom: used to profile script execution (record start time)
     GE_OPEN = 10010, // rs-sdk: native physical Grand Exchange
     RUNITE_MINED = 10011, // rs-sdk: lava maze runite leaderboard
-    PVP_KILL = 10012 // pvp-sdk: a death to a player, for /hiscores/pvp and the kill feed
+    PVP_KILL = 10012, // pvp-sdk: a death to a player, for /hiscores/pvp and the kill feed
+    PLAYTIME = 10013 // pvp-sdk: ticks the player has been logged in, ever (new-player protection)
 }
 
 export const ScriptOpcodeMap: Map<string, number> = new Map([
@@ -882,6 +883,7 @@ export const ScriptOpcodeMap: Map<string, number> = new Map([
     ['GE_OPEN', ScriptOpcode.GE_OPEN],
     ['RUNITE_MINED', ScriptOpcode.RUNITE_MINED],
     ['PVP_KILL', ScriptOpcode.PVP_KILL],
+    ['PLAYTIME', ScriptOpcode.PLAYTIME],
     ['GETTIMESPENT', ScriptOpcode.GETTIMESPENT],
     ['TIMESPENT', ScriptOpcode.TIMESPENT]
 ]);

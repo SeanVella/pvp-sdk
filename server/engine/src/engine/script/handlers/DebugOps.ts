@@ -21,6 +21,10 @@ const DebugOps: CommandHandlers = {
         const skulled = state.popInt() === 1;
         World.notifyPvpKill(state.activePlayer2, state.activePlayer, skulled);
     },
+    // pvp-sdk: playtime / .playtime, for new-player protection (pvp_world.rs2)
+    [ScriptOpcode.PLAYTIME]: state => {
+        state.pushInt(state.activePlayer.playtime);
+    },
     [ScriptOpcode.ERROR]: state => {
         throw new Error(state.popString());
     },

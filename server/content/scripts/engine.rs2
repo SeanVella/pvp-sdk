@@ -1078,3 +1078,8 @@
 // pvp-sdk: the active player died to .active_player; the engine values what they risked
 // and records the kill for the PvP hiscores and the kill feed. Call before the loot moves.
 [command,pvp_kill](boolean $skulled)
+
+// pvp-sdk: ticks the player has been logged in since their account was made
+[command,playtime]()(int)
+// pvp-sdk: the same for the secondary player
+[command,.playtime]()(int)

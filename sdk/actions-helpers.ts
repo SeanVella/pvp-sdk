@@ -25,6 +25,7 @@ export const PVP_REFUSALS = [
     "you can't attack other players from a safe area",
     'that player is in a safe area',
     'that player has just respawned and is protected',
+    'that player is new and protected for now',
     // upstream (wilderness-only) servers
     "you can't attack players who aren't in the wilderness",
     'your level difference is too great',

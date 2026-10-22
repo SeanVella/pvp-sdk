@@ -49,6 +49,8 @@ queue(macro_event_login, 0, 0);
 ~macro_cube_login;
 // pvp-sdk: skulls from before the safe zones last grew are cleared (pvp_world.rs2)
 ~dmm_rules_login;
+// pvp-sdk: new accounts are protected for their first hours of play (pvp_world.rs2)
+~pvp_newbie_login;
 // so pk skulls persist after logging back in
 ~set_pk_skull_login;
 // so the pvp 1hp-respawn mark persists after logging back in

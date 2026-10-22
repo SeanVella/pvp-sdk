@@ -404,7 +404,8 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       - `pvp_world.varp`: `pvp_protection` (**1001**, transmitted), `pvp_combat_clock` (**1002**),
         `dmm_guard_hits` (**1003**), `dmm_rules_version` (**1004**, perm), `pvp_skull_ticks`
         (**1005**, transmitted: the skull's ticks left when last written, by `~pk_skull` and
-        every ~50 ticks by `dmm_guard_check`; the bot client counts down from it).
+        every ~50 ticks by `dmm_guard_check`; the bot client counts down from it), `pvp_newbie`
+        (**1006**, perm, transmitted: new-player protection).
       - `pvp_world.rs2`: `~pvp_in_safe_zone` (that table + Tutorial Island + Duel Arena + Castle
         Wars), spawn protection, the `dmm_guard_check` softtimer, `~pvp_teleport_locked`,
         `~dmm_rules_login` (clears a skull saved under an older `^dmm_rules_version`).
@@ -456,6 +457,13 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       - `sdk/index.ts` `checkBotStatus`: sends the bot's password, defaults missing fields.
       - `engine/tools/server/grant-bank-item.ts`: sends `OWNER_TOKEN` to `/playerpositions`.
       Verify: `bun test server/engine/test/owner.test.ts sdk/test/gateway-owner.test.ts`.
+- [ ] **New-player protection** — opcode **10013** `PLAYTIME` (`playtime` / `.playtime`, handler
+      in `handlers/DebugOps.ts`, declared in `engine.rs2`); `pvp_world.rs2` `~pvp_newbie_login`,
+      `~.pvp_newbie_protected`, `~pvp_newbie_end`; `^pvp_newbie_protection` 36000 in
+      `pvp_world.constant`. Hooks in upstream files: `login.rs2` (after `~dmm_rules_login`),
+      `pvp_combat.rs2` `~pvp_level_check` (refuses a protected target), `pk_skull.rs2`
+      `set_pk_vars` (attacking ends it). SDK: the refusal in `PVP_REFUSALS`,
+      `state.newPlayerProtected` from varp 1006.
 - [ ] **PvP kills** (`docs/PVP_PLAN.md` item 3). Opcode **10012** `PVP_KILL` (`ScriptOpcode.ts`,
       `ScriptOpcodePointers.ts`, handler in `handlers/DebugOps.ts`), declared in
       `content/scripts/engine.rs2` and called in `player/scripts/death.rs2` before

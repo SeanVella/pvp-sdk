@@ -8,6 +8,9 @@
 // No teleporting for this many ticks after hitting or being hit by a player
 // (24 = 7.2s at 300ms, Deadman: Reborn's teleport delay).
 ^pvp_teleport_lock = 24
+// New-player protection: an account made after it was added can't be attacked for its
+// first this-many ticks of play (36000 = 3 hours at 300ms). Attacking ends it early.
+^pvp_newbie_protection = 36000
 
 // Deadman-style rules (see pvp_world.rs2 and dmm_bank_keys.rs2).
 // Guards shoot a skulled player in a safe area every this many ticks

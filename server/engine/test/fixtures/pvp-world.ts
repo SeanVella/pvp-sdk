@@ -171,6 +171,45 @@ test('spawn protection blocks attacks until it ends or the protected player atta
     expect(attack(attacker, respawned).allowed).toBe(true);
 });
 
+test('a new account is protected for its first hours of play; an old one never is', () => {
+    const fresh = player('fresh_acct', 10, FIELD.x, FIELD.z);
+    fresh.playtime = 0;
+    run('[proc,pvp_newbie_login]', fresh);
+    expect(fresh.vars[varp('pvp_newbie')]).toBe(1);
+    expect(fresh.messages[0]).toBe('You are protected from other players for 180 more minutes of play.');
+
+    const attacker = player('attacker', 10, FIELD.x + 1, FIELD.z);
+    const refused = attack(attacker, fresh);
+    expect(refused.allowed).toBe(false);
+    expect(refused.messages).toEqual(['That player is new and protected for now.']);
+
+    // An account that has already played is never protected, even at low playtime.
+    const veteran = player('veteran', 10, FIELD.x, FIELD.z);
+    veteran.playtime = 5000;
+    run('[proc,pvp_newbie_login]', veteran);
+    expect(veteran.vars[varp('pvp_newbie')]).toBe(0);
+    expect(attack(attacker, veteran).allowed).toBe(true);
+
+    // Three hours of play (36000 ticks at 300ms) later, the protection wears off.
+    fresh.playtime = 36000;
+    expect(attack(attacker, fresh).allowed).toBe(true);
+    run('[softtimer,pvp_newbie_check]', fresh);
+    expect(fresh.vars[varp('pvp_newbie')]).toBe(0);
+    expect(fresh.messages).toContain('Your new-player protection has worn off.');
+});
+
+test('attacking someone gives up new-player protection', () => {
+    const fresh = player('eager', 10, FIELD.x, FIELD.z);
+    fresh.playtime = 0;
+    run('[proc,pvp_newbie_login]', fresh);
+    const target = player('target', 10, FIELD.x + 1, FIELD.z);
+    expect(attack(fresh, target).allowed).toBe(true);
+    run('[proc,set_pk_vars]', fresh, target);
+    expect(fresh.vars[varp('pvp_newbie')]).toBe(0);
+    expect(fresh.messages).toContain('You have given up your new-player protection by attacking.');
+    expect(attack(target, fresh).allowed).toBe(true);
+});
+
 test('guards shoot a skulled player in a safe area harder every hit, and only there', () => {
     const p = player('skulled', 40, VARROCK_SQUARE.x, VARROCK_SQUARE.z); // 40 hitpoints
     p.vars[varp('pk_skull')] = 2000;

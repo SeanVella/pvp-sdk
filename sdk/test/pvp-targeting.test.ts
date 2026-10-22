@@ -131,7 +131,7 @@ describe('BotActions.attack target dispatch', () => {
     });
 
     test('reports spawn protection and attacking from a safe area as not attackable', async () => {
-        for (const message of ['That player has just respawned and is protected.', "You can't attack other players from a safe area."]) {
+        for (const message of ['That player has just respawned and is protected.', 'That player is new and protected for now.', "You can't attack other players from a safe area."]) {
             const result = await createBot(state({ message })).bot.attack(rival);
             expect(result).toMatchObject({ success: false, reason: 'not_attackable', targetType: 'player' });
         }

@@ -75,6 +75,45 @@ if (%pk_skull > 0) {
     mes("The safe zones have changed since you logged out, so your skull has been removed.");
 }
 
+// New-player protection: an account whose first login came after this was added can't
+// be attacked for its first ^pvp_newbie_protection ticks of play, so fresh players and
+// bots can get started. Attacking someone gives it up. Accounts that already existed
+// never get it, so nobody already playing became unattackable overnight.
+[proc,pvp_newbie_login]
+if (playtime < 10) {
+    %pvp_newbie = ^true;
+}
+if (%pvp_newbie = ^false) {
+    return;
+}
+if (playtime >= ^pvp_newbie_protection) {
+    ~pvp_newbie_end("Your new-player protection has worn off.");
+    return;
+}
+def_int $minutes = divide(add(multiply(sub(^pvp_newbie_protection, playtime), 3), 599), 600);
+mes("You are protected from other players for <tostring($minutes)> more minutes of play.");
+mes("Attacking another player ends your protection.");
+softtimer(pvp_newbie_check, 100);
+
+// Is .active_player still protected? Called from ~pvp_level_check.
+[proc,.pvp_newbie_protected]()(boolean)
+if (.%pvp_newbie = ^true & .playtime < ^pvp_newbie_protection) {
+    return(true);
+}
+return(false);
+
+[softtimer,pvp_newbie_check]
+if (playtime >= ^pvp_newbie_protection) {
+    ~pvp_newbie_end("Your new-player protection has worn off.");
+}
+
+[proc,pvp_newbie_end](string $message)
+clearsofttimer(pvp_newbie_check);
+if (%pvp_newbie = ^true) {
+    %pvp_newbie = ^false;
+    mes($message);
+}
+
 // No teleporting for ^pvp_teleport_lock ticks after a PvP hit, dealt or taken.
 [proc,pvp_teleport_locked]()(boolean)
 if (%pvp_combat_clock > 0 & map_clock < add(%pvp_combat_clock, ^pvp_teleport_lock)) {

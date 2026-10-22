@@ -611,6 +611,9 @@ export interface BotWorldState {
      * on a server that doesn't send the countdown yet; absent on older clients. Accurate
      * to about 50 ticks after you re-skull yourself. */
     skullTicksRemaining?: number | null;
+    /** New-player protection (accounts made after it was added): nobody can attack you
+     * until 3 hours of play, or until you attack someone. Absent on older clients. */
+    newPlayerProtected?: boolean;
     /** Absent when the connected client predates authoritative auto-retaliate telemetry. */
     autoRetaliateEnabled?: boolean;
     /** Absent when the connected client predates the signal. */

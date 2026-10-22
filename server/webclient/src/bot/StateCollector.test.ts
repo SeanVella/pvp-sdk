@@ -257,6 +257,15 @@ describe('BotStateCollector combat state', () => {
         expect(collector.collectState(80, true).skullTicksRemaining).toBe(0);
     });
 
+    test('reports new-player protection from varp 1006', () => {
+        const client = createClient();
+        client.var = [];
+        const collector = new BotStateCollector(client);
+        expect(collector.collectState(1, true).newPlayerProtected).toBeFalse();
+        client.var[1006] = 1;
+        expect(collector.collectState(2, true).newPlayerProtected).toBeTrue();
+    });
+
     test('reports which nearby players show the skull', () => {
         const client = createClient();
         const other = (name: string, headicons: number) => ({

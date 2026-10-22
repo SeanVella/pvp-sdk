@@ -43,6 +43,10 @@ if (.%pvp_protection = ^true) {
     mes("That player has just respawned and is protected.");
     return(false);
 }
+if (~.pvp_newbie_protected = true) { // pvp-sdk: new-player protection (pvp_world.rs2)
+    mes("That player is new and protected for now.");
+    return(false);
+}
 // not high enough level: ^pvp_combat_range anywhere, plus one per Wilderness level
 def_int $combat_level_diff = abs(sub(~player_combat_level, ~.player_combat_level));
 def_int $wilderness_level = min(~wilderness_level(coord), ~wilderness_level(.coord));

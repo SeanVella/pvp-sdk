@@ -56,6 +56,7 @@ v2 deploy (2026-10-22).
   varied 5-30 min and 16-24 ticks). Both are one constant each.
 - **No XP loss on death.** Classic DMM had it; DMM since 2023 doesn't.
 - **No login protection.** Logging out still waits out the usual combat timer.
+- **Skull and XP rules stay** (owner, 2026-10-22): no Deadman skull tuning, no XP loss.
 - **Machine:** shared-cpu-2x / 2 GB. Fly refuses performance VMs for this org until billing
   unlocks them; then `fly scale vm performance-1x --memory 2048 -a pvp-sdk`.
 - **IPs:** shared IPv4 + IPv6 (free). The direct gateway on :7443 works over the shared IPv4
@@ -152,7 +153,9 @@ From [`DEADMAN.md`](DEADMAN.md), roughly in order of value:
 - [ ] Safe deposit box: 10 items that bank raids can't take.
 - [ ] Skull and PJ tuning: DMM's longer skulls for attacking much lower levels, +2 min per
       re-skull, and a 16-24 tick single-combat lock.
-- [ ] Protection for new accounts (DMM gave 6-12 hours), so fresh bots can get started.
+- [x] Protection for new accounts: 3 hours of play (the owner's choice; DMM gave 6-12 hours
+      at half our tick speed), only for accounts made after it was added; attacking ends it.
+      `%pvp_newbie` (varp 1006, perm, transmitted) and the `playtime` command.
 - [ ] Breaches: scheduled boss events with point rewards.
 - [ ] Seasons: wipes, PvP leaderboards (item 3) and a finale.
 - [ ] Sigils, and optional classic XP loss on death.

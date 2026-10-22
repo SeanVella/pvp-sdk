@@ -455,6 +455,8 @@ export interface BotState {
     /** Ticks (0.3 s each) until the skull wears off, 0 when unskulled; null while skulled
      * on a server that doesn't send the countdown (varp 1005, pvp_skull_ticks). */
     skullTicksRemaining: number | null;
+    /** New-player protection: nobody can attack you, until 3 hours of play or your first attack. */
+    newPlayerProtected: boolean;
     /** Authoritative client varp 172: server auto-retaliation is enabled. */
     autoRetaliateEnabled: boolean;
     /** Whether the server accepted or silently discarded recent ops */

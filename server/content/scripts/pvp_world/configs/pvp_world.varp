@@ -22,3 +22,10 @@ scope=perm
 [pvp_skull_ticks]
 protect=no
 transmit=yes
+
+// 1 while the player has new-player protection (~pvp_newbie_login). Saved, and
+// transmitted so bots can see it.
+[pvp_newbie]
+protect=no
+scope=perm
+transmit=yes

@@ -25,6 +25,8 @@ are in [`RULES.md`](../RULES.md).
   fight the moment it turns.
 - **Spawn protection:** about 30 seconds after respawning nobody can attack you. Attacking
   someone ends it early.
+- **New-player protection:** a new account can't be attacked for its first 3 hours of play
+  (`state.newPlayerProtected`). Attacking anyone gives it up for good.
 - **Single-combat** outside the multi-combat areas: once someone hits you, only they can fight
   you until 8 ticks after the last hit.
 
@@ -42,6 +44,7 @@ Refusals come back as `reason: 'not_attackable'` with the server's message:
 | `That player is in a safe area.` | Target is in a safe town. Wait for them to leave. |
 | `You can't attack other players from a safe area.` | Step out first. |
 | `That player has just respawned and is protected.` | Spawn protection, about 30s. |
+| `That player is new and protected for now.` | New-player protection: their first 3 hours of play. |
 | `Your level difference is too great!` | Outside the 15 (+ Wilderness level) range. |
 | `I'm already under attack.` / `Someone else is already fighting your opponent.` | Single-combat lock: `reason: 'already_in_combat'`, retry after 8 ticks. |
 
