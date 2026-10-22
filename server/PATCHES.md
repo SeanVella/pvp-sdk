@@ -560,6 +560,8 @@ list after every merge as well. Design and roadmap: `docs/PVP_PLAN.md`.
       `[opplayer2,_]`/`[applayer2,_]` after `~pvp_is_attackable`, so the PvP gate covers them.
       Source: `areas/area_varrock/configs/varrock.inv` `[swordshop]` stocks both (2 each, one back
       per 1000 ticks), the only way to get them since 289 has no Slayer monsters to drop them.
+      Bots: `webclient/src/bot/StateCollector.ts` `COMBAT_STYLE_TABLES[12290]` describes the whip
+      tab's styles (keyed by interface id, so it must follow `combat_whip` if it ever moves).
 - [ ] Verify: `bun test server/engine/test/pvp-world.test.ts sdk/test/pvp-targeting.test.ts`
       from the repo root (needs built content). Server refusal wording is mirrored in
       `sdk/actions-helpers.ts` `PVP_REFUSALS` and in `RULES.md` — change them together.

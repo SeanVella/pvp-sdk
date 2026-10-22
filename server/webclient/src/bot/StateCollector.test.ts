@@ -411,6 +411,19 @@ describe('BotStateCollector combat styles', () => {
         });
     });
 
+    test('knows the abyssal whip tab: Lash is controlled, every style slashes', () => {
+        defineCombatTab(12290, 3); // combat_whip (pvp-sdk's 377 port)
+        const style = collectStyles(12290, 1);
+
+        expect(style.known).toBeTrue();
+        expect(style.styles.map((s: any) => `${s.name}/${s.type}/${s.trainsSkills.join('+')}/${s.damageType}`)).toEqual([
+            'Flick/Accurate/Attack/Slash',
+            'Lash/Controlled/Attack+Strength+Defence/Slash',
+            'Deflect/Defensive/Defence/Slash'
+        ]);
+        expect(style.currentStyle).toBe(1);
+    });
+
     test('clamps com_mode to the styles the tab actually has, as the server does', () => {
         defineCombatTab(425, 3); // combat_blunt has 3 styles
         expect(collectStyles(425, 3).currentStyle).toBe(2);

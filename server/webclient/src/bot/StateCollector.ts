@@ -775,6 +775,11 @@ export class BotStateCollector implements ScanProvider {
         8460: [ // combat_polearm -> weapon_polearm_table (3 styles, no accurate)
             ['Jab', 'controlled', 'Stab'], ['Swipe', 'aggressive', 'Slash'], ['Fend', 'defensive', 'Stab']
         ],
+        // pvp-sdk: the abyssal whip's tab, ported from LostCity 377-wip at 377's interface id
+        // (content scripts/pvp_kit/interfaces/combat_whip.if, slayer_weapons.dbrow)
+        12290: [ // combat_whip -> weapon_whip_table (all slash, no aggressive)
+            ['Flick', 'accurate', 'Slash'], ['Lash', 'controlled', 'Slash'], ['Deflect', 'defensive', 'Slash']
+        ],
         328: [ // combat_staff_2 -> weapon_staff_table
             ['Jab', 'accurate', 'Crush'], ['Pound', 'aggressive', 'Crush'], ['Focus', 'defensive', 'Crush']
         ],
